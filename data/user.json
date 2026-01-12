@@ -1,0 +1,38 @@
+{
+  "profile": {
+    "fullName": "Krrish Nichanii",
+    "initials": "KN",
+    "domain": "Data Science & Analytics"
+  },
+  "stats": {
+    "videoWatchedMins": 1,
+    "questionsAttempted": 0,
+    "monthlyProgress": [12]
+  },
+  "recommendedCourses": [
+    {
+      "id": "rec-1",
+      "title": "Data Science With Generative AI Course",
+      "price": "₹6,999/-",
+      "language": "English",
+      "image": "https://nxtwave.imgix.net/ccbp-website/nxtwave-intensive-2.0/recognized-by-patterns-card1.png",
+      "type": "Paid"
+    },
+    {
+      "id": "rec-2",
+      "title": "Data Analytics Course - Hinglish",
+      "price": "₹7,999/-",
+      "language": "Hinglish",
+      "image": "https://nxtwave.imgix.net/ccbp-website/nxtwave-intensive-2.0/recognized-by-patterns-card2.png",
+      "type": "Paid"
+    },
+    {
+      "id": "rec-3",
+      "title": "Data Analytics With AI Course",
+      "price": "₹6,999/-",
+      "language": "English",
+      "image": "https://nxtwave.imgix.net/ccbp-website/nxtwave-intensive-2.0/recognized-by-patterns-card1.png",
+      "type": "Paid"
+    }
+  ]
+}
