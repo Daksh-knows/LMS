@@ -1,8 +1,3 @@
-import AwardSlider from "@/components/AwardSlider";
-import Dashboard1 from "@/components/Dashboard1";
-import DashBoard2 from "@/components/DashBoard2";
-import WhyJoinIntensive from "@/components/WhyJoinIntensive";
-import Image from "next/image";
 import Link from 'next/link';
 import { LayoutTemplate, PlayCircle, Code2, ArrowRight } from 'lucide-react';
 

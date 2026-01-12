@@ -43,7 +43,7 @@ export default function AwardSlider() {
         {/* Carousel Viewport */}
         <div className="overflow-hidden" ref={emblaRef}>
           {/* Increased gap-10 for better breathing room between long cards */}
-          <div className="flex gap-10">
+          <div className="flex gap-7">
             {awards.map((award) => (
               <div 
                 key={award.id} 
