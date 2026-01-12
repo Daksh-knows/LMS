@@ -8,7 +8,7 @@ import {
   HeadphonesIcon, 
   Briefcase 
 } from "lucide-react";
-import Logo from "./Logo";
+import Logo from "@/app/landingpage/components/Logo";
 
 const navItems = [
   { label: "Overview", icon: LayoutDashboard, href: "/dashboard" },
@@ -23,7 +23,7 @@ export default function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-yellow-50 border-r border-gray-100 flex flex-col z-50">
       {/* Logo */}
-        <Logo className="" />
+        <Logo />
      
 
       {/* Navigation */}
