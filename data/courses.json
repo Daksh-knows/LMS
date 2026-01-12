@@ -1,0 +1,74 @@
+{
+  "courses": [
+    {
+      "id": "1",
+      "title": "Full Stack Web Development",
+      "subtitle": "Lecture: Call Back request form",
+      "image": "https://nxtwave.imgix.net/ccbp-website/nxtwave-intensive-2.0/recognized-by-patterns-card1.png",
+      "modulesCompleted": 2,
+      "totalModules": 16,
+      "status": "In Progress",
+      "tag": "Job Assurance Program"
+    },
+    {
+      "id": "2",
+      "title": "Cracking the Coding Interview in Java - Foundation",
+      "subtitle": "Lecture: Interview Problems on DP-1 Part-2",
+      "image": "https://nxtwave.imgix.net/ccbp-website/nxtwave-intensive-2.0/recognized-by-patterns-card2.png",
+      "modulesCompleted": 0,
+      "totalModules": 2,
+      "status": "In Progress",
+      "tag": "Java Foundation"
+    },
+    {
+      "id": "3",
+      "title": "Full Stack Web Development-1.0",
+      "subtitle": "Lecture: MongoDB",
+      "image": "https://nxtwave.imgix.net/ccbp-website/nxtwave-intensive-2.0/recognized-by-patterns-card1.png",
+      "modulesCompleted": 1,
+      "totalModules": 66,
+      "status": "In Progress",
+      "tag": "Sigma Batch"
+    },
+    {
+      "id": "4",
+      "title": "Introduction to Python Programming",
+      "subtitle": "Lecture: Lists and Tuples Deep Dive",
+      "image": "https://nxtwave.imgix.net/ccbp-website/nxtwave-intensive-2.0/recognized-by-patterns-card2.png",
+      "modulesCompleted": 12,
+      "totalModules": 12,
+      "status": "Completed",
+      "tag": "Basics"
+    },
+    {
+      "id": "5",
+      "title": "Data Structures & Algorithms",
+      "subtitle": "Lecture: Graph Traversals (BFS & DFS)",
+      "image": "https://nxtwave.imgix.net/ccbp-website/nxtwave-intensive-2.0/recognized-by-patterns-card1.png",
+      "modulesCompleted": 45,
+      "totalModules": 100,
+      "status": "In Progress",
+      "tag": "Advanced"
+    },
+    {
+      "id": "6",
+      "title": "React JS Mastery",
+      "subtitle": "Lecture: Custom Hooks and Performance",
+      "image": "https://nxtwave.imgix.net/ccbp-website/nxtwave-intensive-2.0/recognized-by-patterns-card2.png",
+      "modulesCompleted": 30,
+      "totalModules": 30,
+      "status": "Completed",
+      "tag": "Frontend"
+    },
+    {
+      "id": "7",
+      "title": "Backend Engineering with Node.js",
+      "subtitle": "Lecture: Express Middleware and Auth",
+      "image": "https://nxtwave.imgix.net/ccbp-website/nxtwave-intensive-2.0/recognized-by-patterns-card1.png",
+      "modulesCompleted": 5,
+      "totalModules": 40,
+      "status": "In Progress",
+      "tag": "Backend"
+    }
+  ]
+}
