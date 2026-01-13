@@ -1,0 +1,228 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  previewFeatures = ["driverAdapters"]
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User Schema
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  role          String    @default("STUDENT") // "ADMIN", "STUDENT"
+  hasPremium    Boolean   @default(false)
+  
+  // 1:1 Relation to Profile
+  profile       StudentProfile? 
+
+  // 1:1 Relation to Stats 
+  stats         UserStats?
+
+  // Relations
+  createdCourses Course[]      @relation("CourseAuthor") // If Admin
+  enrollments    Enrollment[]  // If Student
+  
+  // FIXED: Added missing inverse relations required by Prisma
+  userProgress   UserProgress[]
+  notes          Note[]
+  reviews        Review[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model StudentProfile {
+  id            String   @id @default(cuid())
+  
+  // Link back to User
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Profile Data
+  fullName      String
+  domain        String?  // e.g. "Data Science"
+
+  collegeName   String?
+  collegeDegree String?
+  collegeYear   Int?
+}
+
+model UserStats {
+  id               String   @id @default(cuid())
+  
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  videoWatchedMins Int      @default(0)
+  questionsSolved  Int      @default(0)
+}
+
+// Course Model
+model Course {
+  id          String  @id @default(cuid())
+  
+  // Basic Metadata
+  title       String  @db.VarChar(255)
+  description String? @db.Text
+  imageUrl    String? 
+  price       Float?
+  isPublished Boolean @default(false)
+
+  // Relations
+  adminId     String
+  admin       User    @relation("CourseAuthor", fields: [adminId], references: [id])
+
+  // Content Hierarchy
+  modules     Module[]
+  
+  // Who purchased/enrolled?
+  students    Enrollment[] 
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([title])
+}
+
+// Join table for Students <-> Courses
+model Enrollment {
+  id        String   @id @default(cuid())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+
+  currentLectureId String?
+  currentLecture   Lecture? @relation(fields: [currentLectureId], references: [id])
+  
+  enrolledAt DateTime @default(now())
+  
+  // Unique constraint ensures a user can't enroll in the same course twice
+  @@unique([userId, courseId])
+}
+
+// Modules Table
+model Module {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  position    Int      // 1, 2, 3... To order sections
+  isPublished Boolean  @default(false)
+
+  // Parent Relation
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  // Child Relation
+  lectures    Lecture[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([courseId])
+}
+
+// Lecture Table
+model Lecture {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text // The "overview" from your JSON
+  videoUrl    String   // The embed URL
+  duration    Int      // Duration in minutes
+  position    Int      // 1, 2, 3... To order lectures inside a module
+  isPublished Boolean  @default(false)
+  isFree      Boolean  @default(false) // Allow free preview?
+
+  // Parent Relation
+  moduleId    String
+  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  // Child Content
+  resources   Attachment[]
+  
+  // User Interaction Relations (Inverse relations)
+  userProgress UserProgress[]
+  notes        Note[]
+  reviews      Review[]
+  
+  // FIXED: Added missing inverse relation for Enrollment.currentLecture
+  enrollments  Enrollment[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([moduleId])
+}
+
+// Resources Table
+model Attachment {
+  id        String   @id @default(cuid())
+  title     String   // e.g. "Source Code"
+  url       String   
+  type      String   @default("FILE") 
+
+  lectureId String
+  lecture   Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model UserProgress {
+  id          String   @id @default(cuid())
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  lectureId   String
+  lecture     Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+
+  isCompleted Boolean  @default(false) // True = Watched
+  watchTime   Int      @default(0)     // Optional: Save timestamp (e.g., stopped at 5:30)
+
+  updatedAt   DateTime @updatedAt      // Important: sort by this to find "recently watched"
+
+  @@unique([userId, lectureId])
+  @@index([userId, lectureId])
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  lectureId String
+  lecture   Lecture  @relation(fields: [lectureId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int      // 1-5
+  comment   String?  @db.Text
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  lectureId String
+  lecture   Lecture  @relation(fields: [lectureId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, lectureId]) // User can only rate a lecture once
+}
