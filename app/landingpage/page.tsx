@@ -9,6 +9,7 @@ import GetCertified from "./components/GetCertified";
 import CareerPathway from "./components/CareerPathway";
 import WhyJoinIntensive from "./components/WhyJoinIntensive";
 import AwardSlider from "./components/AwardSlider";
+import EnrollButton from "./components/EnrollButton";
 
 export default function LandingPage() {
   return (
@@ -24,6 +25,7 @@ export default function LandingPage() {
       <GetCertified />
       <WhyJoinIntensive />
       <AwardSlider />
+      <EnrollButton />
     </>
   );
 }

@@ -1,0 +1,60 @@
+[
+  {
+    "id": "user_01",
+    "role": "student",
+    "profile": {
+      "fullName": "Krrish Nichanii",
+      "initials": "KN",
+      "domain": "Data Science & Analytics"
+    },
+    "stats": {
+      "videoWatchedMins": 1,
+      "questionsAttempted": 0,
+      "monthlyProgress": [12]
+    },
+    "college": { "name": "ABC University", "degree": "B.Sc CS", "year": 2022 },
+    "email": "krrish@gmail.com",
+    "hasPremium": true,
+    "enrolledCourses": ["101", "102"]
+  },
+  {
+    "id": "user_02",
+    "role": "admin",
+    "profile": {
+      "fullName": "Dr. Sarah Smith",
+      "initials": "SS",
+      "domain": "Web Development"
+    },
+    "email": "sarah.admin@platform.com",
+    "managedCourses": ["101", "103"]
+  },
+  {
+    "id": "user_03",
+    "role": "admin",
+    "profile": {
+      "fullName": "Prof. Alan Turing",
+      "initials": "AT",
+      "domain": "Algorithms"
+    },
+    "email": "alan.admin@platform.com",
+    "managedCourses": ["102"]
+  },
+  {
+    "id": "user_04",
+    "role": "student",
+    "profile": {
+      "fullName": "Jane Doe",
+      "initials": "JD",
+      "domain": "Frontend Engineering"
+    },
+    "stats": {
+      "videoWatchedMins": 120,
+      "questionsAttempted": 15,
+      "monthlyProgress": [1, 5, 12]
+    },
+    "college": { "name": "XYZ Tech", "degree": "B.Tech", "year": 2024 },
+    "email": "jane@gmail.com",
+    "hasPremium": false,
+    "enrolledCourses": ["101"]
+  }
+]
