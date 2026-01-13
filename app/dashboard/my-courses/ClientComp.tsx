@@ -63,9 +63,9 @@ export default function CourseFilterList({
 
             {/* Info */}
             <div className="flex-1">
-              <p className="text-gray-400 text-xs mb-1 font-bold tracking-wide uppercase">
+              {/* <p className="text-gray-400 text-xs mb-1 font-bold tracking-wide uppercase">
                 COURSE ID: {course.id}
-              </p>
+              </p> */}
               <h3 className="font-bold text-gray-800 text-lg mb-1">
                 {course.title}
               </h3>

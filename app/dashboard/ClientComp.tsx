@@ -1,115 +1,112 @@
 "use client";
 
-import React, { useState } from "react";
-import { Info, ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { Info, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
+// Import your course JSON
+import courseData from "@/data/courses.json"; 
 
 export default function OverviewClient({ data }: { data: any }) {
-  const [courseType, setCourseType] = useState("Paid");
-  const { stats, recommendedCourses } = data;
+  const [courseType, setCourseType] = useState("All");
+  const { stats } = data;
+
+  // Filter logic based on tags (e.g., Job Assurance vs Others)
+  const filteredRecommended = useMemo(() => {
+    if (courseType === "All") return courseData;
+    return courseData.filter(course => 
+      course.tags.some(tag => tag.includes(courseType))
+    );
+  }, [courseType]);
 
   return (
-    <div className="max-w-6xl ml-5 mt-5 space-y-10">
-      {/* 1. Progress Section (Top) */}
+    <div className="max-w-6xl ml-5 mt-5 space-y-10 pb-20">
+      {/* 1. Progress Section (Keeping your original top stats) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Today's Progress */}
         <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
           <h3 className="text-gray-700 font-bold mb-8 flex items-center gap-2">
             Today's Progress <Info size={14} className="text-gray-400" />
           </h3>
           <div className="flex justify-around items-center py-4">
-            <ProgressCircle
-              value={stats.videoWatchedMins}
-              label="Mins Video Watched"
-              color="text-blue-400"
-            />
-            <ProgressCircle
-              value={stats.questionsAttempted}
-              label="Questions Attempted"
-              color="text-green-400"
-            />
+            <ProgressCircle value={stats.videoWatchedMins} label="Mins Video Watched" color="text-blue-500" />
+            <ProgressCircle value={stats.questionsAttempted} label="Questions Attempted" color="text-green-500" />
           </div>
         </div>
 
-        {/* Monthly Progress Calendar */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-          <h3 className="text-gray-700 font-bold mb-6 flex items-center gap-2">
-            Monthly Progress <Info size={14} className="text-gray-400" />
-          </h3>
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-4 mb-4 text-xs font-bold">
-              <ChevronLeft size={14} /> January 2026 <ChevronRight size={14} />
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col justify-center">
+            {/* Calendar Placeholder */}
+            <h3 className="text-gray-700 font-bold mb-6 text-sm">Monthly Activity</h3>
+            <div className="grid grid-cols-7 gap-1 opacity-50">
+                {Array.from({ length: 28 }).map((_, i) => (
+                    <div key={i} className="h-2 w-2 bg-gray-200 rounded-sm"></div>
+                ))}
             </div>
-            <div className="grid grid-cols-7 gap-1">
-              {["M", "T", "W", "T", "F", "S", "S"].map((d, index) => (
-                <div
-                  key={index}
-                  className="text-[10px] text-gray-400 font-bold"
-                >
-                  {d}
-                </div>
-              ))}
-              {Array.from({ length: 31 }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`text-xs p-2 rounded-full ${
-                    stats.monthlyProgress.includes(i + 1)
-                      ? "bg-green-100 text-green-700 border border-green-300"
-                      : "text-gray-300"
-                  }`}
-                >
-                  {i + 1}
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* 2. Recommended Courses Section (Below) */}
+      {/* 2. Recommended Courses Section */}
       <div className="space-y-6">
-        <h3 className="text-lg font-bold text-gray-800">Recommended Courses</h3>
-
-        {/* Toggle Buttons */}
-        <div className="flex gap-3">
-          {["Paid", "Free"].map((type) => (
-            <button
-              key={type}
-              onClick={() => setCourseType(type)}
-              className={`px-5 py-1.5 rounded-full text-sm font-medium transition-all ${
-                courseType === type
-                  ? "bg-gray-800 text-white"
-                  : "bg-white text-gray-500 border border-gray-200"
-              }`}
-            >
-              {type}
-            </button>
-          ))}
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-extrabold text-gray-900 tracking-tight">Recommended for You</h3>
+          <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
+            {["All", "Frontend", "Advanced"].map((type) => (
+              <button
+                key={type}
+                onClick={() => setCourseType(type)}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  courseType === type ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Course Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {recommendedCourses.map((course: any) => (
-            <div key={course.id} className="group cursor-pointer">
-              <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                {/* Image Container */}
-                <div className="relative aspect-[16/9] bg-slate-900">
-                  <img
-                    src={course.image}
-                    alt={course.title}
-                    className="w-full h-full object-cover opacity-80"
-                  />
-                  <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded font-bold">
-                    Starting at {course.price}
-                  </div>
-                  <div className="absolute bottom-3 right-3 bg-green-500 text-white text-[10px] px-2 py-1 rounded font-bold">
-                    {course.language}
-                  </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredRecommended.map((course) => (
+            <div 
+              key={course.id} 
+              className="group relative bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
+            >
+              {/* Image & Tags Overlay */}
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <img 
+                  src={course.image} 
+                  alt={course.title} 
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                />
+                
+                {/* Floating Tags */}
+                <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+                  {course.tags.map((tag: string) => (
+                    <span 
+                      key={tag} 
+                      className="bg-white/90 backdrop-blur-md text-gray-900 text-[10px] px-3 py-1.5 rounded-full font-black uppercase tracking-widest shadow-sm"
+                    >
+                      {tag}
+                    </span>
+                  ))}
                 </div>
-                {/* Content */}
-                <div className="p-4">
-                  <h4 className="font-bold text-gray-800 text-sm leading-tight group-hover:text-blue-600 transition-colors">
-                    {course.title}
-                  </h4>
+
+                {/* Hover Overlay Button */}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="bg-white text-black px-4 py-2 rounded-full font-bold text-sm flex items-center gap-2">
+                        View Details <ExternalLink size={14} />
+                    </div>
+                </div>
+              </div>
+
+              {/* Minimal Content */}
+              <div className="p-6">
+                <h4 className="font-bold text-gray-900 text-lg leading-tight group-hover:text-blue-600 transition-colors">
+                  {course.title}
+                </h4>
+                <p className="text-gray-400 text-sm mt-2 line-clamp-1">{course.subtitle}</p>
+                
+                <div className="mt-6 flex items-center justify-between">
+                    <span className="text-blue-600 font-bold text-sm">Explore Course</span>
+                    <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                        →
+                    </div>
                 </div>
               </div>
             </div>
@@ -119,6 +116,7 @@ export default function OverviewClient({ data }: { data: any }) {
     </div>
   );
 }
+
 
 // Reusable Progress Circle
 function ProgressCircle({
