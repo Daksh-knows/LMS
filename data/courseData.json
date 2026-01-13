@@ -1,0 +1,93 @@
+[
+  {
+    "courseId": "101",
+    "courseTitle": "Full Stack Web Development",
+    "sections": [
+      {
+        "id": "s1",
+        "title": "Section 1: Introduction to Web",
+        "lectures": [
+          {
+            "id": "l1",
+            "title": "1. How the Internet Works",
+            "duration": "10min",
+            "videoUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            "resources": [],
+            "overview": "Understanding HTTP, DNS, and Browsers.",
+            "faq": [],
+            "review": { "average": 4.5, "count": 20, "userRating": null },
+            "status": "watched"
+          },
+          {
+            "id": "l2",
+            "title": "2. Call Back Request Form",
+            "duration": "15min",
+            "videoUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            "resources": [{ "title": "Form Schema", "url": "#" }],
+            "overview": "Handling form submissions and callbacks in Node.js.",
+            "faq": [],
+            "review": { "average": 4.6, "count": 12, "userRating": 4 },
+            "status": "watching"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "courseId": "102",
+    "courseTitle": "Data Structures & Algorithms",
+    "sections": [
+      {
+        "id": "s1",
+        "title": "Section 1: Graphs",
+        "lectures": [
+          {
+            "id": "l1",
+            "title": "1. Introduction to Graphs",
+            "duration": "15min",
+            "videoUrl": "https://www.youtube.com/embed/M7lc1UVf-VE",
+            "resources": [],
+            "overview": "Nodes, Edges, and Adjacency Lists.",
+            "faq": [],
+            "review": { "average": 4.9, "count": 200, "userRating": null },
+            "status": "watched"
+          },
+          {
+            "id": "l2",
+            "title": "2. Graph Traversals (BFS & DFS)",
+            "duration": "25min",
+            "videoUrl": "https://www.youtube.com/embed/M7lc1UVf-VE",
+            "resources": [{ "title": "Algorithm Notes", "url": "#" }],
+            "overview": "Deep dive into Breadth-First and Depth-First Search.",
+            "faq": [],
+            "review": { "average": 4.8, "count": 150, "userRating": null },
+            "status": "watching"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "courseId": "103",
+    "courseTitle": "React JS Mastery",
+    "sections": [
+      {
+        "id": "s1",
+        "title": "Section 1: Hooks Deep Dive",
+        "lectures": [
+          {
+            "id": "l1",
+            "title": "1. Custom Hooks and Performance",
+            "duration": "12min",
+            "videoUrl": "https://www.youtube.com/embed/W6NZfCO5SIk",
+            "resources": [],
+            "overview": "Optimizing performance in React using useMemo and useCallback.",
+            "faq": [],
+            "review": { "average": 5.0, "count": 50, "userRating": 5 },
+            "status": "watched"
+          }
+        ]
+      }
+    ]
+  }
+]

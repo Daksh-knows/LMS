@@ -8,8 +8,7 @@ export default function OverviewClient({ data }: { data: any }) {
   const { stats, recommendedCourses } = data;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-10 ">
-      
+    <div className="max-w-6xl ml-5 mt-5 space-y-10">
       {/* 1. Progress Section (Top) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Today's Progress */}
@@ -18,14 +17,22 @@ export default function OverviewClient({ data }: { data: any }) {
             Today's Progress <Info size={14} className="text-gray-400" />
           </h3>
           <div className="flex justify-around items-center py-4">
-            <ProgressCircle value={stats.videoWatchedMins} label="Mins Video Watched" color="text-blue-400" />
-            <ProgressCircle value={stats.questionsAttempted} label="Questions Attempted" color="text-green-400" />
+            <ProgressCircle
+              value={stats.videoWatchedMins}
+              label="Mins Video Watched"
+              color="text-blue-400"
+            />
+            <ProgressCircle
+              value={stats.questionsAttempted}
+              label="Questions Attempted"
+              color="text-green-400"
+            />
           </div>
         </div>
 
         {/* Monthly Progress Calendar */}
         <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-           <h3 className="text-gray-700 font-bold mb-6 flex items-center gap-2">
+          <h3 className="text-gray-700 font-bold mb-6 flex items-center gap-2">
             Monthly Progress <Info size={14} className="text-gray-400" />
           </h3>
           <div className="text-center">
@@ -33,10 +40,24 @@ export default function OverviewClient({ data }: { data: any }) {
               <ChevronLeft size={14} /> January 2026 <ChevronRight size={14} />
             </div>
             <div className="grid grid-cols-7 gap-1">
-              {['M','T','W','T','F','S','S'].map(d => <div key={d} className="text-[10px] text-gray-400 font-bold">{d}</div>)}
+              {["M", "T", "W", "T", "F", "S", "S"].map((d, index) => (
+                <div
+                  key={index}
+                  className="text-[10px] text-gray-400 font-bold"
+                >
+                  {d}
+                </div>
+              ))}
               {Array.from({ length: 31 }).map((_, i) => (
-                <div key={i} className={`text-xs p-2 rounded-full ${stats.monthlyProgress.includes(i+1) ? 'bg-green-100 text-green-700 border border-green-300' : 'text-gray-300'}`}>
-                  {i+1}
+                <div
+                  key={i}
+                  className={`text-xs p-2 rounded-full ${
+                    stats.monthlyProgress.includes(i + 1)
+                      ? "bg-green-100 text-green-700 border border-green-300"
+                      : "text-gray-300"
+                  }`}
+                >
+                  {i + 1}
                 </div>
               ))}
             </div>
@@ -47,7 +68,7 @@ export default function OverviewClient({ data }: { data: any }) {
       {/* 2. Recommended Courses Section (Below) */}
       <div className="space-y-6">
         <h3 className="text-lg font-bold text-gray-800">Recommended Courses</h3>
-        
+
         {/* Toggle Buttons */}
         <div className="flex gap-3">
           {["Paid", "Free"].map((type) => (
@@ -55,7 +76,9 @@ export default function OverviewClient({ data }: { data: any }) {
               key={type}
               onClick={() => setCourseType(type)}
               className={`px-5 py-1.5 rounded-full text-sm font-medium transition-all ${
-                courseType === type ? "bg-gray-800 text-white" : "bg-white text-gray-500 border border-gray-200"
+                courseType === type
+                  ? "bg-gray-800 text-white"
+                  : "bg-white text-gray-500 border border-gray-200"
               }`}
             >
               {type}
@@ -70,7 +93,11 @@ export default function OverviewClient({ data }: { data: any }) {
               <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                 {/* Image Container */}
                 <div className="relative aspect-[16/9] bg-slate-900">
-                  <img src={course.image} alt={course.title} className="w-full h-full object-cover opacity-80" />
+                  <img
+                    src={course.image}
+                    alt={course.title}
+                    className="w-full h-full object-cover opacity-80"
+                  />
                   <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded font-bold">
                     Starting at {course.price}
                   </div>
@@ -89,24 +116,48 @@ export default function OverviewClient({ data }: { data: any }) {
           ))}
         </div>
       </div>
-
     </div>
   );
 }
 
 // Reusable Progress Circle
-function ProgressCircle({ value, label, color }: { value: number, label: string, color: string }) {
+function ProgressCircle({
+  value,
+  label,
+  color,
+}: {
+  value: number;
+  label: string;
+  color: string;
+}) {
   return (
     <div className="flex flex-col items-center">
       <div className="relative w-32 h-32">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-          <circle cx="18" cy="18" r="16" fill="none" className="stroke-gray-100" strokeWidth="2" />
-          <circle cx="18" cy="18" r="16" fill="none" className={color} strokeWidth="2" 
-            strokeDasharray={`${value > 0 ? 25 : 0}, 100`} strokeLinecap="round" />
+          <circle
+            cx="18"
+            cy="18"
+            r="16"
+            fill="none"
+            className="stroke-gray-100"
+            strokeWidth="2"
+          />
+          <circle
+            cx="18"
+            cy="18"
+            r="16"
+            fill="none"
+            className={color}
+            strokeWidth="2"
+            strokeDasharray={`${value > 0 ? 25 : 0}, 100`}
+            strokeLinecap="round"
+          />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
           <span className="text-xl font-bold">{value}</span>
-          <span className="text-[8px] text-gray-400 font-bold uppercase leading-tight px-4">{label}</span>
+          <span className="text-[8px] text-gray-400 font-bold uppercase leading-tight px-4">
+            {label}
+          </span>
         </div>
       </div>
     </div>
