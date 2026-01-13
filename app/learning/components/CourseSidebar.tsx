@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Section, Lecture } from '../data';
-import { 
-  ChevronDown, 
-  ChevronUp, 
-  PlayCircle, 
-  CheckCircle2, 
+import React, { useState } from "react";
+import { Section, Lecture } from "../types";
+import {
+  ChevronDown,
+  ChevronUp,
+  PlayCircle,
+  CheckCircle2,
   Circle,
   Download,
-  Play
-} from 'lucide-react';
+  Play,
+} from "lucide-react";
 
 interface Props {
   sections: Section[];
@@ -18,7 +18,11 @@ interface Props {
   onSelectLecture: (lecture: Lecture) => void;
 }
 
-const CourseSidebar: React.FC<Props> = ({ sections, currentLectureId, onSelectLecture }) => {
+const CourseSidebar: React.FC<Props> = ({
+  sections,
+  currentLectureId,
+  onSelectLecture,
+}) => {
   const [openSections, setOpenSections] = useState<string[]>([sections[0]?.id]);
 
   const toggleSection = (id: string) => {
@@ -36,15 +40,17 @@ const CourseSidebar: React.FC<Props> = ({ sections, currentLectureId, onSelectLe
     if (isActive) {
       return (
         <div className="relative">
-           <PlayCircle size={18} className="text-purple-600 animate-pulse" />
+          <PlayCircle size={18} className="text-purple-600 animate-pulse" />
         </div>
       );
     }
 
     switch (lecture.status) {
-      case 'watched':
-        return <CheckCircle2 size={18} className="text-green-600 fill-green-50" />;
-      case 'remaining':
+      case "watched":
+        return (
+          <CheckCircle2 size={18} className="text-green-600 fill-green-50" />
+        );
+      case "remaining":
       default:
         return <Circle size={18} className="text-gray-300" />;
     }
@@ -59,7 +65,7 @@ const CourseSidebar: React.FC<Props> = ({ sections, currentLectureId, onSelectLe
       <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
         {sections.map((section) => {
           const isOpen = openSections.includes(section.id);
-          
+
           return (
             <div key={section.id} className="border-b border-gray-100">
               {/* Section Header */}
@@ -80,15 +86,15 @@ const CourseSidebar: React.FC<Props> = ({ sections, currentLectureId, onSelectLe
                 <div className="bg-white">
                   {section.lectures.map((lecture) => {
                     const isActive = lecture.id === currentLectureId;
-                    
+
                     return (
                       <div
                         key={lecture.id}
                         onClick={() => onSelectLecture(lecture)}
                         className={`group flex flex-col p-4 cursor-pointer transition-all border-l-4 ${
-                          isActive 
-                            ? 'border-purple-700 bg-purple-50' 
-                            : 'border-transparent hover:bg-gray-50'
+                          isActive
+                            ? "border-purple-700 bg-purple-50"
+                            : "border-transparent hover:bg-gray-50"
                         }`}
                       >
                         <div className="flex items-start gap-3">
@@ -98,15 +104,22 @@ const CourseSidebar: React.FC<Props> = ({ sections, currentLectureId, onSelectLe
                           </div>
 
                           <div className="flex-1 min-w-0">
-                            <p className={`text-sm leading-snug transition-colors ${
-                              isActive ? 'font-semibold text-gray-900' : 'text-gray-600'
-                            }`}>
+                            <p
+                              className={`text-sm leading-snug transition-colors ${
+                                isActive
+                                  ? "font-semibold text-gray-900"
+                                  : "text-gray-600"
+                              }`}
+                            >
                               {lecture.title}
                             </p>
-                            
+
                             <div className="flex items-center gap-3 mt-1.5">
                               <div className="flex items-center gap-1 text-[11px] text-gray-400 font-medium">
-                                <Play size={10} className={isActive ? 'text-purple-600' : ''} />
+                                <Play
+                                  size={10}
+                                  className={isActive ? "text-purple-600" : ""}
+                                />
                                 <span>{lecture.duration}</span>
                               </div>
                             </div>
@@ -121,7 +134,7 @@ const CourseSidebar: React.FC<Props> = ({ sections, currentLectureId, onSelectLe
                                 key={idx}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  window.open(res.url, '_blank');
+                                  window.open(res.url, "_blank");
                                 }}
                                 className="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-bold bg-white border border-gray-200 rounded text-gray-500 hover:border-purple-400 hover:text-purple-700 transition-all shadow-sm"
                               >
