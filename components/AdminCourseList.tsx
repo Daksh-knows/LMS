@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { Trash2, Edit, Plus, Loader2 } from "lucide-react";
-// Import the server action you just created
 import { deleteCourse } from "@/lib/admin-actions"; 
 import Link from "next/link";
 
@@ -64,7 +63,8 @@ export default function AdminCourseList({
         </div>
       ) : (
         initialCourses.map((course) => (
-          <div 
+          <Link 
+            href={`/dashboard/admin/add-module/${course.id}`}
             key={course.id} 
             className="flex items-center justify-between p-5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all group"
           >
@@ -105,7 +105,7 @@ export default function AdminCourseList({
                 )}
               </button>
             </div>
-          </div>
+          </Link>
         ))
       )}
     </div>

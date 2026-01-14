@@ -1,90 +1,174 @@
 [
   {
-    "courseId": "101",
-    "courseTitle": "Full Stack Web Development",
-    "sections": [
-      {
-        "id": "s1",
-        "title": "Section 1: Introduction to Web",
-        "lectures": [
-          {
-            "id": "l1",
-            "title": "1. How the Internet Works",
-            "duration": "10min",
-            "videoUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
-            "resources": [],
-            "overview": "Understanding HTTP, DNS, and Browsers.",
-            "faq": [],
-            "review": { "average": 4.5, "count": 20, "userRating": null },
-            "status": "watched"
-          },
-          {
-            "id": "l2",
-            "title": "2. Call Back Request Form",
-            "duration": "15min",
-            "videoUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
-            "resources": [{ "title": "Form Schema", "url": "#" }],
-            "overview": "Handling form submissions and callbacks in Node.js.",
-            "faq": [],
-            "review": { "average": 4.6, "count": 12, "userRating": 4 },
-            "status": "watching"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "courseId": "102",
     "courseTitle": "Data Structures & Algorithms",
     "sections": [
       {
         "id": "s1",
-        "title": "Section 1: Graphs",
+        "title": "Graphs",
         "lectures": [
           {
             "id": "l1",
             "title": "1. Introduction to Graphs",
             "duration": "15min",
             "videoUrl": "https://www.youtube.com/embed/M7lc1UVf-VE",
-            "resources": [],
-            "overview": "Nodes, Edges, and Adjacency Lists.",
-            "faq": [],
-            "review": { "average": 4.9, "count": 200, "userRating": null },
             "status": "watched"
           },
           {
             "id": "l2",
-            "title": "2. Graph Traversals (BFS & DFS)",
+            "title": "2. BFS & DFS",
             "duration": "25min",
             "videoUrl": "https://www.youtube.com/embed/M7lc1UVf-VE",
-            "resources": [{ "title": "Algorithm Notes", "url": "#" }],
-            "overview": "Deep dive into Breadth-First and Depth-First Search.",
-            "faq": [],
-            "review": { "average": 4.8, "count": 150, "userRating": null },
             "status": "watching"
+          }
+        ]
+      },
+      {
+        "id": "s2",
+        "title": "Dynamic Programming",
+        "lectures": [
+          {
+            "id": "l3",
+            "title": "1. Memoization vs Tabulation",
+            "duration": "30min",
+            "videoUrl": "https://www.youtube.com/embed/oBt53YbR9Kk",
+            "status": "not_started"
           }
         ]
       }
     ]
   },
   {
-    "courseId": "103",
-    "courseTitle": "React JS Mastery",
+    "courseId": "104",
+    "courseTitle": "System Design for Interviews",
     "sections": [
       {
-        "id": "s1",
-        "title": "Section 1: Hooks Deep Dive",
+        "id": "sd1",
+        "title": "Architectural Patterns",
         "lectures": [
           {
             "id": "l1",
-            "title": "1. Custom Hooks and Performance",
-            "duration": "12min",
-            "videoUrl": "https://www.youtube.com/embed/W6NZfCO5SIk",
-            "resources": [],
-            "overview": "Optimizing performance in React using useMemo and useCallback.",
-            "faq": [],
-            "review": { "average": 5.0, "count": 50, "userRating": 5 },
+            "title": "1. Microservices vs Monolith",
+            "duration": "20min",
+            "videoUrl": "https://www.youtube.com/embed/qYhXm6-A-5c",
+            "status": "watching"
+          },
+          {
+            "id": "l2",
+            "title": "2. Load Balancers and Scalability",
+            "duration": "18min",
+            "videoUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            "status": "not_started"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "courseId": "107",
+    "courseTitle": "Advanced JavaScript Patterns",
+    "sections": [
+      {
+        "id": "js1",
+        "title": "Core Fundamentals",
+        "lectures": [
+          {
+            "id": "l1",
+            "title": "Closures and Lexical Scope",
+            "duration": "15min",
+            "videoUrl": "https://www.youtube.com/embed/vKJpn5FbL64",
             "status": "watched"
+          },
+          {
+            "id": "l1768373540450",
+            "title": "Callback Hell",
+            "duration": "20min",
+            "videoUrl": "https://www.youtube.com/watch?v=uLz9cVkaQr8",
+            "status": "not_started"
+          }
+        ]
+      },
+      {
+        "id": "s1768369998883",
+        "title": "Promises",
+        "lectures": [
+          {
+            "id": "l1768371996663",
+            "title": "What are promises",
+            "duration": "15min",
+            "videoUrl": "https://www.youtube.com/watch?v=RvYYCGs45L4",
+            "status": "not_started"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "courseId": "108",
+    "courseTitle": "Node.js Backend Architecture",
+    "sections": [
+      {
+        "id": "n1",
+        "title": "Internals",
+        "lectures": [
+          {
+            "id": "l1",
+            "title": "1. Event Loop Deep Dive",
+            "duration": "25min",
+            "videoUrl": "https://www.youtube.com/embed/PNa9OMajw9w",
+            "status": "watching"
+          },
+          {
+            "id": "l2",
+            "title": "2. Streams and Buffers",
+            "duration": "20min",
+            "videoUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            "status": "not_started"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "courseId": "109",
+    "courseTitle": "Tailwind CSS Masterclass",
+    "sections": [
+      {
+        "id": "t1",
+        "title": "Foundations",
+        "lectures": [
+          {
+            "id": "l1",
+            "title": "1. Utility First Workflow",
+            "duration": "10min",
+            "videoUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            "status": "not_started"
+          },
+          {
+            "id": "l2",
+            "title": "2. Responsive Design Systems",
+            "duration": "15min",
+            "videoUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            "status": "not_started"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "courseId": "110",
+    "courseTitle": "Updated New JS Course",
+    "sections": [
+      {
+        "id": "u1",
+        "title": "Getting Started",
+        "lectures": [
+          {
+            "id": "l1",
+            "title": "1. Intro to Javascript",
+            "duration": "5min",
+            "videoUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            "status": "not_started"
           }
         ]
       }
