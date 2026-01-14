@@ -17,7 +17,7 @@ export default function EnrollButton() {
 
         {/* The Actual Button */}
         <button
-          onClick={() => router.push("/enrollment")}
+          onClick={() => router.push("/signup")}
           className="relative flex items-center gap-2 bg-green-600 text-white px-8 py-4 rounded-full font-bold transition-colors"
         >
           Enroll Now
