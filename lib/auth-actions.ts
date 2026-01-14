@@ -155,3 +155,42 @@ export async function upgradeToPremium() {
     return { success: false };
   }
 }
+
+export async function sendOtpEmail(email: string) {
+  try {
+    // 1. Generate a 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // 2. Read the database and find the user
+    const data = await fs.readFile(USERS_DB, "utf-8");
+    let users = JSON.parse(data);
+    const userIndex = users.findIndex((u: any) => u.email === email);
+
+    if (userIndex === -1) return { success: false, error: "User not found" };
+
+    // 3. Save the OTP to the user's record temporarily
+    users[userIndex].currentOtp = otp;
+    await fs.writeFile(USERS_DB, JSON.stringify(users, null, 2));
+
+    // 4. Send the Email
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Your Verification Code",
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+          <h2 style="color: #16a34a;">Verification Code</h2>
+          <p>Your code for Your Academy is:</p>
+          <h1 style="letter-spacing: 5px; color: #111827;">${otp}</h1>
+          <p>This code will expire shortly. Do not share it with anyone.</p>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return { success: true };
+  } catch (error) {
+    console.error("Email Error:", error);
+    return { success: false, error: "Failed to send email" };
+  }
+}
