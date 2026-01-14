@@ -129,11 +129,11 @@
     "isVerified": true
   },
   {
-    "id": "user_1768380020977",
+    "id": "user_1768383370592",
     "role": "student",
     "profile": {
-      "fullName": "daksh ",
-      "initials": "D",
+      "fullName": "asd",
+      "initials": "A",
       "domain": "General Learning"
     },
     "stats": {
@@ -142,13 +142,28 @@
       "monthlyProgress": []
     },
     "college": {
-      "name": "SPIT",
-      "degree": "B.Tech",
+      "name": "asdd",
+      "degree": "asd",
       "year": 2026
     },
-    "email": "daksh.jain22@spit.ac.in",
+    "email": "asd@gmail.com",
     "hasPremium": false,
     "enrolledCourses": [],
-    "isVerified": true
+    "isVerified": false,
+    "currentOtp": "440669"
+  },
+  {
+    "email": "krrishnichanii@gmail.com",
+    "password": "123456",
+    "role": "student",
+    "hasPremium": false,
+    "joinedAt": "2026-01-14T10:22:58.866Z",
+    "fullName": "User",
+    "stats": {
+      "videoWatchedMins": 0,
+      "questionsAttempted": 0,
+      "monthlyProgress": []
+    },
+    "enrolledCourses": []
   }
 ]

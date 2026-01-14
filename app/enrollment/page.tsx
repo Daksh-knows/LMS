@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Script from 'next/script'; // Import Script for Razorpay
 import { createRazorpayOrder } from "@/lib/payment-actions"; // Import your action
 import { CheckCircle2, Rocket, Info, FileText, Loader2 } from 'lucide-react';
+import { upgradeToPremium } from '@/lib/auth-actions';
 
 export default function EnrollmentPage() {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -32,22 +33,23 @@ export default function EnrollmentPage() {
 
       // 2. Initialize Razorpay Options
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Must be in .env.local
-        amount: order.amount,
+        key: "rzp_test_yourkey",
+        amount: 7000 * 100,
         currency: "INR",
-        name: "Krrish's Academy",
-        description: "Full Stack Interview Pro Deposit",
-        order_id: order.id,
-        handler: function (response: any) {
-          // Success Callback
-          console.log("Payment Successful:", response.razorpay_payment_id);
-          window.location.href = "/dashboard?payment=success";
+        // ... other options
+        handler: async function (response: any) {
+          if (response.razorpay_payment_id) {
+            // 1. Call the Server Action to update JSON files
+            const res = await upgradeToPremium();
+
+            if (res.success) {
+              // 2. Redirect to dashboard only after files are updated
+              window.location.href = "/dashboard?payment=success";
+            } else {
+              alert("Payment recorded, but profile update failed. Contact support.");
+            }
+          }
         },
-        prefill: {
-          name: "Student Name",
-          email: "student@example.com",
-        },
-        theme: { color: "#16a34a" }, // Green to match your UI
       };
 
       // 3. Open Razorpay Modal
