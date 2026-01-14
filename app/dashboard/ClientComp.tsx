@@ -26,8 +26,8 @@ export default function OverviewClient({ data }: { data: any }) {
             Today's Progress <Info size={14} className="text-gray-400" />
           </h3>
           <div className="flex justify-around items-center py-4">
-            <ProgressCircle value={stats.videoWatchedMins} label="Mins Video Watched" color="text-blue-500" />
-            <ProgressCircle value={stats.questionsAttempted} label="Questions Attempted" color="text-green-500" />
+            <ProgressCircle value={stats?.videoWatchedMins} label="Mins Video Watched" color="text-blue-500" />
+            <ProgressCircle value={stats?.questionsAttempted} label="Questions Attempted" color="text-green-500" />
           </div>
         </div>
 
