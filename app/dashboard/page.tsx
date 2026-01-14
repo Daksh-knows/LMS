@@ -1,20 +1,29 @@
-import fs from "fs/promises";
-import path from "path";
+// app/overview/page.tsx
+import { db } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth-utils";
 import OverviewClient from "./ClientComp";
-
-
-async function getDashboardData() {
-  const filePath = path.join(process.cwd(), "data", "user.json");
-  const jsonData = await fs.readFile(filePath, "utf-8");
-  return JSON.parse(jsonData);
-}
+import { notFound } from "next/navigation";
 
 export default async function OverviewPage() {
-  const data = await getDashboardData();
+  // 1. Identify the user from the session cookie
+  const user = await getCurrentUser();
 
+  if (!user) return notFound();
+
+  // 2. Fetch real stats from the database
+  const stats = await db.userStats.findUnique({
+    where: { userId: user.id },
+  });
+
+  // 3. Pass real DB data to the client component
   return (
     <div className="min-h-screen bg-[#fcfcfc]">
-      <OverviewClient data={data} />
+      <OverviewClient
+        data={{
+          stats: stats || { videoWatchedMins: 0, questionsSolved: 0 },
+          user: user,
+        }}
+      />
     </div>
   );
 }
