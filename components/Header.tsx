@@ -1,7 +1,9 @@
 "use client";
 
-import { Info } from "lucide-react";
+import { Info, LogOut } from "lucide-react";
 import Link from "next/link";
+// Ensure this path matches where you created your server action
+import { logoutUser } from "@/lib/auth-actions";
 
 export default function Header() {
   return (
@@ -12,23 +14,39 @@ export default function Header() {
           <span className="text-xl">🔥</span>
           <div className="flex flex-col leading-none">
             <span className="text-sm font-bold text-gray-800">3</span>
-            <span className="text-[10px] text-gray-500 font-medium">Days Streak</span>
+            <span className="text-[10px] text-gray-500 font-medium">
+              Days Streak
+            </span>
           </div>
         </div>
-        
+
         {/* Info Icon */}
         <button className="text-gray-400 hover:text-gray-600 transition-colors">
           <Info size={18} />
         </button>
       </div>
 
-      {/* Right side: User Profile */}
+      {/* Right side: User Profile & Logout */}
       <div className="flex items-center gap-4">
         <Link
-         className="w-10 h-10 rounded-full bg-red-700 flex items-center justify-center text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity"
-         href="/dashboard/profile">
+          className="w-10 h-10 rounded-full bg-red-700 flex items-center justify-center text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity"
+          href="/dashboard/profile"
+        >
           KN
         </Link>
+
+        {/* Vertical Separator */}
+        <div className="h-6 w-[1px] bg-gray-200"></div>
+
+        {/* Logout Button */}
+        <button
+          onClick={() => logoutUser()}
+          className="flex items-center gap-2 text-gray-500 hover:text-red-600 transition-colors text-sm font-medium px-2 py-1 rounded-lg hover:bg-red-50"
+          title="Sign Out"
+        >
+          <LogOut size={18} />
+          <span className="hidden md:inline">Logout</span>
+        </button>
       </div>
     </header>
   );
