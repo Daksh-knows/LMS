@@ -16,7 +16,7 @@ export default async function AdminDashboardPage() {
 
   try {
     const myCourses = await getMyManagedCourses(testAdminId);
-    log(myCourses);
+    // log(myCourses);
     return (
       <div className="p-8">
         <header className="mb-8">

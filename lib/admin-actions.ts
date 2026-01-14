@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 
 const coursesPath = path.join(process.cwd(), 'data', 'courses.json');
 const usersPath = path.join(process.cwd(), 'data', 'user.json');
+const courseDataPath = path.join(process.cwd(), 'data', 'courseData.json');
 
 export async function getMyManagedCourses(adminId: string) {
   try {
@@ -174,6 +175,178 @@ export async function updateCourse(courseId: string, updatedData: any, adminId: 
     return { success: true };
   } catch (error: any) {
     console.error("Update Error:", error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+
+export async function getCourseContent(courseId: string) {
+  try {
+    // 1. Read the courseData.json file
+    const fileData = await fs.readFile(courseDataPath, 'utf8');
+    const allCourses = JSON.parse(fileData);
+
+    // 2. Find the course that matches the courseId from the URL
+    // Note: We use string comparison because URL params are always strings
+    const targetCourse = allCourses.find((c: any) => c.courseId === courseId);
+
+    if (!targetCourse) {
+      return { success: false, error: "Course content not found." };
+    }
+
+    // 3. Return the sections (which contain the modules/lectures)
+    return { 
+      success: true, 
+      courseTitle: targetCourse.courseTitle,
+      sections: targetCourse.sections 
+    };
+  } catch (error: any) {
+    console.error("Fetch Content Error:", error.message);
+    return { success: false, error: "Failed to load course content." };
+  }
+}
+
+export async function addModule(courseId: string, sectionTitle: string) {
+  try {
+    // 1. Update courses.json (Increment total count)
+    const coursesRaw = await fs.readFile(coursesPath, 'utf8');
+    const courses = JSON.parse(coursesRaw);
+    const courseIndex = courses.findIndex((c: any) => c.id === courseId);
+
+    if (courseIndex !== -1) {
+      courses[courseIndex].totalModules += 1;
+      courses[courseIndex].subtitle = `New Section: ${sectionTitle}`;
+      await fs.writeFile(coursesPath, JSON.stringify(courses, null, 2));
+    }
+
+    // 2. Update courseData.json (Add as a NEW SECTION)
+    const detailRaw = await fs.readFile(courseDataPath, 'utf8');
+    const details = JSON.parse(detailRaw);
+    const detailIndex = details.findIndex((d: any) => d.courseId === courseId);
+
+    if (detailIndex !== -1) {
+      // Create a new section object instead of a lecture
+      const newSection = {
+        id: `s${Date.now()}`, 
+        title: sectionTitle, // This will now appear in blue
+        lectures: []        // Starts with an empty list of lectures
+      };
+
+      // Push to the sections array
+      details[detailIndex].sections.push(newSection);
+      await fs.writeFile(courseDataPath, JSON.stringify(details, null, 2));
+    }
+
+    revalidatePath(`/dashboard/admin/add-module/${courseId}`);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function addLecture(
+  courseId: string, 
+  sectionId: string, 
+  title: string, 
+  videoUrl: string,
+  duration: string // Now passed from the UI
+) {
+  try {
+    const detailRaw = await fs.readFile(courseDataPath, 'utf8');
+    const details = JSON.parse(detailRaw);
+    
+    const courseIndex = details.findIndex((d: any) => d.courseId === courseId);
+    if (courseIndex === -1) throw new Error("Course not found");
+
+    const sectionIndex = details[courseIndex].sections.findIndex((s: any) => s.id === sectionId);
+    if (sectionIndex === -1) throw new Error("Section not found");
+
+    const newLecture = {
+      id: `l${Date.now()}`,
+      title: title,
+      duration: duration, // Custom input value
+      videoUrl: videoUrl,
+      status: "not_started" 
+    };
+
+    details[courseIndex].sections[sectionIndex].lectures.push(newLecture);
+    
+    await fs.writeFile(courseDataPath, JSON.stringify(details, null, 2));
+    revalidatePath(`/dashboard/admin/add-module/${courseId}`);
+    
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteLecture(courseId: string, sectionId: string, lectureId: string) {
+  try {
+    // 1. Update courseData.json (Remove the lecture)
+    const detailRaw = await fs.readFile(courseDataPath, 'utf8');
+    const details = JSON.parse(detailRaw);
+    
+    const courseIndex = details.findIndex((d: any) => d.courseId === courseId);
+    if (courseIndex === -1) throw new Error("Course not found");
+
+    const sectionIndex = details[courseIndex].sections.findIndex((s: any) => s.id === sectionId);
+    if (sectionIndex === -1) throw new Error("Section not found");
+
+    // Filter out the specific lecture
+    details[courseIndex].sections[sectionIndex].lectures = 
+      details[courseIndex].sections[sectionIndex].lectures.filter((l: any) => l.id !== lectureId);
+    
+    await fs.writeFile(courseDataPath, JSON.stringify(details, null, 2));
+
+    // 2. Update courses.json (Decrement totalModules count)
+    const coursesRaw = await fs.readFile(coursesPath, 'utf8');
+    const courses = JSON.parse(coursesRaw);
+    const mainCourseIndex = courses.findIndex((c: any) => c.id === courseId);
+
+    if (mainCourseIndex !== -1 && courses[mainCourseIndex].totalModules > 0) {
+      courses[mainCourseIndex].totalModules -= 1;
+      await fs.writeFile(coursesPath, JSON.stringify(courses, null, 2));
+    }
+
+    revalidatePath(`/dashboard/admin/add-module/${courseId}`);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+
+export async function deleteSection(courseId: string, sectionId: string) {
+  try {
+    // 1. Update courseData.json
+    const detailRaw = await fs.readFile(courseDataPath, 'utf8');
+    const details = JSON.parse(detailRaw);
+    
+    const courseIndex = details.findIndex((d: any) => d.courseId === courseId);
+    if (courseIndex === -1) throw new Error("Course not found");
+
+    // Find the section to know how many lectures we are removing
+    const sectionToDelete = details[courseIndex].sections.find((s: any) => s.id === sectionId);
+    const lectureCountToRemove = sectionToDelete?.lectures?.length || 0;
+
+    // Filter out the section
+    details[courseIndex].sections = details[courseIndex].sections.filter((s: any) => s.id !== sectionId);
+    
+    await fs.writeFile(courseDataPath, JSON.stringify(details, null, 2));
+
+    // 2. Update courses.json (Subtract all lectures in that section from totalModules)
+    const coursesRaw = await fs.readFile(coursesPath, 'utf8');
+    const courses = JSON.parse(coursesRaw);
+    const mainCourseIndex = courses.findIndex((c: any) => c.id === courseId);
+
+    if (mainCourseIndex !== -1) {
+      courses[mainCourseIndex].totalModules = Math.max(0, courses[mainCourseIndex].totalModules - lectureCountToRemove);
+      await fs.writeFile(coursesPath, JSON.stringify(courses, null, 2));
+    }
+
+    revalidatePath(`/dashboard/admin/add-module/${courseId}`);
+    return { success: true };
+  } catch (error: any) {
     return { success: false, error: error.message };
   }
 }
