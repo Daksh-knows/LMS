@@ -10,12 +10,21 @@
     "stats": {
       "videoWatchedMins": 1,
       "questionsAttempted": 0,
-      "monthlyProgress": [12]
+      "monthlyProgress": [
+        12
+      ]
     },
-    "college": { "name": "ABC University", "degree": "B.Sc CS", "year": 2022 },
+    "college": {
+      "name": "ABC University",
+      "degree": "B.Sc CS",
+      "year": 2022
+    },
     "email": "krrish@gmail.com",
     "hasPremium": true,
-    "enrolledCourses": ["101", "102"]
+    "enrolledCourses": [
+      "101",
+      "102"
+    ]
   },
   {
     "id": "user_02",
@@ -26,7 +35,10 @@
       "domain": "Web Development"
     },
     "email": "sarah.admin@platform.com",
-    "managedCourses": ["101", "103"]
+    "managedCourses": [
+      "101",
+      "103"
+    ]
   },
   {
     "id": "user_03",
@@ -37,7 +49,9 @@
       "domain": "Algorithms"
     },
     "email": "alan.admin@platform.com",
-    "managedCourses": ["102"]
+    "managedCourses": [
+      "102"
+    ]
   },
   {
     "id": "user_04",
@@ -50,11 +64,91 @@
     "stats": {
       "videoWatchedMins": 120,
       "questionsAttempted": 15,
-      "monthlyProgress": [1, 5, 12]
+      "monthlyProgress": [
+        1,
+        5,
+        12
+      ]
     },
-    "college": { "name": "XYZ Tech", "degree": "B.Tech", "year": 2024 },
+    "college": {
+      "name": "XYZ Tech",
+      "degree": "B.Tech",
+      "year": 2024
+    },
     "email": "jane@gmail.com",
     "hasPremium": false,
-    "enrolledCourses": ["101"]
+    "enrolledCourses": [
+      "101"
+    ]
+  },
+  {
+    "id": "user_1768376384941",
+    "role": "student",
+    "profile": {
+      "fullName": "Daksh Jain",
+      "initials": "DJ",
+      "domain": "General Learning"
+    },
+    "stats": {
+      "videoWatchedMins": 0,
+      "questionsAttempted": 0,
+      "monthlyProgress": []
+    },
+    "college": {
+      "name": "SPIT",
+      "degree": "B.Tech",
+      "year": 2026
+    },
+    "email": "dakshjain624@gmail.com",
+    "hasPremium": false,
+    "enrolledCourses": [],
+    "isVerified": false,
+    "currentOtp": "795846"
+  },
+  {
+    "id": "user_1768376695807",
+    "role": "student",
+    "profile": {
+      "fullName": "rkkvbr",
+      "initials": "R",
+      "domain": "General Learning"
+    },
+    "stats": {
+      "videoWatchedMins": 0,
+      "questionsAttempted": 0,
+      "monthlyProgress": []
+    },
+    "college": {
+      "name": "aass",
+      "degree": "ssdf",
+      "year": 2026
+    },
+    "email": "krrish.nichanii22@spit.ac.in",
+    "hasPremium": false,
+    "enrolledCourses": [],
+    "isVerified": true
+  },
+  {
+    "id": "user_1768380020977",
+    "role": "student",
+    "profile": {
+      "fullName": "daksh ",
+      "initials": "D",
+      "domain": "General Learning"
+    },
+    "stats": {
+      "videoWatchedMins": 0,
+      "questionsAttempted": 0,
+      "monthlyProgress": []
+    },
+    "college": {
+      "name": "SPIT",
+      "degree": "B.Tech",
+      "year": 2026
+    },
+    "email": "daksh.jain22@spit.ac.in",
+    "hasPremium": false,
+    "enrolledCourses": [],
+    "isVerified": true
   }
 ]
