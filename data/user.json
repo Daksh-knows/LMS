@@ -1,29 +1,14 @@
 {
-  "id": "cmkcijb1d0007u0esjm2q6gp8",
-  "profile": {
-    "fullName": "Krrish Nichanii",
-    "initials": "KN",
-    "domain": "Data Science & Analytics"
-  },
-  "role": "admin",
+  "email": "krrishnichanii@gmail.com",
+  "password": "123456",
+  "role": "student",
+  "hasPremium": false,
+  "joinedAt": "2026-01-14T10:22:58.866Z",
+  "fullName": "User",
   "stats": {
-    "videoWatchedMins": 1,
+    "videoWatchedMins": 0,
     "questionsAttempted": 0,
-    "monthlyProgress": [12]
+    "monthlyProgress": []
   },
-
-  "college": {
-    "name": "ABC University",
-    "degree": "Bachelor of Science in Computer Science",
-    "yearOfGraduation": 2022,
-    "location": "New York, USA"
-  },
-  "email": "abc@gmail.com",
-
-  "preferences": {
-    "theme": "dark",
-    "notifications": true
-  },
-  "hasPremium": true,
-  "enrolledCourses": ["101", "102", "103"]
+  "enrolledCourses": []
 }
