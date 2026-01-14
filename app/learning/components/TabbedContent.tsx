@@ -64,9 +64,12 @@ const TabbedContent: React.FC<Props> = ({ lecture }) => {
       <div className="p-8 min-h-[400px]">
         {activeTab === "overview" && <OverviewTab lecture={lecture} />}
         {activeTab === "qa" && <QnaTab lecture={lecture} />}
-        {activeTab === "notes" && <NotesTab lecture={lecture} />}
+        {activeTab === "notes" && (
+          <NotesTab lecture={lecture} currentUserId={TEST_USER_ID} />
+        )}
         {activeTab === "reviews" && (
           <ReviewsTab
+            key={lecture.id}
             lectureId={lecture.id}
             currentUserId={TEST_USER_ID}
             reviews={lecture.reviews || []}

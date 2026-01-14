@@ -11,8 +11,6 @@ interface QnaTabProps {
 export default function QnaTab({ lecture }: QnaTabProps) {
   // SAFE GUARD:
   // 1. Check for 'faqs' (Prisma/DB convention)
-  // 2. Fallback to 'faq' (JSON convention)
-  // 3. Default to empty array [] if neither exists
   const questions = lecture.faqs || [];
   // State to track which question is expanded
   const [openIndex, setOpenIndex] = React.useState<number | null>(null);

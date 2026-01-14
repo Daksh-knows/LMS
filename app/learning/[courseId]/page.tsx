@@ -32,6 +32,7 @@ export default async function LearningPage({ params }: PageProps) {
               resources: true,
               faqs: true,
               reviews: true,
+              notes: true,
             },
           },
         },

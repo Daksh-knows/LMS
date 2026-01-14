@@ -5,6 +5,7 @@ import {
   Attachment,
   FAQ,
   Review,
+  Note,
   UserProgress,
 } from "../generated/prisma/client";
 
@@ -13,6 +14,7 @@ export interface Lecture extends PrismaLecture {
   faqs: FAQ[];
   reviews: Review[];
   userProgress: UserProgress[];
+  notes: Note[];
 }
 
 export interface Section extends PrismaModule {

@@ -30,8 +30,8 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
   const myReview = reviews.find((r) => r.userId === currentUserId);
   const otherReviews = reviews.filter((r) => r.userId !== currentUserId);
 
-  const [rating, setRating] = useState<number>(myReview?.rating || 0);
-  const [comment, setComment] = useState<string>(myReview?.comment || "");
+  const [rating, setRating] = useState<number>(0);
+  const [comment, setComment] = useState<string>("");
 
   useEffect(() => {
     if (myReview) {
