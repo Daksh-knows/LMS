@@ -33,7 +33,7 @@ export default function EnrollmentPage() {
 
       // 2. Initialize Razorpay Options
       const options = {
-        key: "rzp_test_yourkey",
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: 7000 * 100,
         currency: "INR",
         // ... other options

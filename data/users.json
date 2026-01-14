@@ -156,7 +156,7 @@
     "email": "krrishnichanii@gmail.com",
     "password": "123456",
     "role": "student",
-    "hasPremium": false,
+    "hasPremium": true,
     "joinedAt": "2026-01-14T10:22:58.866Z",
     "fullName": "User",
     "stats": {
