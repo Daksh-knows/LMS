@@ -18,6 +18,12 @@ datasource db {
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
+  password      String    @default("helloworld")
+
+  otp           String?   @default("123456")
+  otpExpires    DateTime? 
+  isVerified    Boolean   @default(false)
+
   role          String    @default("STUDENT") // "ADMIN", "STUDENT"
   hasPremium    Boolean   @default(false)
   

@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
 
   // 1. If no cookie, redirect to login
   if (!session && request.nextUrl.pathname.startsWith("/learning")) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL("/signin", request.url));
   }
 
   // 2. High-level Premium check (Optional: depends on if 'hasPremium' is in the cookie)

@@ -1,54 +1,113 @@
-"use server"
+"use server";
 
-import fs from 'fs/promises';
-import path from 'path';
-import nodemailer from 'nodemailer';
+import { db } from "@/lib/db";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import nodemailer from "nodemailer";
+import { revalidatePath } from "next/cache";
 
-const usersPath = path.join(process.cwd(), 'data', 'users.json');
-
-const USERS_DB = path.join(process.cwd(), "data/users.json");
-const ALL_USERS_PATH = path.join(process.cwd(), "data/users.json");
-const CURRENT_USER_PATH = path.join(process.cwd(), "data/user.json");
-
-// 1. Create the Transporter using your Google credentials
+// 1. Configure Email Transporter
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
 });
 
-async function ensureFiles() {
+// --- HELPER: Manage Session Cookie (Replaces user.json) ---
+async function createSession(user: any) {
+  const cookieStore = await cookies();
+  // Store essential user info in the cookie
+  const sessionData = {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    hasPremium: user.hasPremium,
+    fullName: user.profile?.fullName || "User",
+  };
+
+  cookieStore.set("user_data", JSON.stringify(sessionData), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 60 * 60 * 24 * 7, // 1 week
+    path: "/",
+  });
+}
+
+// --- SIGN UP ---
+export async function signUpUser(formData: any) {
   try {
-    await fs.access(USERS_DB);
-  } catch {
-    await fs.writeFile(USERS_DB, JSON.stringify([]));
+    const { email, password, fullName } = formData;
+
+    // 1. Check if user exists
+    const existingUser = await db.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      return {
+        success: false,
+        error: "An account with this email already exists.",
+      };
+    }
+
+    // 2. Create User and initialize UserStats in one transaction
+    const newUser = await db.user.create({
+      data: {
+        email,
+        password, // Note: For production, allow use of bcrypt to hash this
+        role: "student",
+        hasPremium: false,
+        isVerified: false,
+        // Create the profile relation
+        profile: {
+          create: {
+            fullName: fullName || "User",
+          },
+        },
+        // Create the stats relation
+        stats: {
+          create: {
+            videoWatchedMins: 0,
+            questionsSolved: 0,
+          },
+        },
+      },
+      include: {
+        profile: true, // Include profile to get the name for the session
+      },
+    });
+
+    // 3. Create Session (Log them in)
+    await createSession(newUser);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Signup Error:", error);
+    return { success: false, error: "Failed to create account." };
   }
 }
 
+// --- SIGN IN ---
 export async function signInUser(formData: any) {
   try {
-    // Destructure email and password from the passed object
     const { email, password } = formData;
-    
-    console.log("Attempting login for:", email);
 
-    // 1. Read the entire database
-    const allUsersData = await fs.readFile(ALL_USERS_PATH, "utf-8");
-    const allUsers = JSON.parse(allUsersData);
+    // 1. Find user in DB
+    const user = await db.user.findUnique({
+      where: { email },
+      include: { profile: true }, // Needed for session name
+    });
 
-    // 2. Find the user
-    const fullUserData = allUsers.find(
-      (u: any) => u.email === email && u.password === password
-    );
-
-    if (!fullUserData) {
+    // 2. Validate Password
+    // (In production, replace this with: await bcrypt.compare(password, user.password))
+    if (!user || user.password !== password) {
       return { success: false, error: "Invalid credentials" };
     }
 
-    // 3. Update the session file (user.json)
-    await fs.writeFile(CURRENT_USER_PATH, JSON.stringify(fullUserData, null, 2));
+    // 3. Create Session
+    await createSession(user);
 
     return { success: true };
   } catch (error) {
@@ -57,122 +116,27 @@ export async function signInUser(formData: any) {
   }
 }
 
-export async function signUpUser(formData: any) {
-  try {
-    const { email, password } = formData;
-
-    // 1. Read existing users from the database
-    let allUsers = [];
-    try {
-      const data = await fs.readFile(ALL_USERS_PATH, "utf-8");
-      allUsers = JSON.parse(data);
-    } catch (err) {
-      // If file doesn't exist, we start with an empty array
-      allUsers = [];
-    }
-
-    // 2. Check if the user already exists
-    if (allUsers.some((u: any) => u.email === email)) {
-      return { success: false, error: "An account with this email already exists." };
-    }
-
-    // 3. Create the full user object
-    const newUser = {
-      email,
-      password,
-      role: "student",       // Default role
-      hasPremium: false,     // Default payment status
-      joinedAt: new Date().toISOString(),
-      fullName: formData.fullName || "User" ,
-      stats: {
-      "videoWatchedMins": 0,
-      "questionsAttempted": 0,
-      "monthlyProgress": []
-      },
-      enrolledCourses: []
-    };
-
-    // 4. Update the main database (users.json)
-    allUsers.push(newUser);
-    await fs.writeFile(ALL_USERS_PATH, JSON.stringify(allUsers, null, 2));
-
-    // 5. Sync this data to the active session file (user.json)
-    // This effectively "logs them in" immediately after signup
-    await fs.writeFile(CURRENT_USER_PATH, JSON.stringify(newUser, null, 2));
-
-    return { success: true };
-  } catch (error) {
-    console.error("Signup Error:", error);
-    return { success: false, error: "Failed to create account. Please try again." };
-  }
-}
-
-// ... (keep your verifyUserOtp function from the previous step)
-
-export async function verifyUserOtp(email: string, otp: string) {
-    const fileData = await fs.readFile(usersPath, 'utf8');
-    let users = JSON.parse(fileData);
-    
-    const userIndex = users.findIndex((u: any) => u.email === email && u.currentOtp === otp);
-    
-    if (userIndex === -1) return { success: false, error: "Invalid OTP" };
-
-    users[userIndex].isVerified = true;
-    delete users[userIndex].currentOtp; // Remove OTP after verification
-
-    await fs.writeFile(usersPath, JSON.stringify(users, null, 2));
-    return { success: true };
-}
-
-export async function upgradeToPremium() {
-  try {
-    // 1. Get the current logged-in user's data
-    const sessionData = await fs.readFile(CURRENT_USER_PATH, "utf-8");
-    const currentUser = JSON.parse(sessionData);
-
-    // 2. Read the main database
-    const allUsersData = await fs.readFile(ALL_USERS_PATH, "utf-8");
-    let allUsers = JSON.parse(allUsersData);
-
-    // 3. Update the user in the main database array
-    allUsers = allUsers.map((user: any) => {
-      if (user.email === currentUser.email) {
-        return { ...user, hasPremium: true };
-      }
-      return user;
-    });
-
-    // 4. Update the current session data
-    const updatedUser = { ...currentUser, hasPremium: true };
-
-    // 5. Save both files
-    await fs.writeFile(ALL_USERS_PATH, JSON.stringify(allUsers, null, 2));
-    await fs.writeFile(CURRENT_USER_PATH, JSON.stringify(updatedUser, null, 2));
-
-    return { success: true };
-  } catch (error) {
-    console.error("Failed to upgrade user:", error);
-    return { success: false };
-  }
-}
-
+// --- SEND OTP ---
 export async function sendOtpEmail(email: string) {
   try {
-    // 1. Generate a 6-digit OTP
+    // 1. Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = new Date(Date.now() + 10 * 60 * 1000); // Expires in 10 mins
 
-    // 2. Read the database and find the user
-    const data = await fs.readFile(USERS_DB, "utf-8");
-    let users = JSON.parse(data);
-    const userIndex = users.findIndex((u: any) => u.email === email);
+    // 2. Check if user exists first
+    const user = await db.user.findUnique({ where: { email } });
+    if (!user) return { success: false, error: "User not found" };
 
-    if (userIndex === -1) return { success: false, error: "User not found" };
+    // 3. Save OTP to Database
+    await db.user.update({
+      where: { email },
+      data: {
+        otp: otp,
+        otpExpires: expires,
+      },
+    });
 
-    // 3. Save the OTP to the user's record temporarily
-    users[userIndex].currentOtp = otp;
-    await fs.writeFile(USERS_DB, JSON.stringify(users, null, 2));
-
-    // 4. Send the Email
+    // 4. Send Email
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
@@ -180,9 +144,9 @@ export async function sendOtpEmail(email: string) {
       html: `
         <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
           <h2 style="color: #16a34a;">Verification Code</h2>
-          <p>Your code for Your Academy is:</p>
+          <p>Your code is:</p>
           <h1 style="letter-spacing: 5px; color: #111827;">${otp}</h1>
-          <p>This code will expire shortly. Do not share it with anyone.</p>
+          <p>This code expires in 10 minutes.</p>
         </div>
       `,
     };
@@ -193,4 +157,77 @@ export async function sendOtpEmail(email: string) {
     console.error("Email Error:", error);
     return { success: false, error: "Failed to send email" };
   }
+}
+
+// --- VERIFY OTP ---
+export async function verifyUserOtp(email: string, otp: string) {
+  try {
+    const user = await db.user.findUnique({ where: { email } });
+
+    if (!user) return { success: false, error: "User not found" };
+
+    // Check OTP match and Expiry
+    if (user.otp !== otp) {
+      return { success: false, error: "Invalid OTP" };
+    }
+
+    if (user.otpExpires && new Date() > user.otpExpires) {
+      return { success: false, error: "OTP has expired" };
+    }
+
+    // Verify User and Clear OTP
+    await db.user.update({
+      where: { email },
+      data: {
+        isVerified: true,
+        otp: null,
+        otpExpires: null,
+      },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Verify Error:", error);
+    return { success: false, error: "Verification failed" };
+  }
+}
+
+// --- UPGRADE TO PREMIUM ---
+export async function upgradeToPremium() {
+  try {
+    // 1. Get Current User ID from Cookie
+    const cookieStore = await cookies();
+    const sessionStr = cookieStore.get("user_data")?.value;
+
+    if (!sessionStr) return { success: false, error: "Not logged in" };
+
+    const currentUser = JSON.parse(sessionStr);
+
+    // 2. Update Database
+    const updatedUser = await db.user.update({
+      where: { id: currentUser.id },
+      data: { hasPremium: true },
+      include: { profile: true }, // Fetch profile again to update session
+    });
+
+    // 3. Update Cookie (So UI reflects Premium immediately)
+    await createSession(updatedUser);
+
+    // 4. Refresh UI
+    revalidatePath("/");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Upgrade Error:", error);
+    return { success: false, error: "Failed to upgrade" };
+  }
+}
+
+export async function logoutUser() {
+  // 1. Delete the session cookie
+  const cookieStore = await cookies();
+  cookieStore.delete("user_data");
+
+  // 2. Redirect to login page
+  redirect("/landingpage");
 }
