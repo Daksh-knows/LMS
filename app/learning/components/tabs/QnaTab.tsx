@@ -1,49 +1,78 @@
-import React from "react";
-import { Lecture } from "../../types";
-import { MessageCircle, HelpCircle } from "lucide-react";
+"use client";
 
-export const QnaTab: React.FC<{ lecture: Lecture }> = ({ lecture }) => {
+import React from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+
+interface QnaTabProps {
+  // Using 'any' to support both the JSON structure and the Prisma DB response
+  lecture: any;
+}
+
+export default function QnaTab({ lecture }: QnaTabProps) {
+  // SAFE GUARD:
+  // 1. Check for 'faqs' (Prisma/DB convention)
+  // 2. Fallback to 'faq' (JSON convention)
+  // 3. Default to empty array [] if neither exists
+  const questions = lecture.faqs || [];
+  // State to track which question is expanded
+  const [openIndex, setOpenIndex] = React.useState<number | null>(null);
+
+  const toggleQuestion = (index: number) => {
+    setOpenIndex(openIndex === index ? null : index);
+  };
+
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="py-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-gray-900">
-          Frequently Asked Questions
+        <h3 className="text-lg font-semibold text-gray-900">
+          Questions & Answers
         </h3>
         <span className="text-xs font-medium px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
-          {lecture.faq.length} Questions
+          {/* This is the line that was crashing previously */}
+          {questions.length} Questions
         </span>
       </div>
 
-      {lecture.faq.length > 0 ? (
-        lecture.faq.map((item, idx) => (
-          <div
-            key={idx}
-            className="group border border-gray-200 rounded-xl p-5 hover:border-purple-200 hover:shadow-sm transition-all bg-white"
-          >
-            <div className="flex gap-3">
-              <div className="mt-1 p-1.5 bg-purple-50 text-purple-600 rounded-full shrink-0 h-fit">
-                <HelpCircle size={18} />
-              </div>
-              <div>
-                <h4 className="font-semibold text-gray-900 text-sm md:text-base">
-                  {item.question}
-                </h4>
-                <p className="text-gray-600 text-sm mt-2 leading-relaxed">
-                  {item.answer}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))
-      ) : (
-        <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
-          <MessageCircle size={48} className="text-gray-300 mb-3" />
-          <p className="text-gray-500 font-medium">No questions yet.</p>
-          <p className="text-gray-400 text-sm">
-            Be the first to ask regarding this lecture!
+      {questions.length === 0 ? (
+        <div className="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+          <p className="text-gray-500 text-sm">
+            No questions have been asked for this lecture yet.
           </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {questions.map((q: any, index: number) => (
+            <div
+              key={q.id || index}
+              className="border border-gray-200 rounded-lg overflow-hidden transition-all duration-200 hover:border-gray-300"
+            >
+              <button
+                onClick={() => toggleQuestion(index)}
+                className="w-full flex items-start justify-between p-4 text-left bg-white hover:bg-gray-50 transition-colors"
+              >
+                <span className="font-medium text-gray-900 text-sm pr-4">
+                  {q.question || "Untitled Question"}
+                </span>
+                <span className="text-gray-400 shrink-0 mt-0.5">
+                  {openIndex === index ? (
+                    <ChevronUp size={18} />
+                  ) : (
+                    <ChevronDown size={18} />
+                  )}
+                </span>
+              </button>
+
+              {openIndex === index && (
+                <div className="p-4 pt-0 bg-gray-50 text-sm text-gray-600 leading-relaxed border-t border-gray-100">
+                  <div className="pt-3">
+                    {q.answer || "No answer provided yet."}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>
   );
-};
+}
