@@ -1,58 +1,122 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Info, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
-// Import your course JSON
-import courseData from "@/data/courses.json"; 
+import { Info, ExternalLink, Calendar } from "lucide-react";
+// We use your existing course data for recommendations
+import courseData from "@/data/courses.json";
 
-export default function OverviewClient({ data }: { data: any }) {
+interface DashboardProps {
+  data: {
+    stats: {
+      videoWatchedMins: number;
+      questionsSolved: number;
+    };
+    user: {
+      id: string;
+      email: string;
+      role: string;
+      hasPremium: boolean;
+    };
+  };
+}
+
+export default function OverviewClient({ data }: DashboardProps) {
   const [courseType, setCourseType] = useState("All");
-  const { stats } = data;
+  const { stats, user } = data;
 
-  // Filter logic based on tags (e.g., Job Assurance vs Others)
+  // Filter recommended courses based on the current UI selection
   const filteredRecommended = useMemo(() => {
     if (courseType === "All") return courseData;
-    return courseData.filter(course => 
-      course.tags.some(tag => tag.includes(courseType))
+    return courseData.filter((course) =>
+      course.tags.some((tag) => tag.includes(courseType))
     );
   }, [courseType]);
 
   return (
-    <div className="max-w-6xl ml-5 mt-5 space-y-10 pb-20">
-      {/* 1. Progress Section (Keeping your original top stats) */}
+    <div className="max-w-6xl ml-5 mt-5 space-y-10 pb-20 animate-in fade-in duration-700">
+      {/* 1. Header & Welcome Message */}
+      <div className="flex flex-col gap-1">
+        <h2 className="text-3xl font-black text-gray-900 tracking-tight">
+          Welcome back, {user.email.split("@")[0]}! 👋
+        </h2>
+      </div>
+
+      {/* 2. Progress Section (Real-time DB Data) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-          <h3 className="text-gray-700 font-bold mb-8 flex items-center gap-2">
-            Today's Progress <Info size={14} className="text-gray-400" />
-          </h3>
+        <div className="lg:col-span-2 bg-white rounded-3xl p-8 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-gray-900 font-bold flex items-center gap-2">
+              Today's Statistics <Info size={14} className="text-gray-400" />
+            </h3>
+            <span className="text-xs font-black text-purple-600 bg-purple-50 px-3 py-1 rounded-full uppercase tracking-widest">
+              Live Data
+            </span>
+          </div>
+
           <div className="flex justify-around items-center py-4">
-            <ProgressCircle value={stats.videoWatchedMins} label="Mins Video Watched" color="text-blue-500" />
-            <ProgressCircle value={stats.questionsAttempted} label="Questions Attempted" color="text-green-500" />
+            {/* Maps to UserStats.videoWatchedMins */}
+            <ProgressCircle
+              value={stats.videoWatchedMins}
+              label="Mins Watched"
+              color="text-blue-500"
+              total={120} // Mock daily goal
+            />
+            {/* Maps to UserStats.questionsSolved */}
+            <ProgressCircle
+              value={stats.questionsSolved}
+              label="Questions Solved"
+              color="text-green-500"
+              total={50} // Mock daily goal
+            />
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col justify-center">
-            {/* Calendar Placeholder */}
-            <h3 className="text-gray-700 font-bold mb-6 text-sm">Monthly Activity</h3>
-            <div className="grid grid-cols-7 gap-1 opacity-50">
-                {Array.from({ length: 28 }).map((_, i) => (
-                    <div key={i} className="h-2 w-2 bg-gray-200 rounded-sm"></div>
-                ))}
-            </div>
+        {/* Calendar / Activity Visualization */}
+        <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-gray-900 font-bold text-sm">
+              Monthly Activity
+            </h3>
+            <Calendar size={16} className="text-gray-400" />
+          </div>
+          <div className="grid grid-cols-7 gap-2">
+            {Array.from({ length: 28 }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-3 w-3 rounded-sm transition-colors ${
+                  i % 5 === 0 ? "bg-purple-400" : "bg-gray-100"
+                }`}
+                title={`Activity level: ${i % 5 === 0 ? "High" : "None"}`}
+              ></div>
+            ))}
+          </div>
+          <p className="text-[10px] text-gray-400 mt-4 font-medium uppercase tracking-tighter">
+            Keep the streak alive to unlock badges!
+          </p>
         </div>
       </div>
 
-      {/* 2. Recommended Courses Section */}
+      {/* 3. Recommended Courses Section */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-extrabold text-gray-900 tracking-tight">Recommended for You</h3>
-          <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
+          <div>
+            <h3 className="text-2xl font-black text-gray-900 tracking-tight">
+              Recommended for You
+            </h3>
+            <p className="text-sm text-gray-500">
+              Based on your recent activity
+            </p>
+          </div>
+
+          <div className="flex gap-2 bg-gray-100 p-1.5 rounded-2xl">
             {["All", "Frontend", "Advanced"].map((type) => (
               <button
                 key={type}
                 onClick={() => setCourseType(type)}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  courseType === type ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                className={`px-6 py-2 rounded-xl text-xs font-black transition-all ${
+                  courseType === type
+                    ? "bg-white text-purple-600 shadow-sm scale-105"
+                    : "text-gray-500 hover:text-gray-900"
                 }`}
               >
                 {type}
@@ -61,52 +125,53 @@ export default function OverviewClient({ data }: { data: any }) {
           </div>
         </div>
 
+        {/* Course Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredRecommended.map((course) => (
-            <div 
-              key={course.id} 
-              className="group relative bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
+            <div
+              key={course.id}
+              className="group relative bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-3"
             >
-              {/* Image & Tags Overlay */}
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <img 
-                  src={course.image} 
-                  alt={course.title} 
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+              <div className="relative aspect-[4/3] overflow-hidden m-3 rounded-[2rem]">
+                <img
+                  src={course.image}
+                  alt={course.title}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
-                
-                {/* Floating Tags */}
+
                 <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                   {course.tags.map((tag: string) => (
-                    <span 
-                      key={tag} 
-                      className="bg-white/90 backdrop-blur-md text-gray-900 text-[10px] px-3 py-1.5 rounded-full font-black uppercase tracking-widest shadow-sm"
+                    <span
+                      key={tag}
+                      className="bg-white/90 backdrop-blur-md text-gray-900 text-[9px] px-3 py-1.5 rounded-full font-black uppercase tracking-widest shadow-lg"
                     >
                       {tag}
                     </span>
                   ))}
                 </div>
 
-                {/* Hover Overlay Button */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <div className="bg-white text-black px-4 py-2 rounded-full font-bold text-sm flex items-center gap-2">
-                        View Details <ExternalLink size={14} />
-                    </div>
+                <div className="absolute inset-0 bg-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="bg-white text-purple-600 px-6 py-2.5 rounded-full font-black text-xs flex items-center gap-2 shadow-2xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                    View Course <ExternalLink size={14} />
+                  </div>
                 </div>
               </div>
 
-              {/* Minimal Content */}
-              <div className="p-6">
-                <h4 className="font-bold text-gray-900 text-lg leading-tight group-hover:text-blue-600 transition-colors">
+              <div className="p-8 pt-4">
+                <h4 className="font-black text-gray-900 text-xl leading-tight group-hover:text-purple-600 transition-colors">
                   {course.title}
                 </h4>
-                <p className="text-gray-400 text-sm mt-2 line-clamp-1">{course.subtitle}</p>
-                
-                <div className="mt-6 flex items-center justify-between">
-                    <span className="text-blue-600 font-bold text-sm">Explore Course</span>
-                    <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                        →
-                    </div>
+                <p className="text-gray-400 text-sm mt-3 line-clamp-2 leading-relaxed font-medium">
+                  {course.subtitle}
+                </p>
+
+                <div className="mt-8 flex items-center justify-between">
+                  <span className="text-purple-600 font-black text-xs uppercase tracking-widest">
+                    Start Learning
+                  </span>
+                  <div className="h-10 w-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">
+                    →
+                  </div>
                 </div>
               </div>
             </div>
@@ -117,43 +182,46 @@ export default function OverviewClient({ data }: { data: any }) {
   );
 }
 
-
-// Reusable Progress Circle
+// Reusable Circular Progress Component
 function ProgressCircle({
   value,
   label,
   color,
+  total,
 }: {
   value: number;
   label: string;
   color: string;
+  total: number;
 }) {
+  const percentage = Math.min((value / total) * 100, 100);
+
   return (
     <div className="flex flex-col items-center">
-      <div className="relative w-32 h-32">
+      <div className="relative w-36 h-36 transform hover:scale-105 transition-transform duration-300">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
           <circle
             cx="18"
             cy="18"
             r="16"
             fill="none"
-            className="stroke-gray-100"
-            strokeWidth="2"
+            className="stroke-gray-50"
+            strokeWidth="3.5"
           />
           <circle
             cx="18"
             cy="18"
             r="16"
             fill="none"
-            className={color}
-            strokeWidth="2"
-            strokeDasharray={`${value > 0 ? 25 : 0}, 100`}
+            className={`${color} transition-all duration-1000 ease-out`}
+            strokeWidth="3.5"
+            strokeDasharray={`${percentage}, 100`}
             strokeLinecap="round"
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-xl font-bold">{value}</span>
-          <span className="text-[8px] text-gray-400 font-bold uppercase leading-tight px-4">
+          <span className="text-3xl font-black text-gray-900">{value}</span>
+          <span className="text-[9px] text-gray-400 font-black uppercase leading-tight px-6 tracking-tighter">
             {label}
           </span>
         </div>
