@@ -1,37 +1,37 @@
-// app/learning/data.ts
+import {
+  Course as PrismaCourse,
+  Module as PrismaModule,
+  Lecture as PrismaLecture,
+  Attachment,
+  FAQ,
+  Review,
+  UserProgress,
+} from "../generated/prisma/client";
 
-export type LectureStatus = "watched" | "watching" | "remaining";
-
-export interface Resource {
-  title: string;
-  url: string;
+export interface Lecture extends PrismaLecture {
+  resources: Attachment[];
+  faqs: FAQ[];
+  reviews: Review[];
+  userProgress: UserProgress[];
 }
 
-export interface ReviewData {
-  average: number;
-  count: number;
-  userRating: number | null;
-}
-
-export interface Lecture {
-  id: string;
-  title: string;
-  duration: string;
-  videoUrl: string;
-  resources: Resource[];
-  overview: string;
-  faq: { question: string; answer: string }[];
-  review: ReviewData;
-  status: LectureStatus; // New field
-}
-
-export interface Section {
-  id: string;
-  title: string;
+export interface Section extends PrismaModule {
   lectures: Lecture[];
 }
 
-export interface Course {
-  courseTitle: string;
-  sections: Section[];
+export interface Course extends PrismaCourse {
+  modules: Section[];
+}
+
+/**
+ * UI-specific types for status tracking
+ * Note: Duration is now an Int (minutes) in your DB
+ */
+export type LectureStatus = "watched" | "watching" | "remaining";
+
+// If you still need a simple review summary object for the UI
+export interface ReviewSummary {
+  average: number;
+  count: number;
+  userRating: number | null;
 }

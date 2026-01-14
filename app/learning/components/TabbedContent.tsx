@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Lecture } from "../types";
 import { OverviewTab } from "./tabs/OverviewTab";
-import { QnaTab } from "./tabs/QnaTab";
+import QnaTab from "./tabs/QnaTab";
 import { NotesTab } from "./tabs/NotesTab";
 import { ReviewsTab } from "./tabs/ReviewsTab";
 import { BookOpen, MessageSquare, Edit3, Star } from "lucide-react";
@@ -16,9 +16,10 @@ const TabbedContent: React.FC<Props> = ({ lecture }) => {
     "overview" | "qa" | "notes" | "reviews"
   >("overview");
 
+  const TEST_USER_ID = "cmkcija2h0000u0esuroeb24t";
   const tabs = [
     { id: "overview", label: "Overview", icon: BookOpen },
-    { id: "qa", label: "Q&A", icon: MessageSquare },
+    { id: "qa", label: "FAQ", icon: MessageSquare },
     { id: "notes", label: "Notes", icon: Edit3 },
     { id: "reviews", label: "Reviews", icon: Star },
   ] as const;
@@ -64,7 +65,13 @@ const TabbedContent: React.FC<Props> = ({ lecture }) => {
         {activeTab === "overview" && <OverviewTab lecture={lecture} />}
         {activeTab === "qa" && <QnaTab lecture={lecture} />}
         {activeTab === "notes" && <NotesTab lecture={lecture} />}
-        {activeTab === "reviews" && <ReviewsTab lecture={lecture} />}
+        {activeTab === "reviews" && (
+          <ReviewsTab
+            lectureId={lecture.id}
+            currentUserId={TEST_USER_ID}
+            reviews={lecture.reviews || []}
+          />
+        )}
       </div>
     </div>
   );
