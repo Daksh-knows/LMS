@@ -1,16 +1,28 @@
-import { cookies } from "next/headers";
+// lib/auth-utils.ts
+import { auth } from "@/auth";
 
+/**
+ * Retrieves the current user from the NextAuth session.
+ * This replaces manual cookie parsing.
+ */
 export async function getCurrentUser() {
-  const cookieStore = await cookies();
-  const userData = cookieStore.get("user_data")?.value;
+  // 1. Fetch the session using NextAuth's secure helper
+  const session = await auth();
 
-  if (!userData) return null;
-
-  try {
-    // Assuming the cookie is a JSON string or a JWT
-    // If it's a JSON string:
-    return JSON.parse(userData);
-  } catch (error) {
+  // 2. Return null if no session exists or user is not authenticated
+  if (!session?.user) {
     return null;
   }
+
+  // 3. Return the user object
+  // Because we extended the types in next-auth.d.ts, 'role' and 'hasPremium' 
+  // will be available here without TypeScript errors.
+  return {
+    id: session.user.id,
+    email: session.user.email,
+    name: session.user.name,
+    role: session.user.role,
+    hasPremium: session.user.hasPremium,
+    image: session.user.image,
+  };
 }

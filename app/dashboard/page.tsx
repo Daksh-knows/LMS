@@ -7,7 +7,7 @@ import { notFound } from "next/navigation";
 export default async function OverviewPage() {
   // 1. Identify the user from the session cookie
   const user = await getCurrentUser();
-
+  
   if (!user) return notFound();
 
   // 2. Fetch real stats from the database

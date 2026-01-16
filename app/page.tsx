@@ -4,7 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export default async function RootPage() {
-  const user = await getCurrentUser(); // Get the simulated user from cookies
+  const user = await getCurrentUser(); 
   redirect('/landingpage')
   return null
 }

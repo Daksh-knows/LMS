@@ -1,21 +1,44 @@
+import NextAuth from "next-auth";
+import { authConfig } from "@/auth_config"; // Import the config (No Prisma here!)
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
-  const session = request.cookies.get("user_data")?.value;
+// 1. Initialize NextAuth for Edge Runtime
+const { auth } = NextAuth(authConfig);
 
-  // 1. If no cookie, redirect to login
-  if (!session && request.nextUrl.pathname.startsWith("/learning")) {
-    return NextResponse.redirect(new URL("/signin", request.url));
+export default auth((req) => {
+  // 2. req.auth is automatically populated with the session
+  const isLoggedIn = !!req.auth;
+  const { nextUrl } = req;
+
+  // Define your protected routes
+  const isProtectedRoute = 
+    nextUrl.pathname.startsWith("/learning") || 
+    nextUrl.pathname.startsWith("/dashboard") || 
+    nextUrl.pathname.startsWith("/my-courses");
+
+  // 3. Redirect unauthenticated users
+  if (isProtectedRoute && !isLoggedIn) {
+    // Redirect to the new login page (/login) not /signin
+    return NextResponse.redirect(new URL("/signin", nextUrl));
   }
 
-  // 2. High-level Premium check (Optional: depends on if 'hasPremium' is in the cookie)
-  // If your coworker puts the premium status in the cookie, you can block here.
+  // 4. (Optional) Premium Check
+  // You can now access custom fields because we typed them in next-auth.d.ts
+  // if (isLoggedIn && nextUrl.pathname.startsWith("/learning/premium") && !req.auth?.user?.hasPremium) {
+  //    return NextResponse.redirect(new URL("/pricing", nextUrl));
+  // }
 
   return NextResponse.next();
-}
+});
 
-// Ensure middleware only runs on protected routes
+// 5. Ensure middleware only runs on specific paths to save resources
 export const config = {
-  matcher: ["/learning/:path*", "/dashboard/:path*", "/my-courses/:path*"],
+  matcher: [
+    // Match all protected routes
+    "/learning/:path*", 
+    "/dashboard/:path*", 
+    "/my-courses/:path*",
+    // Optional: Match root to redirect to dashboard if logged in? 
+    // For now, keep it simple:
+  ],
 };

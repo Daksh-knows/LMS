@@ -2,20 +2,42 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { signUpUser, verifyUserOtp } from "@/lib/auth-actions";
-import { Mail, ShieldCheck, CheckCircle, ArrowRight, Lock } from "lucide-react";
+import { 
+  Mail, 
+  ShieldCheck, 
+  CheckCircle, 
+  ArrowRight, 
+  Lock, 
+  Loader2, 
+  User, 
+  Github 
+} from "lucide-react";
 
-export default function SignupForm() {
+export default function SignupPage() {
+  const router = useRouter();
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
+  // 'loading' can be a string to track specific buttons (e.g. "google", "email")
+  const [loading, setLoading] = useState<string | boolean>(false);
+  
   const [formData, setFormData] = useState({
     email: "", 
     password: "", 
-    confirmPassword: ""
+    confirmPassword: "",
+    fullName: ""
   });
   const [otp, setOtp] = useState("");
 
-  const handleSignup = async (e: React.FormEvent) => {
+  // --- HANDLERS ---
+
+  const handleSocialSignup = (provider: "google" | "github") => {
+    setLoading(provider);
+    signIn(provider, { callbackUrl: "/dashboard" });
+  };
+
+  const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
@@ -23,125 +45,305 @@ export default function SignupForm() {
       return;
     }
 
-    setLoading(true);
-    // Passing the simplified formData to your action
-    const res = await signUpUser(formData);
-    if (res.success) setStep(2);
-    else alert(res.error);
+    setLoading("email");
+    const res = await signUpUser({
+      email: formData.email,
+      password: formData.password,
+      fullName: formData.fullName
+    });
+    
+    if (res.success) {
+      setStep(2);
+    } else {
+      alert(res.error);
+    }
     setLoading(false);
   };
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setLoading("verify");
     const res = await verifyUserOtp(formData.email, otp);
-    if (res.success) setStep(3);
-    else alert("Invalid OTP");
+    
+    if (res.success) {
+      setStep(3);
+    } else {
+      alert("Invalid OTP or it has expired.");
+    }
+    setLoading(false);
+  };
+
+  const handleAutoLogin = async () => {
+    setLoading("autologin");
+    const res = await signIn("credentials", {
+      email: formData.email,
+      password: formData.password,
+      redirect: false,
+    });
+
+    if (res?.error) {
+      alert("Verification successful, but login failed. Please log in manually.");
+      router.push("/signin");
+    } else {
+      router.push("/dashboard");
+      router.refresh();
+    }
     setLoading(false);
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-6 bg-slate-50">
-      <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl p-10 border border-gray-100">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-start md:justify-center p-6 relative overflow-y-auto">
+      
+      <div className="max-w-md w-full my-12">
         
-        {step === 1 && (
-          <div className="space-y-6">
-            <form onSubmit={handleSignup} className="space-y-5">
-              <h2 className="text-3xl font-black text-gray-900 text-center mb-6 tracking-tight">Create Account</h2>
-              
-              <div className="space-y-4">
+        {/* Header - Changes based on step */}
+        <div className="text-center mb-8">
+          {step === 1 && (
+             <>
+                <div className="bg-blue-600 w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-blue-100">
+                    <User className="text-white w-8 h-8" />
+                </div>
+                <h1 className="text-3xl font-black text-slate-900 tracking-tight">Create Account</h1>
+                <p className="text-slate-500 mt-2 font-medium">Join us and start learning today</p>
+             </>
+          )}
+          {step === 2 && (
+             <>
+                <div className="bg-blue-600 w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-blue-100">
+                    <ShieldCheck className="text-white w-8 h-8" />
+                </div>
+                <h1 className="text-3xl font-black text-slate-900 tracking-tight">Verify Email</h1>
+                <p className="text-slate-500 mt-2 font-medium">We sent a code to <span className="text-slate-900 font-bold">{formData.email}</span></p>
+             </>
+          )}
+          {step === 3 && (
+             <>
+                <div className="bg-green-500 w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-green-100">
+                    <CheckCircle className="text-white w-8 h-8" />
+                </div>
+                <h1 className="text-3xl font-black text-slate-900 tracking-tight">Welcome!</h1>
+                <p className="text-slate-500 mt-2 font-medium">Your account has been verified.</p>
+             </>
+          )}
+        </div>
+
+        {/* Main Card */}
+        <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl border border-slate-100">
+          
+          {/* --- STEP 1: REGISTRATION FORM --- */}
+          {step === 1 && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <form onSubmit={handleEmailSignup} className="space-y-4">
+                
                 <Input 
-                  icon={<Mail size={18}/>} 
-                  placeholder="Email Address" 
+                  label="Full Name"
+                  icon={<User className="w-5 h-5" />} 
+                  placeholder="John Doe" 
+                  type="text" 
+                  disabled={!!loading}
+                  onChange={(v) => setFormData({...formData, fullName: v})} 
+                />
+
+                <Input 
+                  label="Email Address"
+                  icon={<Mail className="w-5 h-5" />} 
+                  placeholder="name@example.com" 
                   type="email" 
-                  onChange={(v : any) => setFormData({...formData, email: v})} 
+                  disabled={!!loading}
+                  onChange={(v) => setFormData({...formData, email: v})} 
                 />
                 
                 <Input 
-                  icon={<Lock size={18}/>} 
-                  placeholder="Password" 
+                  label="Password"
+                  icon={<Lock className="w-5 h-5" />} 
+                  placeholder="Create a password" 
                   type="password" 
-                  onChange={(v : any) => setFormData({...formData, password: v})} 
+                  disabled={!!loading}
+                  onChange={(v) => setFormData({...formData, password: v})} 
                 />
                 
                 <Input 
-                  icon={<Lock size={18}/>} 
-                  placeholder="Confirm Password" 
+                  label="Confirm Password"
+                  icon={<Lock className="w-5 h-5" />} 
+                  placeholder="Repeat password" 
                   type="password" 
-                  onChange={(v : any) => setFormData({...formData, confirmPassword: v})} 
+                  disabled={!!loading}
+                  onChange={(v) => setFormData({...formData, confirmPassword: v})} 
                 />
+
+                <button 
+                  type="submit"
+                  disabled={!!loading} 
+                  className="w-full bg-slate-900 hover:bg-black text-white font-black py-5 rounded-2xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-70 mt-6"
+                >
+                  {loading === "email" ? (
+                    <div className="flex items-center gap-2">
+                        <Loader2 className="animate-spin w-5 h-5" />
+                        <span>Creating...</span>
+                    </div>
+                  ) : (
+                    <>
+                      Sign Up with Email <ArrowRight className="w-5 h-5" />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {/* Social Divider */}
+              <div className="relative my-8">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-100"></div>
+                </div>
+                <div className="relative flex justify-center text-[10px] uppercase tracking-widest">
+                  <span className="bg-white px-4 text-slate-400 font-bold">Or join with</span>
+                </div>
               </div>
 
+              {/* Social Buttons */}
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => handleSocialSignup("google")}
+                  disabled={!!loading}
+                  className="flex items-center justify-center gap-3 py-4 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-2xl transition-all font-bold text-slate-600 text-sm disabled:opacity-50"
+                >
+                  {loading === "google" ? (
+                    <Loader2 className="animate-spin w-5 h-5" />
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.21-1.19-2.63z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                      </svg>
+                      Google
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSocialSignup("github")}
+                  disabled={!!loading}
+                  className="flex items-center justify-center gap-3 py-4 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-2xl transition-all font-bold text-slate-600 text-sm disabled:opacity-50"
+                >
+                  {loading === "github" ? (
+                    <Loader2 className="animate-spin w-5 h-5" />
+                  ) : (
+                    <>
+                      <Github className="w-5 h-5" />
+                      GitHub
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="mt-8 pt-8 border-t border-slate-50 text-center">
+                <p className="text-slate-500 text-sm font-medium">
+                  Already have an account?{' '}
+                  <Link 
+                    href="/signin" 
+                    className="text-blue-600 font-bold hover:text-blue-700 transition-colors underline decoration-2 underline-offset-4"
+                  >
+                    Log In
+                  </Link>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* --- STEP 2: OTP VERIFICATION --- */}
+          {step === 2 && (
+            <div className="animate-in fade-in zoom-in duration-300">
+              <form onSubmit={handleVerify} className="text-center space-y-6">
+                
+                <input 
+                  className="w-full text-center text-4xl tracking-[0.5em] py-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-blue-600 focus:bg-white outline-none font-black transition-all text-slate-900"
+                  maxLength={6} 
+                  autoFocus
+                  placeholder="000000"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)} 
+                />
+                
+                <button 
+                  type="submit"
+                  disabled={!!loading}
+                  className="w-full py-5 bg-green-600 hover:bg-green-700 text-white font-black rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  {loading === "verify" ? <Loader2 className="animate-spin" /> : "Verify & Continue"}
+                </button>
+
+                <button 
+                  type="button" 
+                  onClick={() => setStep(1)}
+                  className="text-slate-400 font-bold text-xs hover:text-slate-600"
+                >
+                  Change Email Address
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* --- STEP 3: SUCCESS & AUTO LOGIN --- */}
+          {step === 3 && (
+            <div className="text-center space-y-8 animate-in zoom-in duration-300">
+              <p className="text-slate-500 leading-relaxed font-medium">
+                Your account has been successfully created and verified. You are now being redirected to your dashboard.
+              </p>
+              
               <button 
-                disabled={loading} 
-                className="w-full py-5 bg-blue-600 text-white font-black rounded-2xl shadow-xl hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-2 mt-4"
+                onClick={handleAutoLogin} 
+                disabled={!!loading}
+                className="w-full py-5 bg-slate-900 text-white font-black rounded-2xl hover:bg-black transition-all shadow-xl flex items-center justify-center gap-2"
               >
-                {loading ? "CREATING ACCOUNT..." : (
+                {loading === "autologin" ? (
                   <>
-                    SIGN UP <ArrowRight size={20} />
+                    <Loader2 className="animate-spin" /> Preparing Dashboard...
+                  </>
+                ) : (
+                  <>
+                    Go to Dashboard <ArrowRight size={20} />
                   </>
                 )}
               </button>
-            </form>
-
-            <div className="pt-6 border-t border-gray-50 text-center">
-              <p className="text-gray-500 font-medium text-sm">
-                Already have an account?{" "}
-                <Link 
-                  href="/signin" 
-                  className="text-blue-600 font-black hover:text-blue-700 underline underline-offset-4 decoration-2"
-                >
-                  SIGN IN
-                </Link>
-              </p>
             </div>
-          </div>
-        )}
+          )}
 
-        {step === 2 && (
-          <form onSubmit={handleVerify} className="text-center space-y-6">
-            <ShieldCheck size={50} className="mx-auto text-blue-600" />
-            <h2 className="text-2xl font-black text-gray-900">Verify OTP</h2>
-            <p className="text-gray-500 text-sm">Sent to <span className="text-gray-900 font-bold">{formData.email}</span></p>
-            <input 
-              className="w-full text-center text-4xl tracking-widest py-4 bg-gray-50 rounded-2xl border-2 border-gray-100 focus:border-blue-600 outline-none font-bold transition-all text-gray-900"
-              maxLength={6} 
-              autoFocus
-              onChange={(e) => setOtp(e.target.value)} 
-            />
-            <button className="w-full py-5 bg-green-600 text-white font-black rounded-2xl shadow-lg hover:bg-green-700 transition-all active:scale-95">VERIFY & ACTIVATE</button>
-          </form>
-        )}
+        </div>
 
-        {step === 3 && (
-          <div className="text-center space-y-6 animate-in zoom-in duration-300">
-            <CheckCircle size={60} className="mx-auto text-green-500" />
-            <h2 className="text-3xl font-black text-gray-900">Success!</h2>
-            <p className="text-gray-500">Your account is now active.</p>
-            <button 
-              onClick={() => window.location.href="/enrollment"} 
-              className="w-full py-5 bg-gray-900 text-white font-black rounded-2xl hover:bg-black transition-all shadow-xl"
-            >
-              PROCEED TO ENROLLMENT
-            </button>
-          </div>
-        )}
+        {/* Footer */}
+        <p className="text-center mt-8 text-slate-400 text-[10px] font-bold uppercase tracking-widest opacity-60">
+          Start Your Journey
+        </p>
       </div>
     </div>
   );
 }
 
-function Input({ icon, placeholder, type = "text", onChange }: any) {
+// Reusable UI Component for Inputs
+function Input({ label, icon, placeholder, type = "text", disabled, onChange }: any) {
   return (
-    <div className="relative flex items-center">
-      <div className="absolute left-5 text-gray-400">{icon}</div>
-      <input 
-        type={type} 
-        placeholder={placeholder} 
-        required
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full pl-14 pr-5 py-4 bg-gray-50 rounded-2xl outline-none border-2 border-transparent focus:border-blue-600 transition-all font-semibold text-gray-800 placeholder:text-gray-400"
-      />
+    <div className="space-y-1">
+      {label && (
+        <label className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 ml-1">
+          {label}
+        </label>
+      )}
+      <div className="relative">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+          {icon}
+        </div>
+        <input 
+          type={type} 
+          placeholder={placeholder} 
+          required
+          disabled={disabled}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all outline-none font-bold text-slate-800 placeholder:text-slate-300 disabled:opacity-50"
+        />
+      </div>
     </div>
   );
 }

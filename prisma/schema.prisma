@@ -14,11 +14,36 @@ datasource db {
   provider = "postgresql"
 }
 
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
 // User Schema
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
   password      String    @default("helloworld")
+
+   // --- ADD THESE 3 FIELDS FOR NEXTAUTH ---
+  name          String?   // Stores "Daksh-knows" from GitHub
+  image         String?   // Stores the avatar URL
+  emailVerified DateTime? // required by NextAuth adapter
+  // ---------------------------------------
 
   otp           String?   @default("123456")
   otpExpires    DateTime? 
@@ -26,6 +51,8 @@ model User {
 
   role          String    @default("STUDENT") // "ADMIN", "STUDENT"
   hasPremium    Boolean   @default(false)
+
+  accounts      Account[]
   
   // 1:1 Relation to Profile
   profile       StudentProfile? 

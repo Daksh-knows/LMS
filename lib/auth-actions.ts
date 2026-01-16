@@ -1,9 +1,9 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
+import { auth, signIn, signOut } from "@/auth"; // Integrated with NextAuth config
 import { revalidatePath } from "next/cache";
 
 // 1. Configure Email Transporter
@@ -15,72 +15,42 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// --- HELPER: Manage Session Cookie (Replaces user.json) ---
-async function createSession(user: any) {
-  const cookieStore = await cookies();
-  // Store essential user info in the cookie
-  const sessionData = {
-    id: user.id,
-    email: user.email,
-    role: user.role,
-    hasPremium: user.hasPremium,
-    fullName: user.profile?.fullName || "User",
-  };
-
-  cookieStore.set("user_data", JSON.stringify(sessionData), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 60 * 24 * 7, // 1 week
-    path: "/",
-  });
-}
-
-// --- SIGN UP ---
+// --- SIGN UP (Registration Only) ---
 export async function signUpUser(formData: any) {
+  console.log(formData);
   try {
     const { email, password, fullName } = formData;
 
-    // 1. Check if user exists
-    const existingUser = await db.user.findUnique({
-      where: { email },
-    });
+    const existingUser = await db.user.findUnique({ where: { email } });
 
     if (existingUser) {
-      return {
-        success: false,
-        error: "An account with this email already exists.",
-      };
+      return { success: false, error: "An account with this email already exists." };
     }
 
-    // 2. Create User and initialize UserStats in one transaction
-    const newUser = await db.user.create({
+    // 2. Hash the password before storing in DB
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 3. Create User following NextAuth schema requirements
+    await db.user.create({
       data: {
         email,
-        password, // Note: For production, allow use of bcrypt to hash this
+        password: hashedPassword,
+        name: fullName || "User", // Mapping to standard 'name' field for NextAuth
         role: "student",
         hasPremium: false,
-        isVerified: false,
-        // Create the profile relation
-        profile: {
-          create: {
-            fullName: fullName || "User",
-          },
-        },
-        // Create the stats relation
+        isVerified: false, 
+        // Initialize relations
         stats: {
-          create: {
-            videoWatchedMins: 0,
-            questionsSolved: 0,
-          },
+          create: { videoWatchedMins: 0, questionsSolved: 0 },
         },
-      },
-      include: {
-        profile: true, // Include profile to get the name for the session
+        profile: {
+          create: { fullName: fullName || "User" }
+        }
       },
     });
 
-    // 3. Create Session (Log them in)
-    await createSession(newUser);
+    // 4. Send OTP so they can verify before their first login
+    await sendOtpEmail(email);
 
     return { success: true };
   } catch (error) {
@@ -89,72 +59,35 @@ export async function signUpUser(formData: any) {
   }
 }
 
-// --- SIGN IN ---
-export async function signInUser(formData: any) {
-  try {
-    const { email, password } = formData;
-
-    // 1. Find user in DB
-    const user = await db.user.findUnique({
-      where: { email },
-      include: { profile: true }, // Needed for session name
-    });
-
-    // 2. Validate Password
-    // (In production, replace this with: await bcrypt.compare(password, user.password))
-    if (!user || user.password !== password) {
-      return { success: false, error: "Invalid credentials" };
-    }
-
-    // 3. Create Session
-    await createSession(user);
-
-    return { success: true };
-  } catch (error) {
-    console.error("Auth Error:", error);
-    return { success: false, error: "Database access failed" };
-  }
-}
-
 // --- SEND OTP ---
 export async function sendOtpEmail(email: string) {
   try {
-    // 1. Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expires = new Date(Date.now() + 10 * 60 * 1000); // Expires in 10 mins
+    const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 min expiry
 
-    // 2. Check if user exists first
     const user = await db.user.findUnique({ where: { email } });
     if (!user) return { success: false, error: "User not found" };
 
-    // 3. Save OTP to Database
     await db.user.update({
       where: { email },
-      data: {
-        otp: otp,
-        otpExpires: expires,
-      },
+      data: { otp, otpExpires: expires },
     });
 
-    // 4. Send Email
-    const mailOptions = {
+    await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: "Your Verification Code",
+      subject: "Verification Code",
       html: `
-        <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-          <h2 style="color: #16a34a;">Verification Code</h2>
-          <p>Your code is:</p>
-          <h1 style="letter-spacing: 5px; color: #111827;">${otp}</h1>
+        <div style="font-family: sans-serif; padding: 20px;">
+          <h2>Your Academy Verification</h2>
+          <p>Your code is: <strong style="font-size: 24px; letter-spacing: 2px;">${otp}</strong></p>
           <p>This code expires in 10 minutes.</p>
         </div>
       `,
-    };
+    });
 
-    await transporter.sendMail(mailOptions);
     return { success: true };
   } catch (error) {
-    console.error("Email Error:", error);
     return { success: false, error: "Failed to send email" };
   }
 }
@@ -163,31 +96,24 @@ export async function sendOtpEmail(email: string) {
 export async function verifyUserOtp(email: string, otp: string) {
   try {
     const user = await db.user.findUnique({ where: { email } });
-
     if (!user) return { success: false, error: "User not found" };
 
-    // Check OTP match and Expiry
-    if (user.otp !== otp) {
-      return { success: false, error: "Invalid OTP" };
-    }
+    if (user.otp !== otp) return { success: false, error: "Invalid OTP" };
+    if (user.otpExpires && new Date() > user.otpExpires) return { success: false, error: "OTP Expired" };
 
-    if (user.otpExpires && new Date() > user.otpExpires) {
-      return { success: false, error: "OTP has expired" };
-    }
-
-    // Verify User and Clear OTP
+    // Update DB status
     await db.user.update({
       where: { email },
-      data: {
-        isVerified: true,
-        otp: null,
-        otpExpires: null,
+      data: { 
+        isVerified: true, 
+        emailVerified: new Date(), // Standard NextAuth field
+        otp: null, 
+        otpExpires: null 
       },
     });
 
     return { success: true };
   } catch (error) {
-    console.error("Verify Error:", error);
     return { success: false, error: "Verification failed" };
   }
 }
@@ -195,39 +121,21 @@ export async function verifyUserOtp(email: string, otp: string) {
 // --- UPGRADE TO PREMIUM ---
 export async function upgradeToPremium() {
   try {
-    // 1. Get Current User ID from Cookie
-    const cookieStore = await cookies();
-    const sessionStr = cookieStore.get("user_data")?.value;
+    // 1. Get Session from NextAuth secure helper
+    const session = await auth();
+    if (!session?.user?.id) return { success: false, error: "Not logged in" };
 
-    if (!sessionStr) return { success: false, error: "Not logged in" };
-
-    const currentUser = JSON.parse(sessionStr);
-
-    // 2. Update Database
-    const updatedUser = await db.user.update({
-      where: { id: currentUser.id },
+    // 2. Update DB
+    await db.user.update({
+      where: { id: session.user.id },
       data: { hasPremium: true },
-      include: { profile: true }, // Fetch profile again to update session
     });
 
-    // 3. Update Cookie (So UI reflects Premium immediately)
-    await createSession(updatedUser);
-
-    // 4. Refresh UI
+    // 3. Clear cache to reflect new status in UI
     revalidatePath("/");
 
     return { success: true };
   } catch (error) {
-    console.error("Upgrade Error:", error);
     return { success: false, error: "Failed to upgrade" };
   }
-}
-
-export async function logoutUser() {
-  // 1. Delete the session cookie
-  const cookieStore = await cookies();
-  cookieStore.delete("user_data");
-
-  // 2. Redirect to login page
-  redirect("/landingpage");
 }
