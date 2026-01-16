@@ -9,13 +9,16 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.11.1",
     "@neondatabase/serverless": "^1.0.2",
     "@prisma/adapter-neon": "^7.2.0",
     "@prisma/client": "^7.2.0",
+    "bcryptjs": "^3.0.3",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.25.0",
     "lucide-react": "^0.562.0",
     "next": "16.1.1",
+    "next-auth": "^5.0.0-beta.30",
     "nodemailer": "^7.0.12",
     "razorpay": "^2.9.6",
     "react": "19.2.3",
@@ -25,6 +28,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

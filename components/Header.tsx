@@ -2,10 +2,17 @@
 
 import { Info, LogOut } from "lucide-react";
 import Link from "next/link";
-// Ensure this path matches where you created your server action
-import { logoutUser } from "@/lib/auth-actions";
+import { signOut } from "next-auth/react"; // 👈 Updated to use NextAuth client-side helper
 
 export default function Header() {
+  /**
+   * Handles the sign-out process using NextAuth.
+   * callbackUrl: Redirects the user to the landing page after successful logout.
+   */
+  const handleLogout = () => {
+    signOut({ callbackUrl: "/landingpage" }); //
+  };
+
   return (
     <header className="fixed top-0 right-0 left-64 h-16 bg-amber-50 backdrop-blur-md border-b border-gray-100 z-40 px-8 flex items-center justify-between">
       {/* Left side: Streak info */}
@@ -40,7 +47,7 @@ export default function Header() {
 
         {/* Logout Button */}
         <button
-          onClick={() => logoutUser()}
+          onClick={handleLogout} // 👈 Updated to trigger NextAuth sign out
           className="flex items-center gap-2 text-gray-500 hover:text-red-600 transition-colors text-sm font-medium px-2 py-1 rounded-lg hover:bg-red-50"
           title="Sign Out"
         >
