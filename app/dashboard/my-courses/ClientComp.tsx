@@ -61,7 +61,7 @@ export default function CourseFilterList({
             className="bg-white rounded-2xl p-4 flex gap-6 shadow-sm border border-gray-100 items-center hover:shadow-md transition-shadow"
           >
             {/* Thumbnail */}
-            <div className="w-48 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 relative">
+            <div className="w-48 h-28 rounded-xl overflow-hidden shrink-0 bg-gray-100 relative">
               {course.image ? (
                 <img
                   src={course.image}
