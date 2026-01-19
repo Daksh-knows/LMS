@@ -141,7 +141,7 @@ export default function SignupPage() {
                   placeholder="John Doe" 
                   type="text" 
                   disabled={!!loading}
-                  onChange={(v) => setFormData({...formData, fullName: v})} 
+                  onChange={(v : any) => setFormData({...formData, fullName: v})} 
                 />
 
                 <Input 
@@ -150,7 +150,7 @@ export default function SignupPage() {
                   placeholder="name@example.com" 
                   type="email" 
                   disabled={!!loading}
-                  onChange={(v) => setFormData({...formData, email: v})} 
+                  onChange={(v : any) => setFormData({...formData, email: v})} 
                 />
                 
                 <Input 
@@ -159,7 +159,7 @@ export default function SignupPage() {
                   placeholder="Create a password" 
                   type="password" 
                   disabled={!!loading}
-                  onChange={(v) => setFormData({...formData, password: v})} 
+                  onChange={(v : any) => setFormData({...formData, password: v})} 
                 />
                 
                 <Input 
@@ -168,7 +168,7 @@ export default function SignupPage() {
                   placeholder="Repeat password" 
                   type="password" 
                   disabled={!!loading}
-                  onChange={(v) => setFormData({...formData, confirmPassword: v})} 
+                  onChange={(v : any) => setFormData({...formData, confirmPassword: v})} 
                 />
 
                 <button 
