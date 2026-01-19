@@ -2,8 +2,14 @@
 
 import React, { useState, useMemo } from "react";
 import { Info, ExternalLink, Calendar } from "lucide-react";
-// We use your existing course data for recommendations
-import courseData from "@/data/courses.json";
+
+interface Course {
+  id: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  tags: string[];
+}
 
 interface DashboardProps {
   data: {
@@ -17,20 +23,25 @@ interface DashboardProps {
       role: string;
       hasPremium: boolean;
     };
+    courses: Course[];
   };
 }
 
 export default function OverviewClient({ data }: DashboardProps) {
   const [courseType, setCourseType] = useState("All");
-  const { stats, user } = data;
+  
+  // Destructure courses from data
+  const { stats, user, courses } = data;
 
   // Filter recommended courses based on the current UI selection
   const filteredRecommended = useMemo(() => {
-    if (courseType === "All") return courseData;
-    return courseData.filter((course) =>
+    if (courseType === "All") return courses;
+    
+    // Check if any of the course's tags match the selected type
+    return courses.filter((course) =>
       course.tags.some((tag) => tag.includes(courseType))
     );
-  }, [courseType]);
+  }, [courseType, courses]);
 
   return (
     <div className="max-w-6xl ml-5 mt-5 space-y-10 pb-20 animate-in fade-in duration-700">
@@ -96,7 +107,7 @@ export default function OverviewClient({ data }: DashboardProps) {
         </div>
       </div>
 
-      {/* 3. Recommended Courses Section */}
+      {/* 3. Recommended Courses Section (Now Dynamic) */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -109,7 +120,8 @@ export default function OverviewClient({ data }: DashboardProps) {
           </div>
 
           <div className="flex gap-2 bg-gray-100 p-1.5 rounded-2xl">
-            {["All", "Frontend", "Advanced"].map((type) => (
+            {/* Ensure these match your Category names if you want filtering to work perfectly */}
+            {["All", "Computer Science", "Music"].map((type) => (
               <button
                 key={type}
                 onClick={() => setCourseType(type)}
@@ -127,55 +139,61 @@ export default function OverviewClient({ data }: DashboardProps) {
 
         {/* Course Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredRecommended.map((course) => (
-            <div
-              key={course.id}
-              className="group relative bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-3"
-            >
-              <div className="relative aspect-[4/3] overflow-hidden m-3 rounded-[2rem]">
-                <img
-                  src={course.image}
-                  alt={course.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
+          {filteredRecommended.length > 0 ? (
+            filteredRecommended.map((course) => (
+              <div
+                key={course.id}
+                className="group relative bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-3"
+              >
+                <div className="relative aspect-4/3 overflow-hidden m-3 rounded-4xl">
+                  <img
+                    src={course.image}
+                    alt={course.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  />
 
-                <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                  {course.tags.map((tag: string) => (
-                    <span
-                      key={tag}
-                      className="bg-white/90 backdrop-blur-md text-gray-900 text-[9px] px-3 py-1.5 rounded-full font-black uppercase tracking-widest shadow-lg"
-                    >
-                      {tag}
+                  <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+                    {course.tags.map((tag: string) => (
+                      <span
+                        key={tag}
+                        className="bg-white/90 backdrop-blur-md text-gray-900 text-[9px] px-3 py-1.5 rounded-full font-black uppercase tracking-widest shadow-lg"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="absolute inset-0 bg-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="bg-white text-purple-600 px-6 py-2.5 rounded-full font-black text-xs flex items-center gap-2 shadow-2xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                      View Course <ExternalLink size={14} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-8 pt-4">
+                  <h4 className="font-black text-gray-900 text-xl leading-tight group-hover:text-purple-600 transition-colors">
+                    {course.title}
+                  </h4>
+                  <p className="text-gray-400 text-sm mt-3 line-clamp-2 leading-relaxed font-medium">
+                    {course.subtitle}
+                  </p>
+
+                  <div className="mt-8 flex items-center justify-between">
+                    <span className="text-purple-600 font-black text-xs uppercase tracking-widest">
+                      Start Learning
                     </span>
-                  ))}
-                </div>
-
-                <div className="absolute inset-0 bg-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <div className="bg-white text-purple-600 px-6 py-2.5 rounded-full font-black text-xs flex items-center gap-2 shadow-2xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                    View Course <ExternalLink size={14} />
+                    <div className="h-10 w-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">
+                      →
+                    </div>
                   </div>
                 </div>
               </div>
-
-              <div className="p-8 pt-4">
-                <h4 className="font-black text-gray-900 text-xl leading-tight group-hover:text-purple-600 transition-colors">
-                  {course.title}
-                </h4>
-                <p className="text-gray-400 text-sm mt-3 line-clamp-2 leading-relaxed font-medium">
-                  {course.subtitle}
-                </p>
-
-                <div className="mt-8 flex items-center justify-between">
-                  <span className="text-purple-600 font-black text-xs uppercase tracking-widest">
-                    Start Learning
-                  </span>
-                  <div className="h-10 w-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">
-                    →
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+            ))
+          ) : (
+             <div className="col-span-full py-10 text-center text-gray-400">
+                No courses found for this category.
+             </div>
+          )}
         </div>
       </div>
     </div>

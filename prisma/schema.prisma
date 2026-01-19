@@ -119,6 +119,9 @@ model Course {
   
   // Who purchased/enrolled?
   students    Enrollment[] 
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
   
   // Timestamps
   createdAt   DateTime @default(now())
@@ -273,4 +276,10 @@ model Review {
   createdAt DateTime @default(now())
 
   @@unique([userId, lectureId]) // User can only rate a lecture once
+}
+
+model Category {
+  id      String   @id @default(cuid())
+  name    String   @unique // e.g., "Web Development", "Music"
+  courses Course[] // Inverse relation: One category has many courses
 }

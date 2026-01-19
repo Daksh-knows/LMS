@@ -22,7 +22,7 @@ export default async function RootLayout({
       <Sidebar user={currentUser} />
 
       <div className="flex-1 flex flex-col relative overflow-y-auto">
-        <Header />
+        <Header user={currentUser}/>
         <main
           className="ml-64 mt-16 min-h-[calc(100vh-64px)] p-8"
           style={patternStyle}
