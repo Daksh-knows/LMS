@@ -10,8 +10,10 @@ import CareerPathway from "./components/CareerPathway";
 import WhyJoinIntensive from "./components/WhyJoinIntensive";
 import AwardSlider from "./components/AwardSlider";
 import EnrollButton from "./components/EnrollButton";
+import { getCurrentUser } from "@/lib/auth-utils";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const user = await getCurrentUser();
   return (
     <>
       <Dashboard1 />
@@ -25,7 +27,7 @@ export default function LandingPage() {
       <GetCertified />
       <WhyJoinIntensive />
       <AwardSlider />
-      <EnrollButton />
+      <EnrollButton user={user} />
     </>
   );
 }

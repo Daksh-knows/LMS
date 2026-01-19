@@ -3,6 +3,8 @@ import AdminCourseList from "@/components/AdminCourseList";
 import fs from 'fs/promises';
 import path from 'path';
 import { log } from "console";
+import { getCurrentUser } from "@/lib/auth-utils";
+import { notFound, redirect } from "next/navigation";
 
 export default async function AdminDashboardPage() {
   // Simulate getting the "Logged In" user ID 
@@ -10,7 +12,9 @@ export default async function AdminDashboardPage() {
   const usersPath = path.join(process.cwd(), 'data', 'user.json');
   const user = JSON.parse(await fs.readFile(usersPath, 'utf8'));
   log("Reading users :", user);
-  
+  const token = await getCurrentUser() ;
+  console.log("Current User Token:", token);
+  if(token && token?.role === "student") return redirect('/dashboard');
   // Let's pick 'user_02' (Dr. Sarah) for testing
   const testAdminId = user.id; 
 
