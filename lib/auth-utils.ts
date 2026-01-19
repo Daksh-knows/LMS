@@ -19,10 +19,10 @@ export async function getCurrentUser() {
   // will be available here without TypeScript errors.
   return {
     id: session.user.id,
-    email: session.user.email,
-    name: session.user.name,
+    email: session.user.email?? "",
+    name: session.user.name??"user",
     role: session.user.role,
-    hasPremium: session.user.hasPremium,
+    hasPremium: session.user.hasPremium?? false,
     image: session.user.image,
   };
 }

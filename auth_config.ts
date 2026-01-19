@@ -33,7 +33,7 @@ export const authConfig = {
     // B. JWT Callback (Populate token)
     async jwt({ token, user, trigger, session }) {
       if (user) {
-        token.id = user.id;
+        token.id = user.id!;
         token.role = (user as any).role;
         token.hasPremium = (user as any).hasPremium;
       }

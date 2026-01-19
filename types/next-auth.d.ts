@@ -27,3 +27,11 @@ declare module "next-auth/jwt" {
     hasPremium: boolean;
   }
 }
+
+// Add this to help the Prisma Adapter specifically
+declare module "@auth/core/adapters" {
+  interface AdapterUser {
+    role: string;
+    hasPremium: boolean;
+  }
+}
