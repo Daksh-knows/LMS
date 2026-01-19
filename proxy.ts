@@ -1,5 +1,5 @@
 import NextAuth from "next-auth";
-import { authConfig } from "@/auth_config"; // Import the config (No Prisma here!)
+import { authConfig } from "@/auth_config"; 
 import { NextResponse } from "next/server";
 
 // 1. Initialize NextAuth for Edge Runtime
@@ -18,10 +18,11 @@ export default auth((req) => {
 
   // 3. Redirect unauthenticated users
   if (isProtectedRoute && !isLoggedIn) {
-    // Redirect to the new login page (/login) not /signin
     return NextResponse.redirect(new URL("/signin", nextUrl));
   }
-
+  if (isLoggedIn && !req.auth?.user?.hasPremium) {
+    return NextResponse.redirect(new URL("/payment", nextUrl));
+  }
   // 4. (Optional) Premium Check
   // You can now access custom fields because we typed them in next-auth.d.ts
   // if (isLoggedIn && nextUrl.pathname.startsWith("/learning/premium") && !req.auth?.user?.hasPremium) {
@@ -39,6 +40,5 @@ export const config = {
     "/dashboard/:path*", 
     "/my-courses/:path*",
     // Optional: Match root to redirect to dashboard if logged in? 
-    // For now, keep it simple:
   ],
 };
