@@ -18,7 +18,7 @@ export default function LearningClient({ course }: LearningClientProps) {
   const [currentLecture, setCurrentLecture] = useState(
     course.modules?.[0]?.lectures?.[0] || null
   );
-
+  console.log("Current course : " , course)
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-white">
       {/* Navbar - This will now always show */}
