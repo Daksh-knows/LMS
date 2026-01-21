@@ -1,5 +1,6 @@
 import { Inter } from 'next/font/google';
 import './globals.css';
+import AuthProvider from '@/components/SessionProvider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -18,7 +19,7 @@ export default function RootLayout({
         className={`${inter.className} antialiased`} 
         suppressHydrationWarning
       >
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
