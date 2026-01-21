@@ -32,6 +32,11 @@ export default async function LearningPage({ params }: PageProps) {
                 faqs: true,
                 reviews: true,
                 notes: true,
+                userProgress: {
+                  where: {
+                    userId: sessionUser?.id // Only get progress for the logged-in user
+                  }
+                },
               },
             },
           },

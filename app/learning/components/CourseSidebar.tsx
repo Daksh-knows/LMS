@@ -32,11 +32,23 @@ const CourseSidebar: React.FC<Props> = ({
   };
 
   /**
-   * REFINED ICON LOGIC:
-   * 1. If it's the active lecture -> Show "Watching" pulse icon.
-   * 2. Otherwise -> Show icon based on the 'status' in data.ts.
+   * Helper to determine lecture completion status from Prisma UserProgress
    */
-  const getStatusIcon = (lecture: Lecture, isActive: boolean) => {
+  const getLectureStatus = (lecture: any) => {
+    // Access the progress entry fetched via the 'userProgress' include in your query
+    const progress = lecture.userProgress?.[0]; 
+    
+    if (progress?.isCompleted) {
+      return "watched";
+    }
+    
+    return "unwatched";
+  };
+
+  /**
+   * Generates the appropriate icon based on active state and completion
+   */
+  const getStatusIcon = (lecture: any, isActive: boolean) => {
     if (isActive) {
       return (
         <div className="relative">
@@ -45,15 +57,15 @@ const CourseSidebar: React.FC<Props> = ({
       );
     }
 
-    switch (lecture.status) {
-      case "watched":
-        return (
-          <CheckCircle2 size={18} className="text-green-600 fill-green-50" />
-        );
-      case "remaining":
-      default:
-        return <Circle size={18} className="text-gray-300" />;
+    const status = getLectureStatus(lecture);
+
+    if (status === "watched") {
+      return (
+        <CheckCircle2 size={18} className="text-green-600 fill-green-50" />
+      );
     }
+
+    return <Circle size={18} className="text-gray-300" />;
   };
 
   return (
@@ -90,7 +102,7 @@ const CourseSidebar: React.FC<Props> = ({
                     return (
                       <div
                         key={lecture.id}
-                        onClick={() => onSelectLecture(lecture)}
+                        onClick={() => onSelectLecture(lecture as any)}
                         className={`group flex flex-col p-4 cursor-pointer transition-all border-l-4 ${
                           isActive
                             ? "border-purple-700 bg-purple-50"
@@ -120,14 +132,14 @@ const CourseSidebar: React.FC<Props> = ({
                                   size={10}
                                   className={isActive ? "text-purple-600" : ""}
                                 />
-                                <span>{lecture.duration}</span>
+                                <span>{lecture.duration} mins</span>
                               </div>
                             </div>
                           </div>
                         </div>
 
                         {/* Resources Section */}
-                        {lecture.resources.length > 0 && (
+                        {lecture.resources && lecture.resources.length > 0 && (
                           <div className="ml-7 mt-3 flex flex-wrap gap-2">
                             {lecture.resources.map((res, idx) => (
                               <button
