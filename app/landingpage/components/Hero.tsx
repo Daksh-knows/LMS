@@ -18,35 +18,9 @@ const Hero = () => {
   }, []);
 
   return (
-    <section className="relative w-full bg-white pt-44 pb-32 px-6 overflow-hidden min-h-screen">
-      
-      {/* --- TEAL SEMI-CIRCLE SWOOSH --- */}
-      <div 
-        className="absolute right-0 top-1/2 -translate-y-1/2 w-[45%] h-[90%] bg-[#4cb4a2] -z-10 hidden lg:block"
-        style={{ 
-          borderTopLeftRadius: '600px',
-          borderBottomLeftRadius: '600px',
-        }}
-      >
-        {/* Subtle wavy pattern overlay (optional) */}
-        <div className="absolute left-10 top-1/2 -translate-y-1/2 opacity-20">
-            <svg width="40" height="100" viewBox="0 0 40 100" fill="none">
-                <path d="M10 10C20 20 20 30 10 40C0 50 0 60 10 70" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M20 10C30 20 30 30 20 40C10 50 10 60 20 70" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M30 10C40 20 40 30 30 40C20 50 20 60 30 70" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-        </div>
+    <section className="relative w-full bg-white pt-44 pb-32 px-6 overflow-hidden min-h-screen flex">
 
-        {/* Product of NxtWave Branding */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2 text-white/90">
-            <span className="text-xs font-medium uppercase tracking-wider">Product of</span>
-            <div className="flex flex-col leading-none font-black italic">
-                <span className="text-lg">NXT<span className="text-teal-200">WAVE</span></span>
-            </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-start relative z-10">
+      <div className="justify-center max-w-7xl mx-auto gap-16 items-start relative z-10">
         {/* LEFT COLUMN */}
         <div className="flex flex-col">
           <div className="mb-8">
@@ -95,10 +69,6 @@ const Hero = () => {
           </div>
         </div>
 
-        {/* RIGHT COLUMN */}
-        <div className="relative flex justify-center lg:justify-end">
-           <HeroForm />
-        </div>
       </div>
     </section>
   );

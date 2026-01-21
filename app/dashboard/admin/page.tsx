@@ -7,8 +7,7 @@ import { getCurrentUser } from "@/lib/auth-utils";
 import { notFound, redirect } from "next/navigation";
 
 export default async function AdminDashboardPage() {
-  // Simulate getting the "Logged In" user ID 
-  // (In the future, this comes from a cookie/session)
+  
   const usersPath = path.join(process.cwd(), 'data', 'user.json');
   const user = JSON.parse(await fs.readFile(usersPath, 'utf8'));
   log("Reading users :", user);

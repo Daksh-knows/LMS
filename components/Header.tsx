@@ -5,10 +5,7 @@ import Link from "next/link";
 import { signOut } from "next-auth/react"; // 👈 Updated to use NextAuth client-side helper
 
 export default function Header() {
-  /**
-   * Handles the sign-out process using NextAuth.
-   * callbackUrl: Redirects the user to the landing page after successful logout.
-   */
+
   const handleLogout = () => {
     signOut({ callbackUrl: "/landingpage" }); //
   };

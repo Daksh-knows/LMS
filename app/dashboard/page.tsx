@@ -14,7 +14,7 @@ export default async function OverviewPage() {
   const stats = await db.userStats.findUnique({
     where: { userId: user.id },
   });
-
+  console.log("User " , user) ;
   // 3. Pass real DB data to the client component
   return (
     <div className="min-h-screen bg-[#fcfcfc]">

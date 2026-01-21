@@ -30,7 +30,9 @@ export default function Sidebar({ user }: { user: any }) {
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-yellow-50 border-r border-gray-100 flex flex-col z-50">
-      <Logo />
+      <div className="h-10 flex items-center justify-center mt-4 mb-6 w-40">
+        <Logo />
+      </div>
 
       <nav className="flex-1 px-4 space-y-2 mt-4">
         {navItems.map((item) => {

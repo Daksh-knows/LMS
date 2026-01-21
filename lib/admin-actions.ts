@@ -3,6 +3,8 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { revalidatePath } from 'next/cache';
+import { getCurrentUser } from './auth-utils';
+import { createCourseRecord } from './course-actions';
 
 const coursesPath = path.join(process.cwd(), 'data', 'courses.json');
 const usersPath = path.join(process.cwd(), 'data', 'user.json');
@@ -77,62 +79,34 @@ export async function deleteCourse(courseId: string, adminId: string) {
   }
 }
 
-export async function addCourse(
-  formData: { 
-    title: string; 
-    subtitle?: string; 
-    image?: string; 
-    totalModules?: number; 
-    tags: string[] 
-  }, 
-  adminId: string
-) {
+export async function addCourse(formData: { 
+  title: string; 
+  description?: string; 
+  imageUrl?: string; 
+  price?: number; 
+}) {
   try {
-    // 1. Fetch current courses
-    const fileData = await fs.readFile(coursesPath, 'utf8');
-    const courses = JSON.parse(fileData);
-    const coursesArray = Array.isArray(courses) ? courses : [];
+    // 1. Get user from secure session
+    const user = await getCurrentUser();
+    console.log("Current User in addCourse:", user);
+    // 2. Security Check (Role-based access)
+    if (!user || user.role !== 'ADMIN') { // Matches @default("STUDENT") in your schema
+      throw new Error("Unauthorized: Only admins can create courses.");
+    }
 
-    // 2. Security Check: Is the requester an admin?
-    const userData = await fs.readFile(usersPath, 'utf8');
-    const users = JSON.parse(userData);
-    const usersArray = Array.isArray(users) ? users : [users];
-    const isAdmin = usersArray.find(u => u.id === adminId && u.role === 'admin');
+    // 3. Create the entry in PostgreSQL via Prisma
+    const newCourse = await createCourseRecord(formData, user.id);
 
-    if (!isAdmin) throw new Error("Unauthorized: Only admins can add courses.");
-
-    // 3. Generate New Course Object
-    const lastId = coursesArray.length > 0 
-      ? Math.max(...coursesArray.map((c: any) => parseInt(c.id))) 
-      : 100;
-
-    const newCourse = {
-      id: (lastId + 1).toString(),
-      title: formData.title,
-      // Use provided subtitle or a default
-      subtitle: formData.subtitle || "New Course - Get Started",
-      // LOGIC: Use provided image URL if it exists, otherwise use default
-      image: formData.image && formData.image.trim() !== "" 
-        ? formData.image 
-        : "https://nxtwave.imgix.net/ccbp-website/nxtwave-intensive-2.0/recognized-by-patterns-card1.png",
-      modulesCompleted: 0,
-      totalModules: formData.totalModules || 10,
-      status: "Not Started",
-      tags: formData.tags,
-      creator: adminId
-    };
-
-    // 4. Update the array and save
-    const updatedCourses = [...coursesArray, newCourse];
-    await fs.writeFile(coursesPath, JSON.stringify(updatedCourses, null, 2));
-
-    // 5. Revalidate cache
+    // 4. Refresh the Admin Dashboard
     revalidatePath('/dashboard/admin');
 
     return { success: true, course: newCourse };
   } catch (error: any) {
-    console.error("Add Course Error:", error.message);
-    return { success: false, error: error.message };
+    console.error("Prisma Create Error:", error.message);
+    return { 
+      success: false, 
+      error: error.message || "Failed to create course in database." 
+    };
   }
 }
 
