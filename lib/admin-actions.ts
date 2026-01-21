@@ -1,178 +1,213 @@
-"use server"
+"use server";
 
-import fs from 'fs/promises';
-import path from 'path';
 import { revalidatePath } from 'next/cache';
-import { getCurrentUser } from './auth-utils';
-import { createCourseRecord } from './course-actions';
+import { auth } from '@/auth';
+import { db } from '@/lib/db';
 
-const coursesPath = path.join(process.cwd(), 'data', 'courses.json');
-const usersPath = path.join(process.cwd(), 'data', 'user.json');
-const courseDataPath = path.join(process.cwd(), 'data', 'courseData.json');
-
+/**
+ * Fetches courses for the Admin Dashboard.
+ * Maps the Database 'Category' relation to the 'tags' array expected by the UI.
+ */
 export async function getMyManagedCourses(adminId: string) {
   try {
-    const userData = await fs.readFile(usersPath, 'utf8');
-    const parsedData = JSON.parse(userData);
+    const courses = await db.course.findMany({
+      where: { adminId: adminId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        category: true, // Fetch the related category
+        // Get counts for the UI if needed, though your current UI doesn't explicitly show them
+        _count: {
+          select: { modules: true, students: true }
+        }
+      }
+    });
 
-    // FIX: Ensure 'users' is always an array so .find() works
-    const users = Array.isArray(parsedData) ? parsedData : [parsedData];
-
-    // Now .find() will work even if there is only 1 user in the file
-    const activeUser = users.find((u: any) => u.id === adminId);
-
-    if (!activeUser || activeUser.role !== 'admin') {
-      console.error(`Unauthorized: ID ${adminId} is not an admin.`);
-      return [];
-    }
-
-    const courseData = await fs.readFile(coursesPath, 'utf8');
-    const allCourses = JSON.parse(courseData);
-    
-    // Safety check for courses as well
-    const coursesArray = Array.isArray(allCourses) ? allCourses : [];
-
-    return coursesArray.filter((course: any) => course.creator === adminId);
+    // Transform to match the UI interface: { id, title, tags[] }
+    return courses.map(course => ({
+      id: course.id,
+      title: course.title,
+      // Map the single DB Category to the "tags" array your UI expects
+      tags: course.category ? [course.category.name] : ["General"],
+      // Pass other fields if you update the UI later
+      imageUrl: course.imageUrl,
+      isPublished: course.isPublished
+    }));
 
   } catch (error) {
-    // This logs the error to your terminal (server-side)
-    console.error("Server Error in getMyManagedCourses:", error);
+    console.error("Fetch Courses Error:", error);
     return [];
   }
 }
 
+/**
+ * Deletes a course and all its related content (Modules, Lectures).
+ * Prisma's 'onDelete: Cascade' in the schema handles the children automatically.
+ */
 export async function deleteCourse(courseId: string, adminId: string) {
   try {
-    // 1. Read the existing courses
-    const fileData = await fs.readFile(coursesPath, 'utf8');
-    const courses = JSON.parse(fileData);
-    
-    // Ensure it's an array
-    const coursesArray = Array.isArray(courses) ? courses : [];
-
-    // 2. Find the course to verify ownership before deleting
-    const courseToDelete = coursesArray.find((c: any) => c.id === courseId);
-
-    if (!courseToDelete) {
-      throw new Error("Course not found.");
+    const session = await auth();
+    if (!session?.user || session.user.role !== "ADMIN") {
+      return { success: false, error: "Unauthorized" };
     }
 
-    // 3. Security Check: Does the admin own this course?
-    if (courseToDelete.creator !== adminId) {
-      throw new Error("Unauthorized: You can only delete your own courses.");
+    // 1. Verify Ownership
+    const course = await db.course.findUnique({
+      where: { id: courseId },
+    });
+
+    if (!course) return { success: false, error: "Course not found" };
+    if (course.adminId !== adminId) {
+      return { success: false, error: "Unauthorized: You do not own this course." };
     }
 
-    // 4. Filter out the deleted course
-    const updatedCourses = coursesArray.filter((c: any) => c.id !== courseId);
+    // 2. Delete Record (Cascades to Modules -> Lectures)
+    await db.course.delete({
+      where: { id: courseId },
+    });
 
-    // 5. Write the updated array back to courses.json
-    // null, 2 keeps the JSON file readable with proper indentation
-    await fs.writeFile(coursesPath, JSON.stringify(updatedCourses, null, 2));
-
-    // 6. Refresh the page data
     revalidatePath('/dashboard/admin');
-
     return { success: true };
   } catch (error: any) {
-    console.error("Delete Error:", error.message);
-    return { success: false, error: error.message };
+    console.error("Delete Error:", error);
+    return { success: false, error: "Failed to delete course." };
   }
 }
 
-export async function addCourse(formData: { 
-  title: string; 
-  description?: string; 
-  imageUrl?: string; 
-  price?: number; 
+/**
+ * Adds a new course.
+ * Handles extracting the first tag to create/link a Category.
+ */
+export async function addCourse(data: {
+  title: string;
+  subtitle: string; // Mapped to description
+  image: string;    // Mapped to imageUrl
+  tags: string[];   // Used to find/create Category
+  totalModules?: number; // Ignored (DB calculates this dynamically)
 }) {
   try {
-    // 1. Get user from secure session
-    const user = await getCurrentUser();
-    console.log("Current User in addCourse:", user);
-    // 2. Security Check (Role-based access)
-    if (!user || user.role !== 'ADMIN') { // Matches @default("STUDENT") in your schema
-      throw new Error("Unauthorized: Only admins can create courses.");
+    const session = await auth();
+    if (!session?.user || session.user.role !== "ADMIN") {
+      return { success: false, error: "Unauthorized" };
     }
 
-    // 3. Create the entry in PostgreSQL via Prisma
-    const newCourse = await createCourseRecord(formData, user.id);
+    // 1. Handle Category
+    // We take the first tag as the primary category.
+    let categoryId = null;
+    if (data.tags && data.tags.length > 0) {
+      const categoryName = data.tags[0];
+      
+      // Upsert: Create if doesn't exist, otherwise return existing
+      const category = await db.category.upsert({
+        where: { name: categoryName },
+        update: {},
+        create: { name: categoryName },
+      });
+      categoryId = category.id;
+    }
 
-    // 4. Refresh the Admin Dashboard
-    revalidatePath('/dashboard/admin');
+    // 2. Create Course
+    const newCourse = await db.course.create({
+      data: {
+        title: data.title,
+        description: data.subtitle, // UI calls it subtitle, DB calls it description
+        imageUrl: data.image,
+        adminId: session.user.id,
+        categoryId: categoryId,     // Link the category
+        isPublished: false,
+      },
+    });
 
-    return { success: true, course: newCourse };
-  } catch (error: any) {
-    console.error("Prisma Create Error:", error.message);
-    return { 
-      success: false, 
-      error: error.message || "Failed to create course in database." 
-    };
+    revalidatePath("/dashboard/admin");
+    return { success: true, id: newCourse.id };
+  } catch (error) {
+    console.error("Create Course Error:", error);
+    return { success: false, error: "Failed to create course in database." };
   }
 }
 
+/**
+ * Updates a course.
+ */
 export async function updateCourse(courseId: string, updatedData: any, adminId: string) {
   try {
-    // 1. Read existing courses
-    const fileData = await fs.readFile(coursesPath, 'utf8');
-    const courses = JSON.parse(fileData);
-    const coursesArray = Array.isArray(courses) ? courses : [];
-
-    // 2. Find the index of the course to update
-    const courseIndex = coursesArray.findIndex((c: any) => c.id === courseId);
-
-    if (courseIndex === -1) {
-      throw new Error("Course not found.");
+    // 1. Verify Ownership
+    const course = await db.course.findUnique({ where: { id: courseId } });
+    if (!course || course.adminId !== adminId) {
+      return { success: false, error: "Unauthorized" };
     }
 
-    // 3. Security Check: Does the admin own this course?
-    if (coursesArray[courseIndex].creator !== adminId) {
-      throw new Error("Unauthorized: You can only edit your own courses.");
-    }
-
-    // 4. Update the course while preserving fields like 'id', 'creator', and 'modulesCompleted'
-    // unless you specifically want to change them.
-    coursesArray[courseIndex] = {
-      ...coursesArray[courseIndex], // Keep old data (id, creator, etc.)
-      ...updatedData,               // Overwrite with new form data
-      // Handle the image logic specifically
-      image: updatedData.image && updatedData.image.trim() !== "" 
-        ? updatedData.image 
-        : "https://nxtwave.imgix.net/ccbp-website/nxtwave-intensive-2.0/recognized-by-patterns-card1.png"
+    // 2. Prepare update data
+    const dataToUpdate: any = {
+      title: updatedData.title,
+      description: updatedData.description || updatedData.subtitle,
+      imageUrl: updatedData.image || updatedData.imageUrl,
     };
 
-    // 5. Write updated array back to JSON
-    await fs.writeFile(coursesPath, JSON.stringify(coursesArray, null, 2));
+    // 3. Handle Category Update if tags are provided
+    if (updatedData.tags && updatedData.tags.length > 0) {
+      const categoryName = updatedData.tags[0];
+      const category = await db.category.upsert({
+        where: { name: categoryName },
+        update: {},
+        create: { name: categoryName },
+      });
+      dataToUpdate.categoryId = category.id;
+    }
 
-    // 6. Refresh the cache
+    await db.course.update({
+      where: { id: courseId },
+      data: dataToUpdate,
+    });
+
     revalidatePath('/dashboard/admin');
-
     return { success: true };
   } catch (error: any) {
-    console.error("Update Error:", error.message);
     return { success: false, error: error.message };
   }
 }
 
-
+/**
+ * Fetches course content (Modules & Lectures) for the "Edit Curriculum" page.
+ * Maps 'Modules' -> 'sections' to match your UI's expectation.
+ */
 export async function getCourseContent(courseId: string) {
   try {
-    // 1. Read the courseData.json file
-    const fileData = await fs.readFile(courseDataPath, 'utf8');
-    const allCourses = JSON.parse(fileData);
+    const course = await db.course.findUnique({
+      where: { id: courseId },
+      include: {
+        modules: {
+          orderBy: { position: 'asc' }, // Order modules 1, 2, 3...
+          include: {
+            lectures: {
+              orderBy: { position: 'asc' } // Order lectures 1, 2, 3...
+            }
+          }
+        }
+      }
+    });
 
-    // 2. Find the course that matches the courseId from the URL
-    // Note: We use string comparison because URL params are always strings
-    const targetCourse = allCourses.find((c: any) => c.courseId === courseId);
-
-    if (!targetCourse) {
-      return { success: false, error: "Course content not found." };
+    if (!course) {
+      return { success: false, error: "Course not found." };
     }
 
-    // 3. Return the sections (which contain the modules/lectures)
+    // Map DB structure to the JSON structure your UI expects
+    // UI expects: { sections: [{ id, title, lectures: [] }] }
+    const sections = course.modules.map(mod => ({
+      id: mod.id,
+      title: mod.title,
+      lectures: mod.lectures.map(lec => ({
+        id: lec.id,
+        title: lec.title,
+        duration: lec.duration,
+        videoUrl: lec.videoUrl,
+        status: "not_started" // Status is user-specific, not in Admin view usually
+      }))
+    }));
+
     return { 
       success: true, 
-      courseTitle: targetCourse.courseTitle,
-      sections: targetCourse.sections 
+      courseTitle: course.title,
+      sections: sections 
     };
   } catch (error: any) {
     console.error("Fetch Content Error:", error.message);
@@ -180,36 +215,27 @@ export async function getCourseContent(courseId: string) {
   }
 }
 
+/**
+ * Adds a new Module (Section) to a course.
+ */
 export async function addModule(courseId: string, sectionTitle: string) {
   try {
-    // 1. Update courses.json (Increment total count)
-    const coursesRaw = await fs.readFile(coursesPath, 'utf8');
-    const courses = JSON.parse(coursesRaw);
-    const courseIndex = courses.findIndex((c: any) => c.id === courseId);
+    // 1. Find the highest position to append to the end
+    const lastModule = await db.module.findFirst({
+      where: { courseId },
+      orderBy: { position: 'desc' }
+    });
+    const newPosition = (lastModule?.position || 0) + 1;
 
-    if (courseIndex !== -1) {
-      courses[courseIndex].totalModules += 1;
-      courses[courseIndex].subtitle = `New Section: ${sectionTitle}`;
-      await fs.writeFile(coursesPath, JSON.stringify(courses, null, 2));
-    }
-
-    // 2. Update courseData.json (Add as a NEW SECTION)
-    const detailRaw = await fs.readFile(courseDataPath, 'utf8');
-    const details = JSON.parse(detailRaw);
-    const detailIndex = details.findIndex((d: any) => d.courseId === courseId);
-
-    if (detailIndex !== -1) {
-      // Create a new section object instead of a lecture
-      const newSection = {
-        id: `s${Date.now()}`, 
-        title: sectionTitle, // This will now appear in blue
-        lectures: []        // Starts with an empty list of lectures
-      };
-
-      // Push to the sections array
-      details[detailIndex].sections.push(newSection);
-      await fs.writeFile(courseDataPath, JSON.stringify(details, null, 2));
-    }
+    // 2. Create Module
+    await db.module.create({
+      data: {
+        title: sectionTitle,
+        courseId: courseId,
+        position: newPosition,
+        isPublished: true // Default to true or draft as needed
+      }
+    });
 
     revalidatePath(`/dashboard/admin/add-module/${courseId}`);
     return { success: true };
@@ -218,69 +244,62 @@ export async function addModule(courseId: string, sectionTitle: string) {
   }
 }
 
+/**
+ * Adds a new Lecture to a Module (Section).
+ */
 export async function addLecture(
   courseId: string, 
   sectionId: string, 
   title: string, 
   videoUrl: string,
-  duration: string // Now passed from the UI
+  duration: string,
+  attachments: { title: string; url: string, type: string }[] = []
 ) {
   try {
-    const detailRaw = await fs.readFile(courseDataPath, 'utf8');
-    const details = JSON.parse(detailRaw);
-    
-    const courseIndex = details.findIndex((d: any) => d.courseId === courseId);
-    if (courseIndex === -1) throw new Error("Course not found");
+    // 1. Parse duration (UI sends string "10", DB wants Int)
+    const durationInt = parseInt(duration) || 0;
 
-    const sectionIndex = details[courseIndex].sections.findIndex((s: any) => s.id === sectionId);
-    if (sectionIndex === -1) throw new Error("Section not found");
+    // 2. Find highest position in this module
+    const lastLecture = await db.lecture.findFirst({
+      where: { moduleId: sectionId },
+      orderBy: { position: 'desc' }
+    });
+    const newPosition = (lastLecture?.position || 0) + 1;
 
-    const newLecture = {
-      id: `l${Date.now()}`,
-      title: title,
-      duration: duration, // Custom input value
-      videoUrl: videoUrl,
-      status: "not_started" 
-    };
+    // 3. Create Lecture
+    await db.lecture.create({
+      data: {
+        title,
+        videoUrl,
+        duration: durationInt,
+        moduleId: sectionId,
+        position: newPosition,
+        isPublished: true,
+        resources: {
+          create: attachments.map((att) => ({
+            title: att.title,
+            url: att.url,
+            type: att.type,
+          }))
+        },
+      },
+    });
 
-    details[courseIndex].sections[sectionIndex].lectures.push(newLecture);
-    
-    await fs.writeFile(courseDataPath, JSON.stringify(details, null, 2));
     revalidatePath(`/dashboard/admin/add-module/${courseId}`);
-    
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
   }
 }
 
+/**
+ * Deletes a lecture.
+ */
 export async function deleteLecture(courseId: string, sectionId: string, lectureId: string) {
   try {
-    // 1. Update courseData.json (Remove the lecture)
-    const detailRaw = await fs.readFile(courseDataPath, 'utf8');
-    const details = JSON.parse(detailRaw);
-    
-    const courseIndex = details.findIndex((d: any) => d.courseId === courseId);
-    if (courseIndex === -1) throw new Error("Course not found");
-
-    const sectionIndex = details[courseIndex].sections.findIndex((s: any) => s.id === sectionId);
-    if (sectionIndex === -1) throw new Error("Section not found");
-
-    // Filter out the specific lecture
-    details[courseIndex].sections[sectionIndex].lectures = 
-      details[courseIndex].sections[sectionIndex].lectures.filter((l: any) => l.id !== lectureId);
-    
-    await fs.writeFile(courseDataPath, JSON.stringify(details, null, 2));
-
-    // 2. Update courses.json (Decrement totalModules count)
-    const coursesRaw = await fs.readFile(coursesPath, 'utf8');
-    const courses = JSON.parse(coursesRaw);
-    const mainCourseIndex = courses.findIndex((c: any) => c.id === courseId);
-
-    if (mainCourseIndex !== -1 && courses[mainCourseIndex].totalModules > 0) {
-      courses[mainCourseIndex].totalModules -= 1;
-      await fs.writeFile(coursesPath, JSON.stringify(courses, null, 2));
-    }
+    await db.lecture.delete({
+      where: { id: lectureId }
+    });
 
     revalidatePath(`/dashboard/admin/add-module/${courseId}`);
     return { success: true };
@@ -289,38 +308,71 @@ export async function deleteLecture(courseId: string, sectionId: string, lecture
   }
 }
 
-
+/**
+ * Deletes a Module (Section).
+ * Will cascade delete all lectures inside it due to schema settings.
+ */
 export async function deleteSection(courseId: string, sectionId: string) {
   try {
-    // 1. Update courseData.json
-    const detailRaw = await fs.readFile(courseDataPath, 'utf8');
-    const details = JSON.parse(detailRaw);
-    
-    const courseIndex = details.findIndex((d: any) => d.courseId === courseId);
-    if (courseIndex === -1) throw new Error("Course not found");
-
-    // Find the section to know how many lectures we are removing
-    const sectionToDelete = details[courseIndex].sections.find((s: any) => s.id === sectionId);
-    const lectureCountToRemove = sectionToDelete?.lectures?.length || 0;
-
-    // Filter out the section
-    details[courseIndex].sections = details[courseIndex].sections.filter((s: any) => s.id !== sectionId);
-    
-    await fs.writeFile(courseDataPath, JSON.stringify(details, null, 2));
-
-    // 2. Update courses.json (Subtract all lectures in that section from totalModules)
-    const coursesRaw = await fs.readFile(coursesPath, 'utf8');
-    const courses = JSON.parse(coursesRaw);
-    const mainCourseIndex = courses.findIndex((c: any) => c.id === courseId);
-
-    if (mainCourseIndex !== -1) {
-      courses[mainCourseIndex].totalModules = Math.max(0, courses[mainCourseIndex].totalModules - lectureCountToRemove);
-      await fs.writeFile(coursesPath, JSON.stringify(courses, null, 2));
-    }
+    await db.module.delete({
+      where: { id: sectionId }
+    });
 
     revalidatePath(`/dashboard/admin/add-module/${courseId}`);
     return { success: true };
   } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateLecture(
+  lectureId: string,
+  title: string,
+  videoUrl: string,
+  duration: string,
+  isFree: boolean,
+  attachments: { title: string; url: string; type: string }[] = []
+) {
+  try {
+    const durationInt = parseInt(duration) || 0;
+
+    // Use a transaction to update lecture details and replace resources
+    await db.$transaction(async (tx) => {
+      // 1. Update basic lecture details
+      await tx.lecture.update({
+        where: { id: lectureId },
+        data: {
+          title,
+          videoUrl,
+          duration: durationInt,
+          isFree, // Updates the "Free Preview" status
+        },
+      });
+
+      // 2. Sync Resources: Delete old ones and create new ones
+      // This is the simplest way to ensure the DB matches the UI list exactly
+      await tx.attachment.deleteMany({
+        where: { lectureId: lectureId },
+      });
+
+      if (attachments.length > 0) {
+        await tx.attachment.createMany({
+          data: attachments.map((att) => ({
+            lectureId: lectureId,
+            title: att.title,
+            url: att.url,
+            type: att.type || "FILE",
+          })),
+        });
+      }
+    });
+
+    // We can't easily get the courseId here without an extra query, 
+    // but usually, the frontend triggers a refresh anyway.
+    // Ideally, pass courseId to this function if you want strict revalidation path.
+    return { success: true };
+  } catch (error: any) {
+    console.error("Update Lecture Error:", error);
     return { success: false, error: error.message };
   }
 }

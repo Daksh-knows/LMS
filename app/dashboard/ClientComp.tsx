@@ -27,7 +27,7 @@ export default function OverviewClient({ data }: { data: any }) {
     }
     load();
   }, []);
-  console.log("Fetched courses from DB:", courses);
+  // console.log("Fetched courses from DB:", courses);
   const filteredRecommended = useMemo(() => {
     if (courseType === "All") return courses;
     return courses.filter(course => 

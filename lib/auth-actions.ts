@@ -17,7 +17,7 @@ const transporter = nodemailer.createTransport({
 
 // --- SIGN UP (Registration Only) ---
 export async function signUpUser(formData: any) {
-  console.log(formData);
+  // console.log(formData);
   try {
     const { email, password, fullName } = formData;
 
