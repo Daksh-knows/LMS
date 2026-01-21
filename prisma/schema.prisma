@@ -38,12 +38,11 @@ model User {
   id            String    @id @default(cuid())
   email         String    @unique
   password      String    @default("helloworld")
+  questions     Question[] 
 
-   // --- ADD THESE 3 FIELDS FOR NEXTAUTH ---
-  name          String?   // Stores "Daksh-knows" from GitHub
+  name          String?   
   image         String?   // Stores the avatar URL
   emailVerified DateTime? // required by NextAuth adapter
-  // ---------------------------------------
 
   otp           String?   @default("123456")
   otpExpires    DateTime? 
@@ -180,7 +179,7 @@ model Lecture {
   position    Int      // 1, 2, 3... To order lectures inside a module
   isPublished Boolean  @default(false)
   isFree      Boolean  @default(false) // Allow free preview?
-
+  questions   Question[]
   // Parent Relation
   moduleId    String
   module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
@@ -282,4 +281,24 @@ model Category {
   id      String   @id @default(cuid())
   name    String   @unique // e.g., "Web Development", "Music"
   courses Course[] // Inverse relation: One category has many courses
+}
+
+model Question {
+  id          String   @id @default(cuid())
+  title       String   @db.VarChar(255)
+  description String   @db.Text
+  imageUrl    String?  // Optional field as per your requirements
+
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  lectureId   String
+  lecture     Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([lectureId])
 }
