@@ -2,7 +2,6 @@
 "use client";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import HeroForm from './HeroForm';
 import TestimonialSlider from './TestimonialSlider';
 
 const roles = ["Full Stack Developer", "Data Analyst", "QA Engineer"];

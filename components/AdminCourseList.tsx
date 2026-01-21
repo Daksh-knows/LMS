@@ -33,7 +33,7 @@ export default function AdminCourseList({
 
       if (result.success) {
         // Success! (Note: revalidatePath in the action updates the UI automatically)
-        console.log("Course removed successfully");
+        // console.log("Course removed successfully");
       } else {
         alert(`Failed to delete: ${result.error}`);
       }
@@ -50,7 +50,7 @@ export default function AdminCourseList({
         <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest">
           Your Courses ({initialCourses.length})
         </h2>
-        <Link href="/dashboard/admin/add-courses">
+        <Link href="/dashboard/admin/add-course">
             <button className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition-all">
                 <Plus size={16} /> Add New Course
             </button>
@@ -70,9 +70,9 @@ export default function AdminCourseList({
           >
             <div>
               <div className="flex gap-2 mb-1">
-                {course.tags.map(tag => (
-                  <span key={tag} className="text-[9px] font-black uppercase text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
-                    {tag}
+                {course.tags.map(category => (
+                  <span key={category} className="text-[9px] font-black uppercase text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                    {category}
                   </span>
                 ))}
               </div>
