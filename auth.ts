@@ -5,7 +5,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import Github from "next-auth/providers/github";
 import bcrypt from "bcryptjs";
-
+import { Adapter } from "next-auth/adapters";
 function requiredEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -15,7 +15,7 @@ function requiredEnv(name: string): string {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(db),
+  adapter: PrismaAdapter(db) as Adapter,
   session: { strategy: "jwt" }, // We use JWT to avoid database hits on every request
   pages: {
     signIn: "/signin", // Redirect here if auth fails
@@ -78,7 +78,7 @@ Github({
     async jwt({ token, user, trigger, session }) {
       if (user) {
         // Initial sign in: add custom fields to token
-        token.id = (user as any).id;
+        token.id = user.id!;
         token.role = (user as any).role;
         token.hasPremium = (user as any).hasPremium;
       }

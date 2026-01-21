@@ -139,3 +139,44 @@ export async function upgradeToPremium() {
     return { success: false, error: "Failed to upgrade" };
   }
 }
+
+export async function updateProfile(data: any) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return { success: false, error: "Unauthorized" };
+
+    const { fullName, domain, collegeName, collegeDegree, collegeYear } = data;
+
+    // Update or Create the StudentProfile
+    await db.studentProfile.upsert({
+      where: { userId: session.user.id },
+      update: {
+        fullName,
+        domain,
+        collegeName,
+        collegeDegree,
+        collegeYear: parseInt(collegeYear) || 1,
+      },
+      create: {
+        userId: session.user.id,
+        fullName,
+        domain,
+        collegeName,
+        collegeDegree,
+        collegeYear: parseInt(collegeYear) || 1,
+      },
+    });
+
+    // Also update the main User name for NextAuth consistency
+    await db.user.update({
+      where: { id: session.user.id },
+      data: { name: fullName }
+    });
+
+    revalidatePath("/dashboard/profile");
+    return { success: true };
+  } catch (error) {
+    console.error("Profile Update Error:", error);
+    return { success: false, error: "Failed to update profile." };
+  }
+}
