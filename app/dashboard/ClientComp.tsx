@@ -1,37 +1,18 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { Info, ExternalLink, Calendar } from "lucide-react";
-
-interface Course {
-  id: string;
-  title: string;
-  subtitle: string;
-  image: string;
-  tags: string[];
-}
-
-interface DashboardProps {
-  data: {
-    stats: {
-      videoWatchedMins: number;
-      questionsSolved: number;
-    };
-    user: {
-      id: string;
-      email: string;
-      role: string;
-      hasPremium: boolean;
-    };
-    courses: Course[];
-  };
-}
+import React, { useState, useMemo, useEffect } from "react";
+import { Info, ExternalLink, Loader2 } from "lucide-react";
+// Remove: import courseData from "@/data/courses.json"; 
+import { enrollInCourse } from "@/lib/user-actions"; 
+import { getAllCourses } from "@/lib/course-actions"; // Import the new action
 
 export default function OverviewClient({ data }: { data: any }) {
   const [courseType, setCourseType] = useState("All");
+  const [courses, setCourses] = useState<any[]>([]); // State to hold DB courses
+  const [loadingCourses, setLoadingCourses] = useState(true);
+  const [processingId, setProcessingId] = useState<string | null>(null);
   
-  // Destructure courses from data
-  const { stats, user, courses } = data;
+  const { stats } = data;
 
   // Fetch courses from DB on mount
   useEffect(() => {
@@ -49,12 +30,28 @@ export default function OverviewClient({ data }: { data: any }) {
   console.log("Fetched courses from DB:", courses);
   const filteredRecommended = useMemo(() => {
     if (courseType === "All") return courses;
-    
-    // Check if any of the course's tags match the selected type
-    return courses.filter((course) =>
-      course.tags.some((tag) => tag.includes(courseType))
+    return courses.filter(course => 
+      // Ensure course.tags exists and is an array before filtering
+      Array.isArray(course.tags) && course.tags.some((tag: string) => tag.includes(courseType))
     );
   }, [courseType, courses]);
+
+  const handleQuickEnroll = async (e: React.MouseEvent, courseId: string, title: string) => {
+    e.stopPropagation();
+    setProcessingId(courseId);
+    try {
+      const result = await enrollInCourse(courseId);
+      if (result.success) {
+        alert(`Successfully enrolled in ${title}!`);
+      } else {
+        alert(result.error || "Enrollment failed.");
+      }
+    } catch (error) {
+      alert("An unexpected error occurred.");
+    } finally {
+      setProcessingId(null);
+    }
+  };
 
   return (
     <div className="max-w-6xl ml-5 mt-5 space-y-10 pb-20">
@@ -80,21 +77,12 @@ export default function OverviewClient({ data }: { data: any }) {
         </div>
       </div>
 
-      {/* 3. Recommended Courses Section (Now Dynamic) */}
+      {/* 2. Recommended Courses Section */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-2xl font-black text-gray-900 tracking-tight">
-              Recommended for You
-            </h3>
-            <p className="text-sm text-gray-500">
-              Based on your recent activity
-            </p>
-          </div>
-
-          <div className="flex gap-2 bg-gray-100 p-1.5 rounded-2xl">
-            {/* Ensure these match your Category names if you want filtering to work perfectly */}
-            {["All", "Computer Science", "Music"].map((type) => (
+          <h3 className="text-xl font-extrabold text-gray-900 tracking-tight">Recommended for You</h3>
+          <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
+            {["All", "Frontend", "Advanced"].map((type) => (
               <button
                 key={type}
                 onClick={() => setCourseType(type)}
@@ -108,64 +96,77 @@ export default function OverviewClient({ data }: { data: any }) {
           </div>
         </div>
 
-        {/* Course Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredRecommended.length > 0 ? (
-            filteredRecommended.map((course) => (
-              <div
-                key={course.id}
-                className="group relative bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-3"
-              >
-                <div className="relative aspect-4/3 overflow-hidden m-3 rounded-4xl">
-                  <img
-                    src={course.image}
-                    alt={course.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
+        {loadingCourses ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="animate-spin text-blue-600" size={40} />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredRecommended.map((course) => {
+              const isProcessing = processingId === course.id;
 
-                  <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                    {course.tags.map((tag: string) => (
-                      <span
-                        key={tag}
-                        className="bg-white/90 backdrop-blur-md text-gray-900 text-[9px] px-3 py-1.5 rounded-full font-black uppercase tracking-widest shadow-lg"
-                      >
-                        {tag}
-                      </span>
-                    ))}
+              return (
+                <div 
+                  key={course.id} 
+                  className="group relative bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <img 
+                      src={course.imageUrl} 
+                      alt={course.title} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                    />
+                    
+                    <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+                      {Array.isArray(course.tags) && course.tags.map((tag: string) => (
+                        <span 
+                          key={tag} 
+                          className="bg-white/90 backdrop-blur-md text-gray-900 text-[10px] px-3 py-1.5 rounded-full font-black uppercase tracking-widest shadow-sm"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button 
+                          onClick={(e) => handleQuickEnroll(e, course.id, course.title)}
+                          disabled={isProcessing}
+                          className="bg-blue-600 text-white px-6 py-3 rounded-full font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-xl hover:bg-blue-700 transition-all disabled:bg-gray-400"
+                        >
+                          {isProcessing ? (
+                            <>Enrolling... <Loader2 size={14} className="animate-spin" /></>
+                          ) : (
+                            <>Enroll Now <ExternalLink size={14} /></>
+                          )}
+                        </button>
+                    </div>
                   </div>
 
-                  <div className="absolute inset-0 bg-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <div className="bg-white text-purple-600 px-6 py-2.5 rounded-full font-black text-xs flex items-center gap-2 shadow-2xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                      View Course <ExternalLink size={14} />
+                  <div className="p-6">
+                    <h4 className="font-bold text-gray-900 text-lg leading-tight group-hover:text-blue-600 transition-colors">
+                      {course.title}
+                    </h4>
+                    <p className="text-gray-400 text-sm mt-2 line-clamp-1">{course.subtitle}</p>
+                    
+                    <div className="mt-6 flex items-center justify-between">
+                        <button 
+                           onClick={(e) => handleQuickEnroll(e, course.id, course.title)}
+                           className="text-blue-600 font-bold text-sm hover:underline disabled:text-gray-400"
+                           disabled={isProcessing}
+                        >
+                          {isProcessing ? "Processing..." : "Enroll Now"}
+                        </button>
+                        <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                            →
+                        </div>
                     </div>
                   </div>
                 </div>
-
-                <div className="p-8 pt-4">
-                  <h4 className="font-black text-gray-900 text-xl leading-tight group-hover:text-purple-600 transition-colors">
-                    {course.title}
-                  </h4>
-                  <p className="text-gray-400 text-sm mt-3 line-clamp-2 leading-relaxed font-medium">
-                    {course.subtitle}
-                  </p>
-
-                  <div className="mt-8 flex items-center justify-between">
-                    <span className="text-purple-600 font-black text-xs uppercase tracking-widest">
-                      Start Learning
-                    </span>
-                    <div className="h-10 w-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">
-                      →
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-             <div className="col-span-full py-10 text-center text-gray-400">
-                No courses found for this category.
-             </div>
-          )}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
