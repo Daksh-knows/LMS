@@ -9,8 +9,7 @@ import Link from "next/link";
 export default function AddCoursePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const adminId = "user_02"; 
-
+  
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -23,8 +22,9 @@ export default function AddCoursePage() {
       totalModules: parseInt(formData.get("totalModules") as string),
       tags: (formData.get("tags") as string).split(",").map(tag => tag.trim()),
     };
-
-    const result = await addCourse(courseData, adminId);
+    console.log("Testing");
+    
+    const result = await addCourse(courseData);
     if (result.success) {
       router.push("/dashboard/admin");
       router.refresh();

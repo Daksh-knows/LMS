@@ -19,7 +19,6 @@ import {
 export default function SignupPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  // 'loading' can be a string to track specific buttons (e.g. "google", "email")
   const [loading, setLoading] = useState<string | boolean>(false);
   
   const [formData, setFormData] = useState({
@@ -85,7 +84,7 @@ export default function SignupPage() {
       alert("Verification successful, but login failed. Please log in manually.");
       router.push("/signin");
     } else {
-      router.push("/dashboard");
+      router.push("/enrollment");
       router.refresh();
     }
     setLoading(false);
