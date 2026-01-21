@@ -2,11 +2,15 @@
 
 import React, { useState } from "react";
 import Script from "next/script";
-import { createRazorpayOrder } from "@/lib/payment-actions";
+import { createRazorpayOrder, verifyAndUpgradeStatus } from "@/lib/payment-actions";
 import { Loader2, ShieldCheck, Lock } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export default function PaymentPage() {
   const [loading, setLoading] = useState(false);
+  const { update } = useSession();
+  const router = useRouter();
 
   const handlePayment = async () => {
     setLoading(true);
@@ -28,10 +32,20 @@ export default function PaymentPage() {
       name: "Your Academy",
       description: "Security Deposit for Enrollment",
       order_id: order.id,
-      handler: function (response: any) {
-        // Success Logic
-        console.log("Payment ID:", response.razorpay_payment_id);
-        window.location.href = "/dashboard?status=success";
+      handler: async function (response: any) {
+        // 1. Update Database via Server Action
+        const result = await verifyAndUpgradeStatus(response.razorpay_payment_id);
+
+        if (result.success) {
+          // 2. IMPORTANT: Update the NextAuth Session Cookie
+          // This calls the 'jwt' callback in auth_config.ts with trigger: "update"
+          await update({ hasPremium: true });
+
+          // 3. Redirect to dashboard
+          router.push("/dashboard?status=success");
+        } else {
+          alert("Payment received but account upgrade failed. Please contact support.");
+        }
       },
       prefill: {
         name: "Student Name",
