@@ -13,9 +13,7 @@ export async function saveNote(
   }
 
   try {
-    // We search for a note by userId and lectureId
-    // Since we don't have a composite unique key in the schema for Note (unlike Review),
-    // we find first, then create or update.
+
     const existingNote = await db.note.findFirst({
       where: { userId, lectureId },
     });

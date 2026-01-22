@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client"
-  // previewFeatures = ["driverAdapters"]
   output   = "../app/generated/prisma"
 }
 
@@ -35,53 +34,54 @@ model Account {
 
 // User Schema
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  password      String    @default("helloworld")
-  questions     Question[] 
+  id        String     @id @default(cuid())
+  email     String     @unique
+  password  String     @default("helloworld")
+  questions Question[]
 
-  name          String?   
-  image         String?   // Stores the avatar URL
+  name          String?
+  image         String? // Stores the avatar URL
   emailVerified DateTime? // required by NextAuth adapter
 
-  otp           String?   @default("123456")
-  otpExpires    DateTime? 
-  isVerified    Boolean   @default(false)
+  otp        String?   @default("123456")
+  otpExpires DateTime?
+  isVerified Boolean   @default(false)
 
-  role          String    @default("STUDENT") // "ADMIN", "STUDENT"
-  hasPremium    Boolean   @default(false)
+  role       String  @default("STUDENT") // "ADMIN", "STUDENT"
+  hasPremium Boolean @default(false)
 
-  accounts      Account[]
-  
+  accounts Account[]
+
   // 1:1 Relation to Profile
-  profile       StudentProfile? 
+  profile StudentProfile?
 
   // 1:1 Relation to Stats 
-  stats         UserStats?
+  stats UserStats?
 
   // Relations
-  createdCourses Course[]      @relation("CourseAuthor") // If Admin
-  enrollments    Enrollment[]  // If Student
-  
-  // FIXED: Added missing inverse relations required by Prisma
-  userProgress   UserProgress[]
-  notes          Note[]
-  reviews        Review[]
+  createdCourses Course[]     @relation("CourseAuthor") // If Admin
+  enrollments    Enrollment[] // If Student
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  // FIXED: Added missing inverse relations required by Prisma
+  userProgress UserProgress[]
+  notes        Note[]
+  reviews      Review[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  replies   Reply[]
 }
 
 model StudentProfile {
-  id            String   @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Link back to User
-  userId        String   @unique
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Profile Data
-  fullName      String
-  domain        String?  // e.g. "Data Science"
+  fullName String
+  domain   String? // e.g. "Data Science"
 
   collegeName   String?
   collegeDegree String?
@@ -89,188 +89,206 @@ model StudentProfile {
 }
 
 model UserStats {
-  id               String   @id @default(cuid())
-  
-  userId           String   @unique
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id String @id @default(cuid())
 
-  videoWatchedMins Int      @default(0)
-  questionsSolved  Int      @default(0)
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  videoWatchedMins Int @default(0)
+  questionsSolved  Int @default(0)
 }
 
 // Course Model
 model Course {
-  id          String  @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Basic Metadata
   title       String  @db.VarChar(255)
   description String? @db.Text
-  imageUrl    String? 
+  imageUrl    String?
   price       Float?
   isPublished Boolean @default(false)
 
   // Relations
-  adminId     String
-  admin       User    @relation("CourseAuthor", fields: [adminId], references: [id])
+  adminId String
+  admin   User   @relation("CourseAuthor", fields: [adminId], references: [id])
 
   // Content Hierarchy
-  modules     Module[]
-  
+  modules Module[]
+
   // Who purchased/enrolled?
-  students    Enrollment[] 
+  students Enrollment[]
 
   categoryId String?
   category   Category? @relation(fields: [categoryId], references: [id])
-  
+
   // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([title])
 }
 
 // Join table for Students <-> Courses
 model Enrollment {
-  id        String   @id @default(cuid())
-  
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  
-  courseId  String
-  course    Course   @relation(fields: [courseId], references: [id])
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id])
 
   currentLectureId String?
   currentLecture   Lecture? @relation(fields: [currentLectureId], references: [id])
-  
+
   enrolledAt DateTime @default(now())
-  
+
   // Unique constraint ensures a user can't enroll in the same course twice
   @@unique([userId, courseId])
 }
 
 // Modules Table
 model Module {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
   description String?
-  position    Int      // 1, 2, 3... To order sections
-  isPublished Boolean  @default(false)
+  position    Int // 1, 2, 3... To order sections
+  isPublished Boolean @default(false)
 
   // Parent Relation
-  courseId    String
-  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   // Child Relation
-  lectures    Lecture[]
+  lectures Lecture[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([courseId])
 }
 
+enum ItemType {
+  VIDEO
+  TEXT
+  QUIZ
+  ASSIGNMENT
+}
+
 // Lecture Table
 model Lecture {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
-  description String?  @db.Text // The "overview" from your JSON
-  videoUrl    String   // The embed URL
-  duration    Int      // Duration in minutes
-  position    Int      // 1, 2, 3... To order lectures inside a module
-  isPublished Boolean  @default(false)
-  isFree      Boolean  @default(false) // Allow free preview?
+  description String? @db.Text // The "overview" from your JSON
+
+  // --- NEW FIELDS FOR MULTI-TYPE SUPPORT ---
+  type ItemType @default(VIDEO) // VIDEO, TEXT, QUIZ, ASSIGNMENT
+
+  videoUrl String? // The embed URL
+  duration Int?
+
+  // For TEXT CONTENT
+  textContent String? @db.Text // Stores Rich Text/Markup
+
+  position    Int // 1, 2, 3... To order lectures inside a module
+  isPublished Boolean    @default(false)
+  isFree      Boolean    @default(false) // Allow free preview?
   questions   Question[]
   // Parent Relation
   moduleId    String
-  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  module      Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
   // Child Content
-  resources   Attachment[]
-  
+  resources Attachment[]
+
   // User Interaction Relations (Inverse relations)
   userProgress UserProgress[]
   notes        Note[]
   reviews      Review[]
-  
-  faqs        FAQ[]
 
-  // FIXED: Added missing inverse relation for Enrollment.currentLecture
-  enrollments  Enrollment[]
+  faqs FAQ[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  enrollments Enrollment[]
+
+  // --- NEW RELATIONS FOR QUIZ & ASSIGNMENT ---
+  quizQuestions QuizQuestion[]
+  submissions   AssignmentSubmission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([moduleId])
 }
 
 // Create the new table
 model FAQ {
-  id        String   @id @default(cuid())
-  question  String   @db.Text
-  answer    String   @db.Text
-  
+  id       String @id @default(cuid())
+  question String @db.Text
+  answer   String @db.Text
+
   lectureId String
-  lecture   Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
-  
+  lecture   Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 // Resources Table
 model Attachment {
-  id        String   @id @default(cuid())
-  title     String   // e.g. "Source Code"
-  url       String   
-  type      String   @default("FILE") 
+  id    String @id @default(cuid())
+  title String // e.g. "Source Code"
+  url   String
+  type  String @default("FILE")
 
   lectureId String
-  lecture   Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  lecture   Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 }
 
 model UserProgress {
-  id          String   @id @default(cuid())
-  
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id String @id @default(cuid())
 
-  lectureId   String
-  lecture     Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  isCompleted Boolean  @default(false) // True = Watched
-  watchTime   Int      @default(0)     // Optional: Save timestamp (e.g., stopped at 5:30)
+  lectureId String
+  lecture   Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 
-  updatedAt   DateTime @updatedAt      // Important: sort by this to find "recently watched"
+  isCompleted Boolean @default(false) // True = Watched
+  watchTime   Int     @default(0) // Optional: Save timestamp (e.g., stopped at 5:30)
+
+  updatedAt DateTime @updatedAt // Important: sort by this to find "recently watched"
 
   @@unique([userId, lectureId])
   @@index([userId, lectureId])
 }
 
 model Note {
-  id        String   @id @default(cuid())
-  content   String   @db.Text
-  
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  id      String @id @default(cuid())
+  content String @db.Text
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
   lectureId String
-  lecture   Lecture  @relation(fields: [lectureId], references: [id])
+  lecture   Lecture @relation(fields: [lectureId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Review {
-  id        String   @id @default(cuid())
-  rating    Int      // 1-5
-  comment   String?  @db.Text
-  
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  id      String  @id @default(cuid())
+  rating  Int // 1-5
+  comment String? @db.Text
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
   lectureId String
-  lecture   Lecture  @relation(fields: [lectureId], references: [id])
+  lecture   Lecture @relation(fields: [lectureId], references: [id])
 
   createdAt DateTime @default(now())
 
@@ -284,21 +302,83 @@ model Category {
 }
 
 model Question {
-  id          String   @id @default(cuid())
-  title       String   @db.VarChar(255)
-  description String   @db.Text
-  imageUrl    String?  // Optional field as per your requirements
+  id          String  @id @default(cuid())
+  title       String  @db.VarChar(255)
+  description String  @db.Text
+  imageUrl    String?
 
-  // Relations
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  lectureId   String
-  lecture     Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  lectureId String
+  lecture   Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  replies Reply[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([lectureId])
+}
+
+// 2. Specialized Quiz Tables
+model QuizQuestion {
+  id       String @id @default(cuid())
+  text     String @db.Text
+  position Int
+
+  lectureId String
+  lecture   Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+
+  options AnswerOption[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AnswerOption {
+  id        String  @id @default(cuid())
+  text      String
+  isCorrect Boolean @default(false)
+
+  quizQuestionId String
+  quizQuestion   QuizQuestion @relation(fields: [quizQuestionId], references: [id], onDelete: Cascade)
+}
+
+// 3. Specialized Assignment Submission Table
+model AssignmentSubmission {
+  id      String @id @default(cuid())
+  fileUrl String // Student solution document
+
+  lectureId String
+  lecture   Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+
+  studentId String
+  // user     User     @relation(fields: [studentId], references: [id])
+
+  grade    Float?
+  feedback String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, lectureId])
+}
+
+model Reply {
+  id      String @id @default(cuid())
+  content String @db.Text
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([questionId])
+  @@index([userId])
 }

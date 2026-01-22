@@ -1,27 +1,55 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronLeft, VideoOff } from "lucide-react";
+import { ChevronLeft, VideoOff, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 // Components
-import VideoPlayer from "../components/VideoPlayer";
-import CourseSidebar from "../components/CourseSidebar";
-import TabbedContent from "../components/TabbedContent";
+import VideoPlayer from "../../components/VideoPlayer";
+import CourseSidebar from "../../components/CourseSidebar";
+import TabbedContent from "../../components/TabbedContent";
 
 interface LearningClientProps {
   course: any;
+  lectureId: string;
 }
 
-export default function LearningClient({ course }: LearningClientProps) {
-  // 1. Safe state initialization (defaults to null if no lectures exist)
-  const [currentLecture, setCurrentLecture] = useState(
-    course.modules?.[0]?.lectures?.[0] || null
-  );
-  console.log("Current course : " , course)
+export default function LearningClient({ course, lectureId }: LearningClientProps) {
+  const [currentLecture, setCurrentLecture] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchLecture = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`/api/lecture/${lectureId}`);
+        
+        if (!response.ok) throw new Error("Failed to fetch lecture");
+        
+        const data = await response.json();
+        setCurrentLecture(data);
+      } catch (error) {
+        console.error("Error loading lecture:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (lectureId) {
+      fetchLecture();
+    }
+  }, [lectureId]);
+
+  // 2. Handle Lecture Selection (Navigate to update the URL)
+  const handleSelectLecture = (selectedLecture: any) => {
+    router.push(`/learning/${course.id}/${selectedLecture.id}`);
+  };
+
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-white">
-      {/* Navbar - This will now always show */}
+      {/* Navbar */}
       <nav className="h-14 bg-gray-900 text-white flex items-center justify-between px-4 shadow-md z-10 shrink-0">
         <div className="flex items-center gap-4 min-w-0">
           <Link
@@ -42,41 +70,46 @@ export default function LearningClient({ course }: LearningClientProps) {
 
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 overflow-y-auto bg-white">
-          {currentLecture ? (
+        <main className="flex-1 overflow-y-auto bg-white relative">
+          {isLoading ? (
+            /* Loading State */
+            <div className="flex flex-col items-center justify-center h-full">
+              <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+              <p className="mt-2 text-sm text-gray-500">Loading lecture content...</p>
+            </div>
+          ) : currentLecture ? (
             <>
               <div className="w-full">
                 <VideoPlayer videoUrl={currentLecture.videoUrl} />
               </div>
-              <div className="max-w-4xl mx-auto px-6 pb-10">
+              <div className="w-full p-5">
                 <div className="mt-8 mb-4">
                   <h1 className="text-2xl font-bold text-gray-900">
                     {currentLecture.title}
                   </h1>
                 </div>
-                <TabbedContent lecture={currentLecture} />
+                <TabbedContent lecture={currentLecture} courseId={course.id} />
               </div>
             </>
           ) : (
-            /* 2. Placeholder UI when no lecture is selected/available */
+            /* Placeholder UI */
             <div className="flex flex-col items-center justify-center h-full text-center p-10">
               <div className="bg-gray-50 p-6 rounded-full mb-4">
                 <VideoOff size={48} className="text-gray-300" />
               </div>
               <h2 className="text-xl font-semibold text-gray-700">No lectures found</h2>
               <p className="text-gray-500 max-w-xs mt-2">
-                Content hasn't been uploaded for this course yet. Please check back later.
+                Content hasn't been uploaded for this course yet.
               </p>
             </div>
           )}
         </main>
 
         <aside className="w-[350px] shrink-0 border-l border-gray-200 hidden md:block h-full">
-          {/* 3. Sidebar remains visible, but passes empty arrays if modules don't exist */}
           <CourseSidebar
             sections={course.modules || []}
-            currentLectureId={currentLecture?.id}
-            onSelectLecture={(lecture: any) => setCurrentLecture(lecture)}
+            currentLectureId={lectureId}
+            onSelectLecture={handleSelectLecture}
           />
         </aside>
       </div>

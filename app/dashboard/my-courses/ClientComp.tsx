@@ -21,6 +21,7 @@ export default function CourseFilterList({
   initialCourses: EnrolledCourse[];
 }) {
   const [filter, setFilter] = useState("All");
+  const [loadingId, setLoadingId] = useState<string | null>(null);
   const router = useRouter();
 
   const filteredCourses = initialCourses.filter((course) => {
@@ -28,9 +29,41 @@ export default function CourseFilterList({
     return course.status === filter;
   });
 
+  const handleCourseSelect = async (courseId: string) => {
+    try {
+      setLoadingId(courseId); 
+      
+      const baseUrl = window.location.origin;
+      
+
+      const response = await fetch(`${baseUrl}/api/course/${courseId}`, {
+        cache: 'no-store'
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch course data");
+
+      const courseData = await response.json();
+
+
+      //TODO: Handle cases where there are no modules or lectures 
+      //TODO: Use user progress to continue from last visited lecture
+      const firstLectureId = courseData.modules?.[0]?.lectures?.[0]?.id;
+
+      if (firstLectureId) {
+        router.push(`/learning/${courseId}/${firstLectureId}`);
+      } else {
+        alert("This course has no lectures available.");
+      }
+    } catch (error) {
+      console.error("Redirection error:", error);
+      router.push(`/learning/${courseId}`);
+    } finally {
+      setLoadingId(null);
+    }
+  }
+
   return (
     <div className="space-y-6">
-      {/* Filter Tabs */}
       <div className="flex gap-4">
         {["All", "Completed", "In Progress"].map((tab) => (
           <button
@@ -118,7 +151,7 @@ export default function CourseFilterList({
 
               {/* DYNAMIC BUTTON LOGIC */}
               <button
-                onClick={() => router.push(`/learning/${course.id}`)}
+                onClick={() => handleCourseSelect(course.id)}
                 className={`px-6 py-2 rounded-lg font-bold transition-colors whitespace-nowrap ${
                   course.status === "Completed"
                     ? "bg-green-100 text-green-700 hover:bg-green-200"
