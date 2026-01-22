@@ -88,7 +88,7 @@ export default function LearningClient({ course, lectureId }: LearningClientProp
                     {currentLecture.title}
                   </h1>
                 </div>
-                <TabbedContent lecture={currentLecture} courseId={course.id} />
+                <TabbedContent lecture={currentLecture} courseId={course.id} adminId={course.adminId} />
               </div>
             </>
           ) : (
