@@ -8,10 +8,11 @@ import { ReviewsTab } from "./tabs/ReviewsTab";
 import { BookOpen, MessageSquare, Edit3, Star } from "lucide-react";
 
 interface Props {
-  lecture: Lecture;
+  lecture: any;   
+  courseId: string; 
 }
 
-const TabbedContent: React.FC<Props> = ({ lecture }) => {
+const TabbedContent: React.FC<Props> = ({ lecture , courseId }) => {
   const [activeTab, setActiveTab] = useState<
     "overview" | "qa" | "notes" | "reviews"
   >("overview");
@@ -63,7 +64,7 @@ const TabbedContent: React.FC<Props> = ({ lecture }) => {
       {/* Content Area */}
       <div className="p-8 min-h-[400px]">
         {activeTab === "overview" && <OverviewTab lecture={lecture} />}
-        {activeTab === "qa" && <QnaTab lecture={lecture} />}
+        {activeTab === "qa" && <QnaTab lectureId={lecture.id} courseId={courseId} />}
         {activeTab === "notes" && (
           <NotesTab lecture={lecture} currentUserId={TEST_USER_ID} />
         )}

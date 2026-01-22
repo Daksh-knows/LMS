@@ -14,8 +14,6 @@ export async function submitReview(
   }
 
   try {
-    // Use upsert to either update the existing review or create a new one
-    // based on the unique userId_lectureId constraint
     await db.review.upsert({
       where: {
         userId_lectureId: {
