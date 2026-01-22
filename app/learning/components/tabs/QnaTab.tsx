@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { MessageSquarePlus, Globe, Search, Loader2, ArrowLeft, Send , Trash2 } from "lucide-react";
+import { MessageSquarePlus, Globe, Search, Loader2, ArrowLeft, Send , Trash2 , Image as ImageIcon, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
+import { CldUploadWidget } from "next-cloudinary";
 
 interface QnaTabProps {
   lectureId: string;
@@ -18,6 +19,8 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
   const [isAllLectures, setIsAllLectures] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [sortBy, setSortBy] = useState<"latest" | "oldest" | "replies">("latest");
+  const [images, setImages] = useState<string[]>([]);
+
 
   const { data: session } = useSession();
   const userId = session?.user?.id;
@@ -27,6 +30,9 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
   const [replyContent, setReplyContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+
+
+
   const sortedQuestions = [...questions].sort((a, b) => {
       const isTeacherA = a.userId === adminId;
       const isTeacherB = b.userId === adminId;
@@ -47,6 +53,10 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
       }
       return 0;
   });
+
+
+
+
   // 1. Fetch Data
   const fetchQuestions = useCallback(async () => {
     try {
@@ -79,11 +89,18 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !description) return;
+    console.log("Images to upload:", images);
     try {
       setIsSubmitting(true);
       const res = await fetch("/api/questions", {
         method: "POST",
-        body: JSON.stringify({ title, description, lectureId, userId }),
+        body: JSON.stringify({ 
+          title, 
+          description, 
+          lectureId, 
+          userId,
+          imageUrls: images 
+        }),
       });
       if (res.ok) {
         const newQuestion = await res.json();
@@ -91,6 +108,7 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
         setShowForm(false);
         setTitle("");
         setDescription("");
+        setImages([]); 
         toast.success("Question posted!");
       }
     } catch (error) {
@@ -98,6 +116,11 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Helper to remove an image before posting
+  const removeImage = (urlToRemove: string) => {
+    setImages((prev) => prev.filter((url) => url !== urlToRemove));
   };
 
   // 3. Post Reply
@@ -196,7 +219,7 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
                       {selectedQuestion.title}
                     </h2>
                     {isQuestionTeacher && (
-                      <span className="bg-blue-600 text-white text-[8px] px-1.5 py-0.5 rounded font-black uppercase">Teacher</span>
+                      <span className="bg-blue-600 text-white text-[6px] p-0.5 rounded font-black uppercase">Teacher</span>
                     )}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
@@ -220,6 +243,30 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
               {selectedQuestion.description}
             </p>
 
+            {selectedQuestion.images && selectedQuestion.images.length > 0 && (
+                  <div className={`grid gap-3 mb-6 ${
+                    selectedQuestion.images.length === 1 ? "grid-cols-1" : 
+                    selectedQuestion.images.length === 2 ? "grid-cols-2" : "grid-cols-2 md:grid-cols-3"
+                  }`}>
+                    {selectedQuestion.images.map((image: any) => (
+                      <div 
+                        key={image.id} 
+                        className="relative aspect-video group cursor-zoom-in overflow-hidden rounded-lg border border-gray-100 bg-gray-50"
+                        onClick={() => window.open(image.url, '_blank')}
+                      >
+                        <img 
+                          src={image.url} 
+                          alt="Question attachment" 
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                          <Search className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={24} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+              )}
+
             <div className="mt-6 space-y-6">
               <div className="flex items-center gap-2">
                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
@@ -238,7 +285,7 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
                     <div key={reply.id} className="flex gap-3">
                       <div 
                         style={{ backgroundColor: isReplyTeacher ? "#2563eb" : "#9ca3af" }}
-                        className="h-8 w-8 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white shadow-sm"
+                        className="h-8 w-8 rounded-full flex-shrink-0 flex items-center justify-center text-[6px] font-bold text-white shadow-sm"
                       >
                         {reply.user?.name?.charAt(0)}
                       </div>
@@ -251,7 +298,7 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
                           <span className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
                             {reply.user?.name}
                             {isReplyTeacher && (
-                              <span className="bg-blue-600 text-white text-[7px] px-3 py-1 rounded font-black uppercase"> Teacher </span>
+                              <span className="bg-blue-600 text-white text-[1px] p-1 rounded font-black uppercase"> Teacher </span>
                             )}
                           </span>
                           <span className="text-[10px] text-gray-400">
@@ -342,7 +389,7 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Question Title..."
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 outline-none"
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md outline-none"
             required
           />
           <textarea
@@ -350,10 +397,48 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Detailed description..."
             rows={3}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 outline-none"
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md outline-none"
             required
           />
-          <div className="flex justify-end gap-2">
+
+          {/* IMAGE UPLOAD SECTION */}
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {images.map((url) => (
+                <div key={url} className="relative h-20 w-20 rounded-md overflow-hidden border border-gray-300">
+                  <button
+                    type="button"
+                    onClick={() => removeImage(url)}
+                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full z-10 hover:bg-red-600"
+                  >
+                    <X size={12} />
+                  </button>
+                  <img src={url} alt="Upload" className="object-cover h-full w-full" />
+                </div>
+              ))}
+            </div>
+
+            <CldUploadWidget
+              uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET} // Create this in Cloudinary Settings > Upload
+              onSuccess={(result: any) => {
+                setImages((prev) => [...prev, result.info.secure_url]);
+              }}
+              options={{ multiple: true, maxFiles: 5 }}
+            >
+              {({ open }) => (
+                <button
+                  type="button"
+                  onClick={() => open()}
+                  className="flex items-center gap-2 px-3 py-2 border border-dashed border-gray-400 rounded-md text-xs font-medium text-gray-600 hover:bg-gray-100 transition"
+                >
+                  <ImageIcon size={14} />
+                  Add Images ({images.length}/5)
+                </button>
+              )}
+            </CldUploadWidget>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
             <button type="button" onClick={() => setShowForm(false)} className="px-3 py-1.5 text-xs text-gray-600">Cancel</button>
             <button disabled={isSubmitting} type="submit" className="px-4 py-1.5 bg-gray-900 text-white rounded-md text-xs font-medium disabled:opacity-50">
               {isSubmitting ? "Posting..." : "Post Question"}
