@@ -19,13 +19,14 @@ async function Page({ params }: PageProps) {
     const response = await fetch(`${baseUrl}/api/course/${courseId}`, {
       cache: 'no-store', 
     });
-
+    console.log("Fetch response status:", response);
     if (!response.ok) {
       if (response.status === 404) return notFound();
       throw new Error("Failed to fetch course");
     }
 
     course = await response.json();
+    console.log("Fetched course data:", course);
   } catch (error) {
     console.error("Error fetching course in Server Component:", error);
   }

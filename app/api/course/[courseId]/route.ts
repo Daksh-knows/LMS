@@ -29,6 +29,7 @@ export async function GET(
                 title: true,
                 position: true,
                 videoUrl: true, 
+                type: true,
               }
             }
           }

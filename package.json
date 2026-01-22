@@ -14,6 +14,7 @@
     "@prisma/adapter-neon": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.9.0",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.25.0",
     "lucide-react": "^0.562.0",

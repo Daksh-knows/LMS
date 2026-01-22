@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { Section, Lecture } from "../types";
 import {
   ChevronDown,
   ChevronUp,
@@ -9,21 +8,54 @@ import {
   CheckCircle2,
   Circle,
   Download,
-  Play,
+  FileText,
+  ClipboardList,
+  Lock,
+  SpellCheck,
+  TvMinimalPlay
 } from "lucide-react";
+
+// --- Types (You can move these to types.ts later) ---
+export type ItemType = "VIDEO" | "TEXT" | "QUIZ" | "ASSIGNMENT";
+
+export interface Resource {
+  title: string;
+  url: string;
+}
+
+export interface CourseItem {
+  id: string;
+  title: string;
+  type: ItemType;
+  duration?: number;
+  isFree: boolean;
+  resources: Resource[];
+  userProgress: { isCompleted: boolean }[];
+}
+
+export interface Section {
+  id: string;
+  title: string;
+  lectures: CourseItem[]; // In DB it's 'lectures' (CourseItems)
+}
 
 interface Props {
   sections: Section[];
   currentLectureId: string;
-  onSelectLecture: (lecture: Lecture) => void;
+  onSelectLecture: (lecture: CourseItem) => void;
+  isEnrolled?: boolean; // Optional: to show lock icons if not enrolled
 }
 
 const CourseSidebar: React.FC<Props> = ({
   sections,
   currentLectureId,
   onSelectLecture,
+  isEnrolled = true,
 }) => {
-  const [openSections, setOpenSections] = useState<string[]>([sections[0]?.id]);
+  // Default to opening the first section
+  const [openSections, setOpenSections] = useState<string[]>(
+    sections.length > 0 ? [sections[0].id] : []
+  );
 
   const toggleSection = (id: string) => {
     setOpenSections((prev) =>
@@ -32,40 +64,74 @@ const CourseSidebar: React.FC<Props> = ({
   };
 
   /**
-   * Helper to determine lecture completion status from Prisma UserProgress
+   * Helper: Get Status (Watched/Unwatched)
    */
-  const getLectureStatus = (lecture: any) => {
-    // Access the progress entry fetched via the 'userProgress' include in your query
-    const progress = lecture.userProgress?.[0]; 
-    
-    if (progress?.isCompleted) {
-      return "watched";
-    }
-    
-    return "unwatched";
+  const getCompletionStatus = (item: CourseItem) => {
+    const progress = item.userProgress?.[0];
+    return progress?.isCompleted ? "completed" : "incomplete";
   };
 
   /**
-   * Generates the appropriate icon based on active state and completion
+   * Helper: Render the correct icon based on Item Type
    */
-  const getStatusIcon = (lecture: any, isActive: boolean) => {
+  const getTypeIcon = (type: ItemType, isActive: boolean) => {
+    const className = isActive ? "text-purple-600" : "text-gray-400";
+    const size = 16;
+
+    switch (type) {
+      case "VIDEO":
+        return <TvMinimalPlay size={size} className={className} />;
+      case "TEXT":
+        return <FileText size={size} className={className} />;
+      case "QUIZ":
+        return <SpellCheck size={size} className={className} />;
+      case "ASSIGNMENT":
+        return <ClipboardList size={size} className={className} />;
+      default:
+        return <PlayCircle size={size} className={className} />;
+    }
+  };
+
+  /**
+   * Helper: Render the Checkmark or Lock icon
+   */
+  const getStatusIndicator = (item: CourseItem, isActive: boolean) => {
+    // 1. If Active, show a pulsing dot or specific active indicator
     if (isActive) {
       return (
-        <div className="relative">
-          <PlayCircle size={18} className="text-purple-600 animate-pulse" />
+        <div className="relative flex items-center justify-center w-5 h-5">
+          <span className="absolute inline-flex h-full w-full rounded-full bg-purple-200 opacity-75 animate-ping"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-600"></span>
         </div>
       );
     }
 
-    const status = getLectureStatus(lecture);
-
-    if (status === "watched") {
-      return (
-        <CheckCircle2 size={18} className="text-green-600 fill-green-50" />
-      );
+    // 2. If Locked (Not enrolled & Not free)
+    if (!isEnrolled && !item.isFree) {
+      return <Lock size={16} className="text-gray-300" />;
     }
 
+    // 3. If Completed
+    const status = getCompletionStatus(item);
+    if (status === "completed") {
+      return <CheckCircle2 size={18} className="text-green-600 fill-green-50" />;
+    }
+
+    // 4. Default empty circle
     return <Circle size={18} className="text-gray-300" />;
+  };
+
+  /**
+   * Helper: Render Metadata (Duration, etc.)
+   */
+  const getMetaInfo = (item: CourseItem) => {
+    if (item.type === "VIDEO" && item.duration) {
+      return `${item.duration} mins`;
+    }
+    if (item.type === "TEXT") return "Read";
+    if (item.type === "QUIZ") return "Quiz";
+    if (item.type === "ASSIGNMENT") return "Task";
+    return "";
   };
 
   return (
@@ -80,7 +146,7 @@ const CourseSidebar: React.FC<Props> = ({
 
           return (
             <div key={section.id} className="border-b border-gray-100">
-              {/* Section Header */}
+              {/* --- Section Header --- */}
               <button
                 onClick={() => toggleSection(section.id)}
                 className="w-full flex items-center gap-3 p-4 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
@@ -91,64 +157,67 @@ const CourseSidebar: React.FC<Props> = ({
                 <h3 className="font-bold text-sm text-gray-800 leading-tight flex-1">
                   {section.title}
                 </h3>
+                <span className="text-[10px] font-bold text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">
+                  {section.lectures.length}
+                </span>
               </button>
 
-              {/* Lectures List */}
+              {/* --- Items List --- */}
               {isOpen && (
                 <div className="bg-white">
-                  {section.lectures.map((lecture) => {
-                    const isActive = lecture.id === currentLectureId;
+                  {section.lectures.map((item) => {
+                    const isActive = item.id === currentLectureId;
+                    const isLocked = !isEnrolled && !item.isFree;
 
                     return (
                       <div
-                        key={lecture.id}
-                        onClick={() => onSelectLecture(lecture as any)}
-                        className={`group flex flex-col p-4 cursor-pointer transition-all border-l-4 ${
+                        key={item.id}
+                        onClick={() => !isLocked && onSelectLecture(item)}
+                        className={`group flex flex-col p-4 transition-all border-l-4 ${
                           isActive
-                            ? "border-purple-700 bg-purple-50"
+                            ? "border-purple-600 bg-purple-50"
                             : "border-transparent hover:bg-gray-50"
-                        }`}
+                        } ${isLocked ? "cursor-not-allowed opacity-75" : "cursor-pointer"}`}
                       >
                         <div className="flex items-start gap-3">
-                          {/* DYNAMIC STATUS ICON */}
+                          {/* Status Icon (Checkmark/Lock) */}
                           <div className="mt-0.5 shrink-0">
-                            {getStatusIcon(lecture, isActive)}
+                            {getStatusIndicator(item, isActive)}
                           </div>
 
                           <div className="flex-1 min-w-0">
+                            {/* Title */}
                             <p
                               className={`text-sm leading-snug transition-colors ${
                                 isActive
-                                  ? "font-semibold text-gray-900"
-                                  : "text-gray-600"
+                                  ? "font-bold text-purple-900"
+                                  : "text-gray-700 group-hover:text-gray-900"
                               }`}
                             >
-                              {lecture.title}
+                              {item.title}
                             </p>
 
+                            {/* Meta Info Row */}
                             <div className="flex items-center gap-3 mt-1.5">
-                              <div className="flex items-center gap-1 text-[11px] text-gray-400 font-medium">
-                                <Play
-                                  size={10}
-                                  className={isActive ? "text-purple-600" : ""}
-                                />
-                                <span>{lecture.duration} mins</span>
+                              <div className={`flex items-center gap-1.5 text-[11px] font-medium ${isActive ? "text-purple-600" : "text-gray-400"}`}>
+                                {getTypeIcon(item.type, isActive)}
+                                <span>{getMetaInfo(item)}</span>
                               </div>
                             </div>
                           </div>
                         </div>
 
-                        {/* Resources Section */}
-                        {lecture.resources && lecture.resources.length > 0 && (
-                          <div className="ml-7 mt-3 flex flex-wrap gap-2">
-                            {lecture.resources.map((res, idx) => (
+                        {/* Resources (Only show if active or explicitly desired) */}
+                        {item.resources && item.resources.length > 0 && isActive && (
+                          <div className="ml-8 mt-3 flex flex-wrap gap-2 animate-in fade-in slide-in-from-top-1">
+                            {item.resources.map((res, idx) => (
                               <button
                                 key={idx}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   window.open(res.url, "_blank");
                                 }}
-                                className="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-bold bg-white border border-gray-200 rounded text-gray-500 hover:border-purple-400 hover:text-purple-700 transition-all shadow-sm"
+                                className="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-bold bg-white border border-gray-200 rounded-md text-gray-500 hover:border-purple-400 hover:text-purple-700 transition-all shadow-sm"
                               >
                                 <Download size={10} />
                                 {res.title}
