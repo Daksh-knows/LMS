@@ -16,6 +16,7 @@ export async function GET(
         id: true,
         title: true,
         description: true,
+        adminId: true, // <--- ADDED THIS FIELD HERE
         modules: {
           orderBy: { position: "asc" },
           select: {
