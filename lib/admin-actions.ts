@@ -34,21 +34,19 @@ export async function getMyManagedCourses(adminId: string) {
 
 export async function deleteCourse(courseId: string, adminId: string) {
   try {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized" };
-    }
-
     const course = await db.course.findUnique({ where: { id: courseId } });
     if (!course) return { success: false, error: "Course not found" };
     if (course.adminId !== adminId) {
       return { success: false, error: "Unauthorized" };
     }
-
-    await db.course.delete({ where: { id: courseId } });
+    const deleteStudents = await db.enrollment.deleteMany({
+      where: { courseId },
+    });
+    const resp =  await db.course.delete({ where: { id: courseId } });
     revalidatePath('/dashboard/admin');
     return { success: true };
   } catch (error: any) {
+    console.log("Delete Course Error:", error);
     return { success: false, error: "Failed to delete course." };
   }
 }

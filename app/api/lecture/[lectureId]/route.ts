@@ -17,6 +17,7 @@ export async function GET(
         id: true,
         title: true,
         description: true,
+        type: true,
         videoUrl: true,
         position: true,
         moduleId: true,

@@ -6,9 +6,11 @@ import {
   Loader2, Clock, Link2, Type, Plus, Trash2, 
   FileText, X, AlignLeft, CheckCircle, FileQuestion, UploadCloud 
 } from "lucide-react";
+import { AttachmentsSection } from "./AttachmentsSection";
 
 // --- Types ---
 type ItemType = "VIDEO" | "TEXT" | "QUIZ" | "ASSIGNMENT";
+type VideoMode = "URL" | "UPLOAD";
 
 interface Resource {
   title: string;
@@ -46,6 +48,9 @@ export default function AddLectureForm({ courseId, sectionId, initialData, onSuc
   const [videoUrl, setVideoUrl] = useState("");
   const [duration, setDuration] = useState("");
   const [attachments, setAttachments] = useState<Resource[]>([]);
+  const [videoMode, setVideoMode] = useState<VideoMode>("URL"); 
+  const [videoFile, setVideoFile] = useState<File | null>(null); // NEW
+  const [uploading, setUploading] = useState(false); 
 
   // --- Text State ---
   const [htmlContent, setHtmlContent] = useState("");
@@ -138,7 +143,29 @@ export default function AddLectureForm({ courseId, sectionId, initialData, onSuc
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+    let finalVideoUrl = videoUrl;
+    if(type === "VIDEO" && videoMode === "UPLOAD" && videoFile) {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append("file", videoFile);
+
+      const res = await fetch("/api/upload/video", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      setUploading(false);
+
+      if (!res.ok) {
+        alert("Video upload failed");
+        setLoading(false);
+        return;
+      }
+
+      finalVideoUrl = data.url;
+
+    }
     // Prepare payload
     const payload: any = {
       courseId,
@@ -150,7 +177,7 @@ export default function AddLectureForm({ courseId, sectionId, initialData, onSuc
 
     // Add type-specific data
     if (type === "VIDEO") {
-      payload.videoUrl = videoUrl;
+      payload.videoUrl = finalVideoUrl;
       payload.duration = duration;
       payload.attachments = attachments.filter(a => a.title && a.url);
     } else if (type === "TEXT") {
@@ -238,46 +265,121 @@ export default function AddLectureForm({ courseId, sectionId, initialData, onSuc
         </label> */}
       </div>
 
-      {/* --- VIDEO FORM --- */}
+      {/* VIDEO FORM */}
       {type === "VIDEO" && (
-        <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Duration (min)</label>
-              <div className="relative group">
-                <input 
-                  required
-                  type="number"
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                  placeholder="10"
-                  className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-                />
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Video Embed URL</label>
-              <div className="relative group">
-                <input 
-                  required
-                  type="url"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  placeholder="https://..."
-                  className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-                />
-                <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              </div>
-            </div>
+        <div className="space-y-4">
+
+          {/* MODE TOGGLE */}
+          <div className="flex gap-2">
+            {[
+              { id: "URL", label: "Embed URL", icon: Link2, desc: "YouTube, Vimeo" },
+              { id: "UPLOAD", label: "Upload Video", icon: UploadCloud, desc: "MP4, WebM, MOV" },
+            ].map(({ id, label, icon: Icon, desc }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setVideoMode(id as VideoMode)}
+                className={`p-5 rounded-2xl border text-left transition-all ${
+        videoMode === id
+          ? "border-blue-500 bg-blue-50 shadow-sm"
+          : "border-gray-200 hover:border-gray-300"
+      }`}
+              >
+                <Icon size={28} className="mb-2 text-blue-600" />
+                <p className="font-bold text-sm">{label}</p>
+                <p className="text-xs text-gray-500">{desc}</p>
+              </button>
+            ))}
           </div>
-          
-          <AttachmentsSection 
-            attachments={attachments} 
-            onAdd={addAttachmentRow} 
-            onRemove={removeAttachmentRow} 
-            onUpdate={updateAttachment} 
-            label="Video Resources"
+
+          {/* DURATION */}
+          <input
+            required
+            type="number"
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+            placeholder="Duration (min)"
+            className="w-full p-3 bg-gray-50 border rounded-xl"
+          />
+
+          {/* URL INPUT */}
+          {videoMode === "URL" && (
+            <input
+              required
+              type="url"
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              placeholder="https://..."
+              className="w-full p-3 bg-gray-50 border rounded-xl"
+            />
+          )}
+
+          {/* FILE UPLOAD */}
+          {videoMode === "UPLOAD" && (
+            <div className="space-y-3">
+              {/* Hidden native input */}
+              <input
+                id="video-upload"
+                type="file"
+                accept="video/*"
+                onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                className="hidden"
+              />
+
+              {/* Custom upload UI */}
+              <label
+                htmlFor="video-upload"
+                className="flex flex-col items-center justify-center gap-3 p-6
+                          border-2 border-dashed border-gray-300 rounded-2xl
+                          cursor-pointer bg-gray-50
+                          hover:border-blue-500 hover:bg-blue-50/40
+                          transition-all text-center"
+              >
+                {!videoFile ? (
+                  <>
+                    <UploadCloud size={32} className="text-gray-400" />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700">
+                        Click to upload a video
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        MP4, WebM, MOV supported
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud size={28} className="text-green-500" />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800 truncate max-w-xs">
+                        {videoFile.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {(videoFile.size / (1024 * 1024)).toFixed(2)} MB
+                      </p>
+                    </div>
+                    <p className="text-[11px] text-blue-600 underline">
+                      Click to change file
+                    </p>
+                  </>
+                )}
+              </label>
+            </div>
+          )}
+
+
+          {uploading && (
+            <p className="text-xs text-blue-600 flex items-center gap-2">
+              <Loader2 className="animate-spin" size={14} /> Uploading video…
+            </p>
+          )}
+
+          <AttachmentsSection
+            attachments={attachments}
+            onAdd={addAttachmentRow}
+            onRemove={removeAttachmentRow}
+            onUpdate={updateAttachment}
+            label="Attachments"
           />
         </div>
       )}
@@ -319,7 +421,7 @@ export default function AddLectureForm({ courseId, sectionId, initialData, onSuc
             onAdd={addAttachmentRow} 
             onRemove={removeAttachmentRow} 
             onUpdate={updateAttachment} 
-            label="Supporting Documents"
+            label="Attachments"
           />
         </div>
       )}
@@ -417,62 +519,3 @@ export default function AddLectureForm({ courseId, sectionId, initialData, onSuc
   );
 }
 
-// --- Sub-Component for Attachments ---
-function AttachmentsSection({ attachments, onAdd, onRemove, onUpdate, label }: any) {
-  return (
-    <div className="pt-2">
-      <div className="flex items-center justify-between mb-3">
-        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-           <UploadCloud size={14} /> {label}
-        </label>
-        <button 
-          type="button"
-          onClick={onAdd}
-          className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-1"
-        >
-          <Plus size={14} /> Add
-        </button>
-      </div>
-
-      <div className="space-y-3">
-        {attachments.map((att: any, index: number) => (
-          <div key={index} className="flex flex-col sm:flex-row gap-2">
-            <div className="relative sm:w-28 shrink-0">
-               <select
-                className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 outline-none"
-                value={att.type}
-                onChange={(e) => onUpdate(index, "type", e.target.value)}
-              >
-                <option value="FILE">File</option>
-                <option value="CODE">Code</option>
-                <option value="LINK">Link</option>
-              </select>
-            </div>
-            <input 
-              placeholder="Title"
-              className="flex-1 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none"
-              value={att.title}
-              onChange={(e) => onUpdate(index, "title", e.target.value)}
-            />
-            <input 
-              placeholder="URL"
-              className="flex-1 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none"
-              value={att.url}
-              onChange={(e) => onUpdate(index, "url", e.target.value)}
-            />
-            <button
-              type="button"
-              onClick={() => onRemove(index)}
-              className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-            >
-              <Trash2 size={16} />
-            </button>
-          </div>
-        ))}
-        {attachments.length === 0 && (
-            <p className="text-center text-xs text-gray-300 italic py-2">No documents attached.</p>
-        )}
-      </div>
-    </div>
-  );
-}
