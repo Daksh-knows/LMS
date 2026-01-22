@@ -108,7 +108,7 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
                            onClick={() => openAddModal(section.id)}
                            className="flex items-center gap-2 text-[10px] font-black bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition-all shadow-md active:scale-95"
                          >
-                           <Plus size={14} /> ADD LECTURE
+                           <Plus size={14} /> ADD 
                          </button>
 
                          <button
