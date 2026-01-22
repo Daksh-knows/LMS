@@ -14,7 +14,7 @@ import Logo from "@/app/landingpage/components/Logo";
 // Note: I added 'user' as a prop
 export default function Sidebar({ user }: { user: any }) {
   const pathname = usePathname();
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "ADMIN" || user?.role === "admin";
 
   // Build the navigation items dynamically
   const navItems = [
