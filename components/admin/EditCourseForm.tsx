@@ -2,38 +2,62 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateCourse } from "@/lib/admin-actions";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 export default function EditCourseForm({ course, adminId }: { course: any, adminId: string }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
+  e.preventDefault();
+  setLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-    const updatedData = {
-      title: formData.get("title") as string,
-      subtitle: formData.get("subtitle") as string,
-      image: formData.get("image") as string,
-      totalModules: parseInt(formData.get("totalModules") as string),
-      tags: (formData.get("tags") as string).split(",").map(tag => tag.trim()),
-    };
-
-    const result = await updateCourse(course.id, updatedData, adminId);
-
-    if (result.success) {
-      router.push("/dashboard/admin");
-      router.refresh();
-    } else {
-      alert("Error: " + result.error);
-      setLoading(false);
-    }
+  const formData = new FormData(e.currentTarget);
+  
+  // 1. Prepare the JSON data
+  const updatedData = {
+    title: formData.get("title") as string,
+    subtitle: formData.get("subtitle") as string,
+    image: formData.get("image") as string,
+    tags: (formData.get("tags") as string).split(",").map(tag => tag.trim()),
   };
 
+  // 2. Define the update promise
+  const updatePromise = async () => {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const response = await fetch(`${baseUrl}/api/course/${course.id}?adminId=${adminId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to update course");
+      }
+
+      return result;
+    };
+
+    // 3. Execute the promise with Toast UI
+    toast.promise(updatePromise(), {
+      loading: "Saving changes...",
+      success: () => {
+        router.push("/dashboard/admin");
+        router.refresh();
+        return "Course updated successfully! 🎉";
+      },
+      error: (err) => {
+        setLoading(false);
+        return `Update failed: ${err.message}`;
+      }
+    });
+  };
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
       <div className="p-8 md:p-12 space-y-8">
