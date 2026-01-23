@@ -1,5 +1,5 @@
 import { getMyManagedCourses } from "@/lib/admin-actions";
-import AdminCourseList from "@/components/AdminCourseList";
+import AdminCourseList from "@/components/admin/AdminCourseList";
 import { getCurrentUser } from "@/lib/auth-utils";
 import { redirect } from "next/navigation";
 

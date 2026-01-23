@@ -213,6 +213,7 @@ model Lecture {
 
   // --- NEW RELATIONS FOR QUIZ & ASSIGNMENT ---
   quizQuestions QuizQuestion[]
+
   submissions   AssignmentSubmission[]
 
   createdAt DateTime @default(now())
@@ -330,7 +331,6 @@ model QuizQuestion {
 
   lectureId String
   lecture   Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
-
   options AnswerOption[]
 
   createdAt DateTime @default(now())
