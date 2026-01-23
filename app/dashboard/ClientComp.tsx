@@ -2,29 +2,48 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { Info, ExternalLink, Loader2 } from "lucide-react";
-// Remove: import courseData from "@/data/courses.json"; 
-import { enrollInCourse } from "@/lib/user-actions"; 
-import { getAllCourses } from "@/lib/course-actions"; // Import the new action
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export default function OverviewClient({ data }: { data: any }) {
   const [courseType, setCourseType] = useState("All");
   const [courses, setCourses] = useState<any[]>([]); // State to hold DB courses
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const router = useRouter();
   
   const { stats } = data;
 
   // Fetch courses from DB on mount
   useEffect(() => {
     async function load() {
-      const result = await getAllCourses();
-      if (result.success) {
-        setCourses(result.data || []);
-      } else {
-        console.error(result.error);
+      try {
+        // 1. Fetch data from the new API route
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+        const response = await fetch(`${baseUrl}/api/course/all`);
+        
+        // 2. Check if the HTTP request was successful
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: Failed to fetch courses`);
+        }
+
+        const result = await response.json();
+
+        // 3. Update state based on the API response structure
+        if (result.success) {
+          setCourses(result.data || []);
+        } else {
+          console.error(result.error);
+        }
+      } catch (error) {
+        // Handle network errors or parsing issues
+        console.error("Fetch Courses Error:", error);
+      } finally {
+        // 4. Always turn off the loading state
+        setLoadingCourses(false);
       }
-      setLoadingCourses(false);
     }
+
     load();
   }, []);
   // console.log("Fetched courses from DB:", courses);
@@ -37,20 +56,43 @@ export default function OverviewClient({ data }: { data: any }) {
   }, [courseType, courses]);
 
   const handleQuickEnroll = async (e: React.MouseEvent, courseId: string, title: string) => {
-    e.stopPropagation();
+    e.stopPropagation(); // Prevents clicking the course card from triggering other events
+    console.log("Enrolling in course:", courseId);
+    // Set local state to show a spinner on the specific button if needed
     setProcessingId(courseId);
-    try {
-      const result = await enrollInCourse(courseId);
-      if (result.success) {
-        alert(`Successfully enrolled in ${title}!`);
-      } else {
-        alert(result.error || "Enrollment failed.");
+
+    // 1. Define the enrollment process as a promise
+    const enrollPromise = async () => {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+      const response = await fetch(`${baseUrl}/api/course/${courseId}/enroll`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Enrollment failed");
       }
-    } catch (error) {
-      alert("An unexpected error occurred.");
-    } finally {
-      setProcessingId(null);
-    }
+
+      return result;
+    };
+
+    // 2. Trigger the Toast UI
+    toast.promise(enrollPromise(), {
+      loading: `Enrolling you in ${title}...`,
+      success: () => {
+        setProcessingId(null);
+        router.refresh(); 
+        return `Successfully enrolled in ${title}! 🚀`;
+      },
+      error: (err) => {
+        setProcessingId(null);
+        return err.message;
+      },
+    });
   };
 
   return (

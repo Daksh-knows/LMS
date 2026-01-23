@@ -2,10 +2,10 @@
 
 import React, { useState } from "react";
 import Script from "next/script";
-import { createRazorpayOrder, verifyAndUpgradeStatus } from "@/lib/payment-actions";
 import { Loader2, ShieldCheck, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { getSession, useSession } from "next-auth/react";
+import toast from "react-hot-toast";
 
 export default function PaymentPage() {
   const [loading, setLoading] = useState(false);
@@ -14,51 +14,86 @@ export default function PaymentPage() {
 
   const handlePayment = async () => {
     setLoading(true);
-    
-    // 1. Trigger the Server Action
-    const order = await createRazorpayOrder();
 
-    if (!order.success) {
-      alert("Error creating order. Please try again.");
+    try {
+      const session = await getSession();
+      if (!session?.user?.id) {
+        toast.error("You must be logged in to proceed.");
+        setLoading(false);
+        return;
+      }
+
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+      const orderRes = await fetch(`${baseUrl}/api/premium/order`, { method: "POST" });
+      const order = await orderRes.json();
+
+      if (!order.success) {
+        toast.error("Failed to create order.");
+        setLoading(false);
+        return;
+      }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: "INR",
+        name: "LMS + Placement Portal",
+        description: "Premium Membership Upgrade",
+        order_id: order.id,
+        handler: async function (response: any) {
+          // --- INTERNAL VERIFICATION LOGIC ---
+          const verifyPayment = async () => {
+            const res = await fetch(`${baseUrl}/api/premium/verify`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.error || "Verification failed");
+            
+            // 1. IMPORTANT: Update the local session so the UI knows you are premium
+            await update({ hasPremium: true  });
+            return data;
+          };
+
+          // --- TOAST PROMISE HANDLING ---
+          toast.promise(verifyPayment(), {
+            loading: "Finalizing your upgrade...",
+            success: () => {
+              // 2. Clear loading before navigating
+              setLoading(false); 
+              console.log("Payment and upgrade successful!");
+              // 3. Redirect to dashboard
+              router.push("/dashboard?payment=success");
+              router.refresh(); 
+              return "Welcome to Premium! 🏆";
+            },
+            error: (err) => {
+              setLoading(false);
+              return `Error: ${err.message}`;
+            },
+          });
+        },
+        modal: {
+          ondismiss: () => setLoading(false),
+        },
+        // ... (prefill and theme remains the same)
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error("Razorpay error:", error);
+      toast.error("Something went wrong.");
       setLoading(false);
-      return;
     }
-
-    // 2. Open Razorpay Checkout
-    const options = {
-      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      amount: order.amount,
-      currency: "INR",
-      name: "Your Academy",
-      description: "Security Deposit for Enrollment",
-      order_id: order.id,
-      handler: async function (response: any) {
-        // 1. Update Database via Server Action
-        const result = await verifyAndUpgradeStatus(response.razorpay_payment_id);
-
-        if (result.success) {
-          // 2. IMPORTANT: Update the NextAuth Session Cookie
-          // This calls the 'jwt' callback in auth_config.ts with trigger: "update"
-          await update({ hasPremium: true });
-
-          // 3. Redirect to dashboard
-          router.push("/dashboard?status=success");
-        } else {
-          alert("Payment received but account upgrade failed. Please contact support.");
-        }
-      },
-      prefill: {
-        name: "Student Name",
-        email: "student@example.com",
-      },
-      theme: { color: "#16a34a" }, // Green theme to match your enrollment card
-    };
-
-    const rzp = new (window as any).Razorpay(options);
-    rzp.open();
-    setLoading(false);
   };
-
+  //#16a34a = green theme for enrollment card design
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" />
