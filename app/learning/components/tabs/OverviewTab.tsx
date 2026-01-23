@@ -8,20 +8,39 @@ export const OverviewTab: React.FC<{ lecture: Lecture }> = ({ lecture }) => {
     month: "long",
     year: "numeric",
   });
-
+  console.log("Lecture in OverviewTab:", lecture);
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-8">
       {/* 1. Description Section */}
       <div>
-        <h3 className="text-xl font-bold text-gray-900 mb-4">
-          About this lecture
-        </h3>
-        <div className="prose prose-purple max-w-none text-gray-700 leading-relaxed">
-          {/* Use 'description' from Prisma instead of 'overview' */}
-          <p>
-            {lecture.description || "No description provided for this lecture."}
-          </p>
-        </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">
+            About this {lecture.type === "VIDEO" ? "Lecture" : "Quiz"}
+          </h3>
+          <div className="prose prose-purple max-w-none text-gray-700 leading-relaxed">
+            {lecture.type === "QUIZ" ? (
+              /* --- Render This if it's a QUIZ --- */
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <p className="text-sm font-medium text-gray-600 mb-2">
+                  This is an interactive quiz module designed to test your understanding of the previous topics.
+                </p>
+                <ul className="text-sm space-y-1 list-none p-0">
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                    Check your results immediately after completion.
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                    Review difficult questions at the end.
+                  </li>
+                </ul>
+              </div>
+            ) : (
+              /* --- Render This if it's a VIDEO (Normal Description) --- */
+              <p>
+                {lecture.description || "No description provided for this lecture."}
+              </p>
+            )}
+          </div>
       </div>
 
       {/* 2. Resources Section (Integrated from Attachment model) */}
