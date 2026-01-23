@@ -23,11 +23,9 @@ export async function GET(
         videoUrl: true,
         position: true,
         moduleId: true,
-        resources: {
-          select: {
-            id: true,
-            url: true,
-          }
+        quizQuestions :{
+          include:{options : true} ,
+          orderBy: { position: 'asc' }
         },
       },
     });
