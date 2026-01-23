@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth-utils";
-import EditCourseForm from "@/components/EditCourseForm";
+import EditCourseForm from "@/components/admin/EditCourseForm";
 import { notFound, redirect } from "next/navigation";
 
 export default async function EditPage({ 
