@@ -113,7 +113,7 @@ export async function PATCH(
   { params }: { params: { courseId: string } }
 ) {
   try {
-    const { courseId } = params;
+    const { courseId } = await params;
     const { searchParams } = new URL(req.url);
     const adminId = searchParams.get("adminId");
 

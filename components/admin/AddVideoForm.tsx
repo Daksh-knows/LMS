@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { addCourseItem, updateCourseItem } from "@/lib/admin-actions";
 import { ItemType } from "@/app/generated/prisma/enums"; 
 import { 
   Loader2, Clock, Link2, Type, Plus, Trash2, 
   FileText, UploadCloud, Link as LinkIcon, File 
 } from "lucide-react";
+import toast from "react-hot-toast";
+import { getSession } from "next-auth/react";
 
 interface Resource {
   title: string;
@@ -56,47 +57,75 @@ export default function AddVideoForm({ courseId, sectionId, initialData, onSucce
     e.preventDefault();
     setLoading(true);
 
-    let finalVideoUrl = videoUrl;
+    const saveVideoPromise = async () => {
+      let finalVideoUrl = videoUrl;
 
-    // 1. Handle Video Upload if in UPLOAD mode
-    if (videoMode === "UPLOAD" && videoFile) {
-      setUploading(true);
-      const formData = new FormData();
-      formData.append("file", videoFile);
-      
-      try {
-        const res = await fetch("/api/upload/video", { method: "POST", body: formData });
-        if (!res.ok) throw new Error("Upload failed");
-        const data = await res.json();
-        finalVideoUrl = data.url;
-      } catch (err) {
-        alert("Video upload failed");
-        setLoading(false);
+      // 1. PHASE: Cloudinary Upload (If applicable)
+      if (videoMode === "UPLOAD" && videoFile) {
+        setUploading(true);
+        const formData = new FormData();
+        formData.append("file", videoFile);
+        
+        const uploadRes = await fetch("/api/upload/video", { 
+          method: "POST", 
+          body: formData 
+        });
+
+        if (!uploadRes.ok) throw new Error("Video upload failed");
+        
+        const uploadData = await uploadRes.json();
+        finalVideoUrl = uploadData.url;
         setUploading(false);
-        return;
       }
-      setUploading(false);
-    }
 
-    const payload = {
-      courseId,
-      moduleId: sectionId,
-      title,
-      type: "VIDEO" as ItemType,
-      isFree,
-      videoUrl: finalVideoUrl,
-      duration,
-      attachments: attachments.filter(a => a.title.trim() !== "" && a.url.trim() !== "")
+      // 2. PHASE: Database Payload Construction
+      const payload = {
+        courseId,
+        moduleId: sectionId,
+        title,
+        type: "VIDEO",
+        isFree,
+        videoUrl: finalVideoUrl,
+        duration,
+        attachments: attachments.filter(a => a.title.trim() !== "" && a.url.trim() !== "")
+      };
+      const session = await getSession();
+      const adminId = session?.user?.id;
+      if (!adminId) throw new Error("Unauthorized");
+      // 3. PHASE: API Calling
+      const isUpdate = !!initialData;
+      const url = isUpdate 
+        ? `/api/lecture?adminId=${adminId}&itemId=${initialData.id}` 
+        : `/api/lecture?adminId=${adminId}`;
+
+      const response = await fetch(url, {
+        method: isUpdate ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to save lecture details");
+      }
+
+      return result;
     };
 
-    const result = initialData 
-      ? await updateCourseItem(initialData.id, payload)
-      : await addCourseItem(payload);
-
-    if (result.success) onSuccess();
-    else alert(result.error);
-    
-    setLoading(false);
+    // --- TRIGGER TOAST ---
+    toast.promise(saveVideoPromise(), {
+      loading: videoFile ? "Uploading video and saving..." : "Saving lecture details...",
+      success: () => {
+        onSuccess(); // Triggers refreshData() in parent
+        return "Video lecture saved! 🎥";
+      },
+      error: (err) => {
+        setLoading(false);
+        setUploading(false);
+        return `Error: ${err.message}`;
+      }
+    });
   };
 
   return (

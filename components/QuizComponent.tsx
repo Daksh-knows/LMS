@@ -60,7 +60,7 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture }) => {
     const score = calculateScore();
     return (
       /* Changed max-w-2xl to max-w-full and added pt-16 for navbar clearance */
-      <div className="w-full max-w-full pt-16 pb-12 px-6">
+      <div className="w-full max-w-full pt-16 pb-12 px-6 mt-10">
         <div className="bg-white border-2 border-blue-100 rounded-3xl p-10 text-center shadow-xl max-w-2xl mx-auto">
           <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <Award size={40} className="text-yellow-600" />
@@ -254,7 +254,7 @@ return (
             Quiz Instructions
           </h4>
           <p className="text-gray-600 leading-relaxed text-lg">
-            {metadata.context || "Answer all questions to the best of your ability. You will see your results immediately after completing the final question."}
+            {"Answer all questions to the best of your ability. You will see your results immediately after completing the final question."}
           </p>
         </div>
 
@@ -262,7 +262,7 @@ return (
         <div className="flex flex-col items-center">
           <button 
             onClick={() => setQuizState('active')}
-            className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-black py-6 px-20 rounded-4xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-blue-200 flex items-center justify-center gap-4 text-2xl group"
+            className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-black py-6 px-10 rounded-2xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-blue-200 flex items-center justify-center gap-4 text-2xl group"
           >
             <PlayCircle size={32} className="group-hover:rotate-12 transition-transform" />
             Start Attempt

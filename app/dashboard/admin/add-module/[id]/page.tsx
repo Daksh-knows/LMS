@@ -10,7 +10,10 @@ import {
 import Link from "next/link";
 import AddModuleForm from "@/components/admin/AddModuleForm"; // Verify path matches your folder structure
 import AddLectureForm from "@/components/admin/AddLectureForm"; // Verify path matches your folder structure
-import { getCourseContent, deleteLecture, deleteSection } from "@/lib/admin-actions";
+import { deleteLecture, deleteSection } from "@/lib/admin-actions";
+import { toast } from "react-hot-toast";
+import { getCurrentUser } from "@/lib/auth-utils";
+import { getSession } from "next-auth/react";
 
 export default function AddModulePage({ params }: { params: Promise<{ id: string }> }) {
   const [id, setId] = useState<string>("");
@@ -29,8 +32,62 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
   }, [params]);
 
   const loadContent = async (courseId: string) => {
-    const res = await getCourseContent(courseId);
-    if (res.success) setContent(res);
+    try {
+      const user: any = await getSession();
+      
+      const adminId = user?.user?.id;
+      
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+      const response = await fetch(`${baseUrl}/api/course/${courseId}/content?adminId=${adminId}`);
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch curriculum");
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        setContent(data);
+      } else {
+        console.error(data.error);
+      }
+    } catch (error) {
+      console.error("Error loading curriculum:", error);
+      toast.error("Failed to load course content");
+    }
+  };
+
+  const handleDeleteSection = async (moduleId: string, title: string) => {
+  if (!confirm(`Delete module "${title}"? This will remove all lectures and quizzes inside it.`)) {
+    return;
+  }
+
+  const deletePromise = async () => {
+    // Calling the API route we created
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+    const user = await getSession();
+    const adminId = user?.user?.id;
+    const response = await fetch(`${baseUrl}/api/course/${id}/module/${moduleId}?adminId=${adminId}`, {
+      method: "DELETE",
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || "Failed to delete section");
+    }
+
+    return result;
+  };
+
+  toast.promise(deletePromise(), {
+      loading: "Deleting section...",
+      success: () => {
+        refreshData(); // Sync the UI state
+        return "Section deleted successfully!";
+      },
+      error: (err) => `Error: ${err.message}`,
+    });
   };
 
   const refreshData = () => loadContent(id);
@@ -162,7 +219,7 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
                 <h2 className="text-xl font-bold text-gray-800">Add New Module (Section)</h2>
               </div>
               <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
-                <AddModuleForm courseId={id} />
+                <AddModuleForm courseId={id} refreshData={refreshData}  />
               </div>
             </section>
 
@@ -187,17 +244,12 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
                          </button>
 
                          <button
-                           onClick={async () => {
-                             if (confirm(`Delete module "${section.title}"?`)) {
-                               const res = await deleteSection(id, section.id);
-                               if (res.success) refreshData();
-                             }
-                           }}
-                           className="p-2 bg-white text-gray-400 hover:text-red-600 border border-gray-100 rounded-full hover:bg-red-50 transition-all shadow-sm"
-                           title="Delete Module"
-                         >
-                           <Trash2 size={16} />
-                         </button>
+                          onClick={() => handleDeleteSection(section.id, section.title)}
+                          className="p-2 bg-white text-gray-400 hover:text-red-600 border border-gray-100 rounded-full hover:bg-red-50 transition-all shadow-sm"
+                          title="Delete Module"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                        </div>
                     </div>
 

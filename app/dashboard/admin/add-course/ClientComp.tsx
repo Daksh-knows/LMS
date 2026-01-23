@@ -6,11 +6,10 @@ import { useFormStatus } from "react-dom";
 import Link from "next/link";
 
 interface Props {
-  addCourseAction: (formData: any) => Promise<{ success: boolean; error?: string }>;
   user: any;
 }
 
-export default function AddCoursePageClient({ addCourseAction, user }: Props) {
+export default function AddCoursePageClient({  user }: Props) {
   const router = useRouter();
 
   async function handleFormAction(formData: FormData) {
