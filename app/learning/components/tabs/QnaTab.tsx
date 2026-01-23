@@ -189,9 +189,10 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
     });
 
     const isQuestionTeacher = selectedQuestion.userId === adminId;
-    if(isQuestionTeacher) setIsTeacher(true);
+
     return (
       <div className="py-6 space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+        {/* --- RESTORED BACK BUTTON --- */}
         <button 
           onClick={() => setSelectedQuestion(null)}
           className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors mb-4 group"
@@ -201,6 +202,7 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
         </button>
 
         <div className={`border rounded-xl p-6 shadow-sm ${isQuestionTeacher ? "bg-blue-50/30 border-blue-200" : "bg-white border-gray-200"}`}>
+          {/* Header Section */}
           <div className="flex justify-between items-start gap-4 mb-4">
             <div className="flex gap-4">
               <div 
@@ -215,7 +217,7 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
                     {selectedQuestion.title}
                   </h2>
                   {isQuestionTeacher && (
-                    <span className="bg-blue-600 text-white text-[6px] p-0.5 rounded font-black uppercase">Teacher</span>
+                    <span className="bg-blue-600 text-white text-[8px] px-1.5 py-0.5 rounded font-black uppercase">Teacher</span>
                   )}
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
@@ -234,20 +236,26 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
             )}
           </div>
 
+          {/* Question Content */}
           <p className="text-gray-700 whitespace-pre-wrap text-sm leading-relaxed border-b pb-6">
             {selectedQuestion.description}
           </p>
 
           {/* Systematic Image Gallery */}
           {selectedQuestion.images && selectedQuestion.images.length > 0 && (
-            <div className={`grid gap-3 my-6 ${
-              selectedQuestion.images.length === 1 ? "grid-cols-1" : 
-              selectedQuestion.images.length === 2 ? "grid-cols-2" : "grid-cols-2 md:grid-cols-3"
+            <div className={`p-3 my-6 ${
+              selectedQuestion.images.length === 1 
+                ? "flex justify-start" // Centers or aligns the single small image
+                : "grid gap-3 " + (selectedQuestion.images.length === 2 ? "grid-cols-2" : "grid-cols-2 md:grid-cols-3")
             }`}>
               {selectedQuestion.images.map((image: any) => (
                 <div 
                   key={image.id} 
-                  className="relative aspect-video group cursor-zoom-in overflow-hidden rounded-lg border border-gray-100 bg-gray-50"
+                  className={`relative group cursor-zoom-in overflow-hidden rounded-lg border border-gray-100 bg-gray-50 transition-all ${
+                    selectedQuestion.images.length === 1 
+                      ? "w-full max-w-[350px] aspect-square md:aspect-video" // Controlled size for single image
+                      : "aspect-video" // Standard size for grid
+                  }`}
                   onClick={() => window.open(image.url, '_blank')}
                 >
                   <img 
@@ -263,6 +271,7 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
             </div>
           )}
 
+          {/* Replies Section */}
           <div className="mt-6 space-y-6">
             <div className="flex items-center gap-2">
               <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
@@ -307,12 +316,13 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
               })}
             </div>
 
+            {/* Add Reply Form */}
             <form onSubmit={handleReplySubmit} className="mt-8 pt-4 border-t border-gray-50">
               <div className="flex items-start gap-3">
-                <div className="h-9 w-9 rounded-full bg-gray-900  flex items-center justify-center text-white text-xs font-bold p-2">
+                <div className="h-9 w-9 rounded-full bg-gray-900 flex items-center justify-center text-white text-xs font-bold p-2 shrink-0">
                   {session?.user?.name?.charAt(0) || "Y"}
                 </div>
-                <div className="relative items-center flex flex-1 gap-3">
+                <div className="relative flex-1 flex gap-3 items-end">
                   <textarea
                     value={replyContent}
                     onChange={(e) => setReplyContent(e.target.value)}
@@ -320,15 +330,13 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
                     className="w-full p-4 pr-14 text-sm bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-50 focus:border-blue-400 outline-none transition-all resize-none shadow-sm min-h-[80px]"
                     required
                   />
-                  <div className="">
-                    <button 
-                      disabled={isSubmitting || !replyContent.trim()}
-                      type="submit"
-                      className=" bg-gray-900 text-white rounded-xl hover:bg-black disabled:bg-gray-200 transition-all p-2"
-                    >
-                      <Send size={18} />
-                    </button>
-                  </div>
+                  <button 
+                    disabled={isSubmitting || !replyContent.trim()}
+                    type="submit"
+                    className="bg-gray-900 text-white rounded-xl hover:bg-black disabled:bg-gray-200 transition-all p-3 shadow-md h-fit"
+                  >
+                    <Send size={18} />
+                  </button>
                 </div>
               </div>
             </form>
