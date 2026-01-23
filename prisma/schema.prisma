@@ -303,24 +303,36 @@ model Category {
 }
 
 model Question {
-  id          String  @id @default(cuid())
-  title       String  @db.VarChar(255)
-  description String  @db.Text
-  imageUrl    String?
+  id          String          @id @default(cuid())
+  title       String          @db.VarChar(255)
+  description String          @db.Text
+  
+  // Relations
+  images      QuestionImage[] // Changed from imageUrl: String?
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  lectureId String
-  lecture   Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  lectureId   String
+  lecture     Lecture         @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 
-  replies Reply[]
+  replies     Reply[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
   @@index([userId])
   @@index([lectureId])
+}
+
+model QuestionImage {
+  id         String   @id @default(cuid())
+  url        String   @db.Text
+  
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
 }
 
 // 2. Specialized Quiz Tables

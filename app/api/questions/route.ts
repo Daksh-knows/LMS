@@ -10,26 +10,29 @@ export async function POST(request: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const body = await request.json();
-    const { title, description, lectureId } = body; 
-     
+    const { title, description, lectureId , imageUrls } = await request.json(); 
+    
     if (!title || !description || !lectureId) {
       return new NextResponse("Missing required fields", { status: 400 });
     }
 
-    const question = await db.question.create({
-      data: {
-        title,
-        description,
-        lectureId,
-        userId: session.user.id, 
-      },
-      include: {
-        user: { 
-          select: { name: true, image: true } 
+      const question = await db.question.create({
+        data: {
+          title,
+          description,
+          lectureId,
+          userId: session.user.id,
+          images: {
+            create: imageUrls.map((url: string) => ({
+              url: url
+            }))
+          }
+        },
+        include: {
+          images: true, 
+          user: true,
         }
-      }
-    });
+      });
 
     return NextResponse.json(question);
   } catch (error) {
@@ -47,27 +50,24 @@ export async function GET(request: Request) {
     const whereClause: any = {};
 
     if (lectureId) {
+      // If we are looking at a specific lecture
       whereClause.lectureId = lectureId;
     } else if (courseId) {
+      // FIX: Drill down through the Module relation to find the courseId
       whereClause.lecture = {
         module: {
-          courseId: courseId,
-        },
+          courseId: courseId
+        }
       };
-    } else {
-      return NextResponse.json(
-        { error: "Either lectureId or courseId is required" },
-        { status: 400 }
-      );
     }
 
-    // FIXED: Corrected the 'user' include block syntax
     const questions = await db.question.findMany({
       where: whereClause,
       include: {
         user: {
           select: { name: true, image: true },
         },
+        images: true, // This requires the migration we discussed earlier
         replies: {
           include: {
             user: { 
@@ -90,5 +90,3 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Internal Error" }, { status: 500 });
   }
 }
-
-
