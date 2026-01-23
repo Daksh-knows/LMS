@@ -41,8 +41,6 @@ export async function POST(request: Request) {
   }
 }
 
-// app/api/questions/route.ts
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -52,10 +50,14 @@ export async function GET(request: Request) {
     const whereClause: any = {};
 
     if (lectureId) {
+      // If we are looking at a specific lecture
       whereClause.lectureId = lectureId;
     } else if (courseId) {
+      // FIX: Drill down through the Module relation to find the courseId
       whereClause.lecture = {
-        courseId: courseId, // Note: verify if your schema is course -> lecture or course -> module -> lecture
+        module: {
+          courseId: courseId
+        }
       };
     }
 
@@ -65,8 +67,7 @@ export async function GET(request: Request) {
         user: {
           select: { name: true, image: true },
         },
-        // ADD THIS: Fetch the images you just added to the schema
-        images: true, 
+        images: true, // This requires the migration we discussed earlier
         replies: {
           include: {
             user: { 
@@ -89,5 +90,3 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Internal Error" }, { status: 500 });
   }
 }
-
-
