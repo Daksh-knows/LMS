@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Trash2, Edit, Plus, Loader2 } from "lucide-react";
-import { deleteCourse } from "@/lib/admin-actions";
+import { toast } from "react-hot-toast";
 
 interface Course {
   id: string;
@@ -17,33 +17,51 @@ interface Props {
 }
 
 export default function AdminCourseList({ initialCourses, adminId }: Props) {
+  // 1. Initialize local state with props
+  const [courses, setCourses] = useState<Course[]>(initialCourses);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   const handleDelete = async (courseId: string) => {
-    if (!confirm("Are you sure you want to delete this course? This action cannot be undone.")) {
-      return;
-    }
+    if (!confirm("Are you sure you want to delete this course?")) return;
 
-    try {
-      setIsDeleting(courseId);
-      const result = await deleteCourse(courseId, adminId);
+    setIsDeleting(courseId);
 
-      if (!result.success) {
-        alert(result.error ?? "Failed to delete course.");
+    const deletePromise = async () => {
+      const baseurl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      // Ensure the endpoint matches your API structure (api/course or api/courses)
+      const response = await fetch(`${baseurl}/api/course/${courseId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to delete course");
       }
-    } catch (error) {
-      alert("An unexpected error occurred.");
-    } finally {
-      setIsDeleting(null);
-    }
+
+      return await response.json();
+    };
+
+    toast.promise(deletePromise(), {
+      loading: 'Deleting course and associated files...',
+      success: () => {
+        // 2. Update local state to remove the course immediately
+        setCourses((prev) => prev.filter((course) => course.id !== courseId));
+        setIsDeleting(null);
+        return 'Course deleted successfully!';
+      },
+      error: (err) => {
+        setIsDeleting(null);
+        return `Error: ${err.message}`;
+      },
+    });
   };
 
   return (
     <div className="space-y-4">
-      {/* Header */}
+      {/* Header - Use local state 'courses' for length */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-          Your Courses ({initialCourses.length})
+          Your Courses ({courses.length})
         </h2>
 
         <Link href="/dashboard/admin/add-course">
@@ -54,13 +72,13 @@ export default function AdminCourseList({ initialCourses, adminId }: Props) {
         </Link>
       </div>
 
-      {/* Empty state */}
-      {initialCourses.length === 0 ? (
+      {/* Empty state - Use local state 'courses' */}
+      {courses.length === 0 ? (
         <div className="p-10 border-2 border-dashed rounded-3xl text-center text-gray-400 bg-gray-50/50">
           You haven&apos;t created any courses yet.
         </div>
       ) : (
-        initialCourses.map((course) => (
+        courses.map((course) => (
           <div
             key={course.id}
             className="flex items-center justify-between p-5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all"

@@ -7,28 +7,48 @@ import Link from "next/link";
 
 interface Props {
   addCourseAction: (formData: any) => Promise<{ success: boolean; error?: string }>;
+  user: any;
 }
 
-export default function AddCoursePageClient({ addCourseAction }: Props) {
+export default function AddCoursePageClient({ addCourseAction, user }: Props) {
   const router = useRouter();
 
   async function handleFormAction(formData: FormData) {
-    const courseData = {
+    // 1. Prepare the data payload
+    const payload = {
       title: formData.get("title") as string,
-      description: formData.get("description") as string,
-      imageUrl: formData.get("imageUrl") as string,
+      subtitle: formData.get("description") as string, // Ensure this matches API expectation
+      image: formData.get("imageUrl") as string,
+      adminId: user.id,
+      tags: [], // Add tags if your form has them, otherwise send empty
     };
 
-    const result = await addCourseAction(courseData);
-    
-    if (result.success) {
-      router.push("/dashboard/admin");
-      router.refresh();
-    } else {
-      alert(result.error || "Something went wrong");
-    }
-  }
+    try {
+      // 2. Call the API endpoint
+      // Ensure 'adminId' is available in your component's scope (props or session)
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const response = await fetch(`${baseUrl}/api/course`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
+      const result = await response.json();
+
+      // 3. Handle success or error
+      if (response.ok && result.success) {
+        router.push("/dashboard/admin");
+        router.refresh();
+      } else {
+        alert(result.error || "Something went wrong");
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      alert("Failed to create course");
+    }
+}
   return (
     <div className="min-h-screen bg-gray-50/50 p-6 md:p-12">
       <div className="max-w-5xl mx-auto">

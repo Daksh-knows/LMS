@@ -12,6 +12,6 @@ export default async function AddCoursePage() {
   }
 
   return (
-    <AddCoursePageClient addCourseAction={addCourse} />
+    <AddCoursePageClient addCourseAction={addCourse} user={session.user} />
   );
 }

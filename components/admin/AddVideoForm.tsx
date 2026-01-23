@@ -82,7 +82,7 @@ export default function AddVideoForm({ courseId, sectionId, initialData, onSucce
       courseId,
       moduleId: sectionId,
       title,
-      type: "VIDEO" as ItemType, // Explicit cast to fix the string/ItemType error
+      type: "VIDEO" as ItemType,
       isFree,
       videoUrl: finalVideoUrl,
       duration,
