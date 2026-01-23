@@ -15,8 +15,6 @@ export async function getCurrentUser() {
   }
 
   // 3. Return the user object
-  // Because we extended the types in next-auth.d.ts, 'role' and 'hasPremium' 
-  // will be available here without TypeScript errors.
   return {
     id: session.user.id,
     email: session.user.email?? "",
