@@ -6,50 +6,50 @@ import { db } from '@/lib/db';
 import { ItemType } from '@/app/generated/prisma/enums'; 
 
 
-export async function getMyManagedCourses(adminId: string) {
-  try {
-    const courses = await db.course.findMany({
-      where: { adminId: adminId },
-      orderBy: { createdAt: "desc" },
-      include: {
-        category: true,
-        _count: {
-          select: { modules: true, students: true }
-        }
-      }
-    });
+// export async function getMyManagedCourses(adminId: string) {
+//   try {
+//     const courses = await db.course.findMany({
+//       where: { adminId: adminId },
+//       orderBy: { createdAt: "desc" },
+//       include: {
+//         category: true,
+//         _count: {
+//           select: { modules: true, students: true }
+//         }
+//       }
+//     });
 
-    return courses.map(course => ({
-      id: course.id,
-      title: course.title,
-      tags: course.category ? [course.category.name] : ["General"],
-      imageUrl: course.imageUrl,
-      isPublished: course.isPublished
-    }));
-  } catch (error) {
-    console.error("Fetch Courses Error:", error);
-    return [];
-  }
-}
+//     return courses.map(course => ({
+//       id: course.id,
+//       title: course.title,
+//       tags: course.category ? [course.category.name] : ["General"],
+//       imageUrl: course.imageUrl,
+//       isPublished: course.isPublished
+//     }));
+//   } catch (error) {
+//     console.error("Fetch Courses Error:", error);
+//     return [];
+//   }
+// }
 
-export async function deleteCourse(courseId: string, adminId: string) {
-  try {
-    const course = await db.course.findUnique({ where: { id: courseId } });
-    if (!course) return { success: false, error: "Course not found" };
-    if (course.adminId !== adminId) {
-      return { success: false, error: "Unauthorized" };
-    }
-    const deleteStudents = await db.enrollment.deleteMany({
-      where: { courseId },
-    });
-    const resp =  await db.course.delete({ where: { id: courseId } });
-    revalidatePath('/dashboard/admin');
-    return { success: true };
-  } catch (error: any) {
-    console.log("Delete Course Error:", error);
-    return { success: false, error: "Failed to delete course." };
-  }
-}
+// export async function deleteCourse(courseId: string, adminId: string) {
+//   try {
+//     const course = await db.course.findUnique({ where: { id: courseId } });
+//     if (!course) return { success: false, error: "Course not found" };
+//     if (course.adminId !== adminId) {
+//       return { success: false, error: "Unauthorized" };
+//     }
+//     const deleteStudents = await db.enrollment.deleteMany({
+//       where: { courseId },
+//     });
+//     const resp =  await db.course.delete({ where: { id: courseId } });
+//     revalidatePath('/dashboard/admin');
+//     return { success: true };
+//   } catch (error: any) {
+//     console.log("Delete Course Error:", error);
+//     return { success: false, error: "Failed to delete course." };
+//   }
+// }
 
 export async function addCourse(data: {
   title: string;

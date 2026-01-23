@@ -1,11 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Loader2, Sparkles, FileQuestion, AlignLeft, BarChart, Hash } from "lucide-react";
+import { Lecture } from "@/app/generated/prisma/client";
+
+
 
 interface Props {
   courseId: string;
   sectionId: string; // This maps to 'moduleId' for the backend
+  initialData: Lecture;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -13,15 +17,39 @@ interface Props {
 export default function AddQuizForm({
   courseId,
   sectionId,
+  initialData,
   onSuccess,
   onCancel,
 }: Props) {
-  const [title, setTitle] = useState("");
-  const [context, setContext] = useState("");
-  const [difficulty, setDifficulty] = useState("MEDIUM");
-  const [questionCount, setQuestionCount] = useState(5);
-  const [submitting, setSubmitting] = useState(false);
+  const [title, setTitle] = useState<string>("");
+  const [context, setContext] = useState<string>("");
+  const [difficulty, setDifficulty] = useState<string>("MEDIUM");
+  const [questionCount, setQuestionCount] = useState<number>(5);
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  // console.log(initialData)
 
+
+  useEffect(() => {
+    if (initialData) {
+      // 1. Set simple fields directly 
+      setTitle(initialData.title || "");
+
+      // 2. Safely parse the JSON description string 
+      try {
+        const quizMeta = initialData.description 
+          ? JSON.parse(initialData.description) 
+          : {};
+
+        // 3. Set states from parsed metadata 
+        setContext(quizMeta.context || "");
+        setDifficulty(quizMeta.difficulty || "MEDIUM");
+        setQuestionCount(quizMeta.questionCount || 5);
+      } catch (error) {
+        console.error("Failed to parse quiz metadata:", error);
+      }
+    }
+  }, [initialData]);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);

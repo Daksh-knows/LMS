@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { 
   ArrowLeft, PlusCircle, Layout, Plus, Trash2, Edit, 
-  Video, FileText, BrainCircuit, ClipboardList, Clock 
+  Video, FileText, BrainCircuit, ClipboardList, Clock, 
+  TvMinimalIcon,
+  SpellCheck
 } from "lucide-react"; 
 import Link from "next/link";
 import AddModuleForm from "@/components/admin/AddModuleForm"; // Verify path matches your folder structure
@@ -52,6 +54,32 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
     setEditingLecture(null);
   };
 
+
+  const handleDelete = async (sectionId: string, lectureId: string, lectureTitle: string) => {
+    const confirmed = confirm(`Delete "${lectureTitle}"? This will also remove all associated quiz data and cloud files.`);
+    
+    if (!confirmed) return;
+
+    try {
+      const baseurl = process.env.NEXT_PUBLIC_APP_URL;
+      // console.log(`${baseurl}/api/lecture/${lectureId}`);
+      // Calling the API route instead of a Server Action
+      const response = await fetch(`${baseurl}/api/lecture/${lectureId}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        refreshData(); // Refresh the curriculum list
+      } else {
+        alert(data.error || "Failed to delete content.");
+      }
+    } catch (error) {
+      console.error("Delete Error:", error);
+      alert("An error occurred while deleting the lecture.");
+    }
+};
   /**
    * Helper to get distinct visual styles for each content type
    */
@@ -59,21 +87,21 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
     switch (lecture.type) {
       case "VIDEO":
         return {
-          icon: <Video size={18} />,
+          icon: <TvMinimalIcon size={18} />,
           color: "text-blue-600 bg-blue-50",
-          label: "Video Lesson",
+          label: "Video Lecture",
           meta: lecture.duration ? `${lecture.duration} min` : "0 min"
         };
       case "TEXT":
         return {
           icon: <FileText size={18} />,
           color: "text-orange-600 bg-orange-50",
-          label: "Article / Text",
+          label: "Article",
           meta: "Read"
         };
       case "QUIZ":
         return {
-          icon: <BrainCircuit size={18} />,
+          icon: <SpellCheck size={18} />,
           color: "text-emerald-600 bg-emerald-50",
           label: "Quiz",
           // Check if questions exist and map length, fallback to 0
@@ -228,7 +256,7 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
                               </button>
 
                               {/* DELETE BUTTON */}
-                              <button
+                              {/* <button
                                 onClick={async (e) => {
                                   e.preventDefault();
                                   if (confirm("Delete this item?")) {
@@ -237,6 +265,14 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
                                   }
                                 }}
                                 className="p-2 bg-gray-100 text-gray-400 hover:bg-red-100 hover:text-red-600 rounded-xl transition-all shadow-sm"
+                                title="Delete Content"
+                              >
+                                <Trash2 size={16} strokeWidth={2.5} />
+                              </button> */}
+                              {/* DELETE BUTTON */}
+                              <button
+                                onClick={() => handleDelete(section.id, lecture.id, lecture.title)}
+                                className="p-2.5 bg-gray-100 text-gray-400 hover:bg-red-100 hover:text-red-600 rounded-xl transition-all shadow-sm"
                                 title="Delete Content"
                               >
                                 <Trash2 size={16} strokeWidth={2.5} />
