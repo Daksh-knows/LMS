@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth"; // Your NextAuth helper
+import { auth } from "@/auth"; 
 import { db } from "@/lib/db";
 
 export async function PATCH(req: Request) {

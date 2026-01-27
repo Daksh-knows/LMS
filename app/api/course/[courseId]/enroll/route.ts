@@ -4,10 +4,10 @@ import { getCurrentUser } from "@/lib/auth-utils";
 
 export async function POST(
   req: Request,
-  { params }: { params: { courseId: string } }
+   context: { params: Promise<{ courseId: string }> }
 ) {
   try {
-    const { courseId } = await params;
+    const { courseId } = await context.params;
     const user = await getCurrentUser();
 
     // 1. Authentication Check

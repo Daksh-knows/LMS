@@ -1,13 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 
 export async function GET(
-  req: Request,
-  { params }: { params: { lectureId: string } }
+  req: NextRequest,
+  context: { params: Promise<{ lectureId: string }> }
+
 ) {
   try {
-    const { lectureId } = await params;
+    const { lectureId } = await context.params;
 
     const reviews = await db.review.findMany({
       where: {
@@ -26,12 +27,12 @@ export async function GET(
 }
 
 export async function POST(
-  req: Request,
-  { params }: { params: { lectureId: string } }
+  req: NextRequest,
+  context: { params: Promise<{ lectureId: string }> }
 ) {
   try {
     const session = await auth();
-    const { lectureId } = await params;
+    const { lectureId } = await context.params;
     const { rating, comment } = await req.json();
 
     // 1. Authorization Check

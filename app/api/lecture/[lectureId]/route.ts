@@ -1,15 +1,16 @@
 import { db } from "@/lib/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import  cloudinary  from "@/lib/cloudinary";
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   // Ensure the param name matches your folder name [lectureId]
-  { params }: { params: { lectureId: string } } 
+  context: { params: Promise<{ lectureId: string }> }
+
 ) {
   try {
-    const { lectureId } = await params;
+    const { lectureId } = await context.params;
 
     const lecture = await db.lecture.findUnique({
       where: { 
@@ -45,12 +46,12 @@ export async function GET(
 }
 
 export async function DELETE(
-  req: Request,
-  { params }: { params: { lectureId: string } }
+  req: NextRequest,
+  context: { params: Promise<{ lectureId: string }> }
 ) {
   try {
     const session = await auth();
-    const { lectureId } = await params;
+    const { lectureId } = await context.params;
     // console.log(lectureId)
     if (!session?.user || session.user.role !== "ADMIN") {
       return new NextResponse("Unauthorized", { status: 401 });

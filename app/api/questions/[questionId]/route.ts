@@ -12,11 +12,12 @@ cloudinary.config({
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { questionId: string } }
+  context: { params: Promise<{ questionId: string }> }
+
 ) {
   try {
     const session = await auth();
-    const { questionId } = await params;
+    const { questionId } = await context.params;
 
     if (!session?.user?.id) {
       return new NextResponse("Unauthorized", { status: 401 });
