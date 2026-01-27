@@ -59,3 +59,37 @@ export async function GET(req: Request) {
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const bookmarkId = searchParams.get("bookmarkId");
+
+    if (!bookmarkId) {
+      return new NextResponse("Bookmark ID missing", { status: 400 });
+    }
+
+    // Optional: Verify the bookmark belongs to the user before deleting
+    const bookmark = await db.bookmark.findUnique({
+      where: { id: bookmarkId },
+    });
+
+    if (!bookmark || bookmark.userId !== user.id) {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
+
+    await db.bookmark.delete({
+      where: { id: bookmarkId },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[BOOKMARK_DELETE]", error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}

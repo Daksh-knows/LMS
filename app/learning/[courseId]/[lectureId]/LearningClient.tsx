@@ -16,10 +16,26 @@ interface LearningClientProps {
   lectureId: string;
 }
 
+interface Bookmark {
+  id: string;
+  time: number;
+  label: string;
+  type: "BOOKMARK" | "IMPORTANT" | "QUESTION";
+}
+
 export default function LearningClient({ course, lectureId }: LearningClientProps) {
   const [currentLecture, setCurrentLecture] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [seekTo, setSeekTo] = useState<string | null>(null);
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const [loadingBookmarks, setLoadingBookmarks] = useState(false);
+// Create a handler to clear the seek value after the player reacts
+  const handleSeekComplete = () => setSeekTo(null);
   const router = useRouter();
+
+  const handleAddBookmark = (newBookmark: Bookmark) => {
+    setBookmarks((prev) => [newBookmark, ...prev]);
+  };
 
   useEffect(() => {
     const fetchLecture = async () => {
@@ -29,6 +45,7 @@ export default function LearningClient({ course, lectureId }: LearningClientProp
         if (!response.ok) throw new Error("Failed to fetch lecture");
         const data = await response.json();
         setCurrentLecture(data);
+        console.log("Fetched lecture data:", data);
       } catch (error) {
         console.error("Error loading lecture:", error);
       } finally {
@@ -36,8 +53,22 @@ export default function LearningClient({ course, lectureId }: LearningClientProp
       }
     };
 
+    const fetchBookmarks = async () => {
+      setLoadingBookmarks(true);
+      try {
+        const response = await fetch(`/api/lecture/bookmark?lectureId=${lectureId}`);
+        if (!response.ok) throw new Error("Failed to fetch");
+        const data = await response.json();
+        setBookmarks(data);
+      } catch (error) {
+        console.error("Error fetching bookmarks:", error);
+      } finally {
+        setLoadingBookmarks(false);
+      }
+    };
     if (lectureId) {
       fetchLecture();
+      fetchBookmarks() ;
     }
   }, [lectureId]);
 
@@ -95,7 +126,13 @@ export default function LearningClient({ course, lectureId }: LearningClientProp
                       {/* --- VIDEO PLAYER --- */}
                       {currentLecture.type === 'VIDEO' && (
                         <div className="aspect-video w-full h-full">
-                          <VideoPlayer videoUrl={currentLecture.videoUrl} lectureId={currentLecture.id} />
+                          <VideoPlayer  
+                             videoUrl={currentLecture.videoUrl} 
+                             lectureId={currentLecture.id} 
+                             seekTo={seekTo} 
+                             onSeekComplete={handleSeekComplete}
+                             onBookmarkAdded={handleAddBookmark}
+                          />
                         </div>
                       )}
 
@@ -116,7 +153,16 @@ export default function LearningClient({ course, lectureId }: LearningClientProp
                           {currentLecture.title}
                         </h1>
                       </div>
-                      <TabbedContent lecture={currentLecture} courseId={course.id} adminId={course.adminId} />
+                      <TabbedContent 
+                         lecture={currentLecture} 
+                         courseId={course.id} 
+                         adminId={course.adminId} 
+                         onBookmarkClick={(time) => setSeekTo(time)}
+                         bookmarks={bookmarks}
+                         loadingBookmarks={loadingBookmarks}
+                         setBookmarks={setBookmarks}
+                         setLoadingBookmarks={setLoadingBookmarks}
+                      />
                     </div>
                   </div>
                 </>
