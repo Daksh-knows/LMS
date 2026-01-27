@@ -7,23 +7,25 @@ import {
   Library, 
   HeadphonesIcon, 
   Briefcase,
-  ShieldCheck // Icon for Admin
+  ShieldCheck 
 } from "lucide-react";
 import Logo from "@/app/landingpage/components/Logo";
 
-// Note: I added 'user' as a prop
 export default function Sidebar({ user }: { user: any }) {
   const pathname = usePathname();
   const isAdmin = user?.role === "ADMIN" || user?.role === "admin";
 
-  // Build the navigation items dynamically
   const navItems = [
     { label: "Overview", icon: LayoutDashboard, href: "/dashboard" },
-    // DYNAMIC ITEM START
-    isAdmin 
-      ? { label: "Admin", icon: ShieldCheck, href: "/dashboard/admin" }
-      : { label: "My Courses", icon: Library, href: "/dashboard/my-courses" },
-    // DYNAMIC ITEM END
+
+    ...(isAdmin
+      ? [
+          { label: "Admin", icon: ShieldCheck, href: "/dashboard/admin" },
+        ]
+      : []),
+
+    { label: "My Courses", icon: Library, href: "/dashboard/my-courses" },
+
     { label: "Support", icon: HeadphonesIcon, href: "/dashboard/support" },
     { label: "Career Services", icon: Briefcase, href: "/dashboard/career-services" },
   ];

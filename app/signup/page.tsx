@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { signUpUser, verifyUserOtp } from "@/lib/auth-actions";
 import { 
   Mail, 
   ShieldCheck, 
@@ -15,6 +14,7 @@ import {
   User, 
   Github 
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -40,36 +40,81 @@ export default function SignupPage() {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+      toast.error("Passwords do not match!");
       return;
     }
 
     setLoading("email");
-    const res = await signUpUser({
-      email: formData.email,
-      password: formData.password,
-      fullName: formData.fullName
+
+    // 1. Define the signup logic
+    const signupPromise = async () => {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          fullName: formData.fullName
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Signup failed");
+      }
+      return data;
+    };
+
+    // 2. Execute with Toast
+    toast.promise(signupPromise(), {
+      loading: "Creating account & sending OTP...",
+      success: () => {
+        setStep(2); // Move to OTP input screen
+        setLoading(false);
+        return "Account created! Check your inbox. 📧";
+      },
+      error: (err) => {
+        setLoading(false);
+        return err.message;
+      },
     });
-    
-    if (res.success) {
-      setStep(2);
-    } else {
-      alert(res.error);
-    }
-    setLoading(false);
   };
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading("verify");
-    const res = await verifyUserOtp(formData.email, otp);
-    
-    if (res.success) {
-      setStep(3);
-    } else {
-      alert("Invalid OTP or it has expired.");
-    }
-    setLoading(false);
+
+    // 1. Define the verification logic
+    const verifyPromise = async () => {
+      const res = await fetch("/api/auth/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          email: formData.email, 
+          otp 
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Invalid OTP");
+      }
+      return data;
+    };
+
+    // 2. Execute with Toast
+    toast.promise(verifyPromise(), {
+      loading: "Verifying code...",
+      success: () => {
+        setStep(3); // Move to "Success/Login" screen
+        setLoading(false);
+        return "Email verified successfully! ✅";
+      },
+      error: (err) => {
+        setLoading(false);
+        return err.message; // e.g., "OTP Expired" or "Invalid OTP"
+      },
+    });
   };
 
   const handleAutoLogin = async () => {

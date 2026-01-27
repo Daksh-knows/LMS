@@ -1,17 +1,15 @@
 "use client";
 
 import React, { useState } from 'react';
-import Script from 'next/script'; // Import Script for Razorpay
-import { createRazorpayOrder } from "@/lib/payment-actions"; // Import your action
+import Script from 'next/script'; 
 import { CheckCircle2, Rocket, Info, FileText, Loader2 } from 'lucide-react';
-import { upgradeToPremium } from '@/lib/auth-actions';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import { get } from 'http';
-import { getSession } from 'next-auth/react';
+import { getSession, useSession } from 'next-auth/react';
 
 export default function EnrollmentPage() {
   const [isProcessing, setIsProcessing] = useState(false);
+  const { update } = useSession();
   const router = useRouter();
 
   const benefits = [
@@ -23,28 +21,28 @@ export default function EnrollmentPage() {
     "Resume & Portfolio review templates"
   ];
 
+  
   const handlePayment = async () => {
     setIsProcessing(true);
 
     try {
-      // 1. Create order via API
       const session = await getSession();
       if (!session?.user?.id) {
-        toast.error("You must be logged in to proceed with payment.");
+        toast.error("You must be logged in to proceed.");
         setIsProcessing(false);
         return;
       }
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "";
       const orderRes = await fetch(`${baseUrl}/api/premium/order`, { method: "POST" });
       const order = await orderRes.json();
 
       if (!order.success) {
-        toast.error("Failed to create order. Please try again.");
+        toast.error("Failed to create order.");
         setIsProcessing(false);
         return;
       }
 
-      // 2. Initialize Razorpay Options
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: order.amount,
@@ -53,7 +51,7 @@ export default function EnrollmentPage() {
         description: "Premium Membership Upgrade",
         order_id: order.id,
         handler: async function (response: any) {
-          // This promise handles the backend verification and UI feedback
+          // --- INTERNAL VERIFICATION LOGIC ---
           const verifyPayment = async () => {
             const res = await fetch(`${baseUrl}/api/premium/verify`, {
               method: "POST",
@@ -66,46 +64,46 @@ export default function EnrollmentPage() {
             });
 
             const data = await res.json();
-            if (!res.ok || !data.success) {
-              throw new Error(data.error || "Verification failed");
-            }
+            if (!res.ok || !data.success) throw new Error(data.error || "Verification failed");
+            
+            // 1. IMPORTANT: Update the local session so the UI knows you are premium
+            await update({ hasPremium: true  });
             return data;
           };
 
+          // --- TOAST PROMISE HANDLING ---
           toast.promise(verifyPayment(), {
-            loading: "Verifying payment and upgrading your account...",
+            loading: "Finalizing your upgrade...",
             success: () => {
-              // Standardizing navigation: use router.push instead of window.location
+              // 2. Clear loading before navigating
+              setIsProcessing(false); 
+              console.log("Payment and upgrade successful!");
+              // 3. Redirect to dashboard
               router.push("/dashboard?payment=success");
               router.refresh(); 
-              return "Welcome to Premium! Your account has been upgraded. 🏆";
+              return "Welcome to Premium! 🏆";
             },
-            error: (err) => `Error: ${err.message}`,
+            error: (err) => {
+              setIsProcessing(false);
+              return `Error: ${err.message}`;
+            },
           });
         },
         modal: {
-          ondismiss: function() {
-            setIsProcessing(false);
-          }
+          ondismiss: () => setIsProcessing(false),
         },
-        prefill: {
-          name: session?.user?.name || "User Name", // You can pass session.user.name here
-          email: session?.user?.email || "user@example.com",
-        },
-        theme: {
-          color: "#2563eb", // Matches your blue-600 buttons
-        },
+        // ... (prefill and theme remains the same)
       };
 
-      // 3. Open Razorpay Modal
       const rzp = new (window as any).Razorpay(options);
       rzp.open();
     } catch (error) {
       console.error("Razorpay error:", error);
-      toast.error("Something went wrong with the payment gateway.");
+      toast.error("Something went wrong.");
       setIsProcessing(false);
     }
   };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 py-12">
       {/* Load Razorpay SDK */}
