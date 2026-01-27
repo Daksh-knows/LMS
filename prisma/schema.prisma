@@ -70,6 +70,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   replies   Reply[]
+  bookmarks Bookmark[]
 }
 
 model StudentProfile {
@@ -210,7 +211,7 @@ model Lecture {
   faqs FAQ[]
 
   enrollments Enrollment[]
-
+  bookmarks Bookmark[]
   // --- NEW RELATIONS FOR QUIZ & ASSIGNMENT ---
   quizQuestions QuizQuestion[]
 
@@ -218,7 +219,7 @@ model Lecture {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
+  
   @@index([moduleId])
 }
 
@@ -393,4 +394,36 @@ model Reply {
 
   @@index([questionId])
   @@index([userId])
+}
+
+
+enum BookmarkType {
+  BOOKMARK
+  IMPORTANT
+  QUESTION
+  RESOURCE
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  
+  // The timestamp in seconds
+  time      Float
+  label     String?
+  
+  // NEW: The type of bookmark
+  type      BookmarkType @default(BOOKMARK)
+
+  // Relations
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  lectureId String
+  lecture   Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([lectureId])
 }

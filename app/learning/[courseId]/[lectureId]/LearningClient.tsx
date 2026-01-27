@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronLeft, VideoOff, Loader2, BrainCircuit, PlayCircle, HelpCircle } from "lucide-react";
+import { ChevronLeft, VideoOff, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 // Components
@@ -79,34 +79,47 @@ export default function LearningClient({ course, lectureId }: LearningClientProp
         </div>
       </nav>
 
-      {/* Main Content Area */}
-      <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 overflow-y-auto bg-white relative">
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center h-full">
-              <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-              <p className="mt-2 text-sm text-gray-500">Loading content...</p>
-            </div>
-          ) : currentLecture ? (
-            <>
-              <div className="w-full">
-                {/* --- VIDEO PLAYER --- */}
-                {currentLecture.type === 'VIDEO' && <VideoPlayer videoUrl={currentLecture.videoUrl} />}
-
-                {/* --- QUIZ UI --- */}
-                {currentLecture.type === 'QUIZ' && quizData && <QuizComponent lecture={currentLecture} />}
-              </div>
-
-              {/* Lecture Info and Tabs */}
-              <div className="w-full p-5">
-                <div className="mt-8 mb-4">
-                  <h1 className="text-2xl font-bold text-gray-900">
-                    {currentLecture.title}
-                  </h1>
+          {/* Main Content Area */}
+          <div className="flex flex-1 overflow-hidden">
+            <main className="flex-1 overflow-y-auto bg-gray-50 relative">
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center h-full">
+                  <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
                 </div>
-                <TabbedContent lecture={currentLecture} courseId={course.id} adminId={course.adminId} />
-              </div>
-            </>
+              ) : currentLecture ? (
+                <>
+                  {/* --- THE STAGE (Video/Quiz Parent) --- */}
+                  {/* Added bg-black to keep the stage distinct and max-h to reduce size */}
+                  <div className="w-full bg-black flex justify-center items-center max-h-[60vh] md:max-h-[65vh] overflow-hidden shadow-inner">
+                    <div className="w-full h-full max-w-5xl mx-auto">
+                      {/* --- VIDEO PLAYER --- */}
+                      {currentLecture.type === 'VIDEO' && (
+                        <div className="aspect-video w-full h-full">
+                          <VideoPlayer videoUrl={currentLecture.videoUrl} lectureId={currentLecture.id} />
+                        </div>
+                      )}
+
+                      {/* --- QUIZ UI --- */}
+                      {currentLecture.type === 'QUIZ' && quizData && (
+                        <div className="h-full w-full bg-white overflow-y-auto">
+                          <QuizComponent lecture={currentLecture} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Lecture Info and Tabs - Now more visible on page load */}
+                  <div className="w-full p-5 bg-white border-t border-gray-200">
+                    <div className="max-w-5xl mx-auto">
+                      <div className="mt-4 mb-4">
+                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                          {currentLecture.title}
+                        </h1>
+                      </div>
+                      <TabbedContent lecture={currentLecture} courseId={course.id} adminId={course.adminId} />
+                    </div>
+                  </div>
+                </>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center p-10">
               <div className="bg-gray-50 p-6 rounded-full mb-4">
