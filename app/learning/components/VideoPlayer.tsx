@@ -19,32 +19,64 @@ import {
 
 interface Props {
   videoUrl: string;
-  lectureId: string; // Add this
+  lectureId: string; 
+  seekTo: string  | null; // Updated to accept number or string
+  onSeekComplete: () => void;
+  onBookmarkAdded: (bookmark: any) => void;
 }
 
-const VideoPlayer: React.FC<Props> = ({ videoUrl , lectureId }) => {
+const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekComplete, onBookmarkAdded }) => {
+  const controllerRef = useRef<any>(null);
+  const playerRef = useRef<any>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [bookmark, setBookmark] = useState({ label: '', type: 'BOOKMARK', time: 0 });
-  const [isPlaying , setIsPlaying] = useState(true);
-  const controllerRef = useRef<any>(null);
-  const [originalControl , setOriginalControl] = useState<any>(null);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [originalControl, setOriginalControl] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  useEffect(() => { setIsMounted(true); }, []);
 
-const handleOpenForm = () => {
+  useEffect(() => { setIsMounted(true); }, []);
+  
+  // --- SEEKING LOGIC ---
+    useEffect(() => {
+      if (seekTo !== null && controllerRef.current) {
+        let timeToSeek: number = 0;
+
+        if (typeof seekTo === 'string' && seekTo.includes(':')) {
+          // Handle "MM:SS" or "HH:MM:SS"
+          const parts = seekTo.split(':').map(Number);
+          if (parts.length === 2) {
+            // [minutes, seconds]
+            timeToSeek = parts[0] * 60 + parts[1];
+          } else if (parts.length === 3) {
+            // [hours, minutes, seconds]
+            timeToSeek = parts[0] * 3600 + parts[1] * 60 + parts[2];
+          }
+        } else {
+          timeToSeek = typeof seekTo === 'string' ? parseFloat(seekTo) : seekTo;
+        }
+
+
+        if (!isNaN(timeToSeek)) {
+          controllerRef.current.media.currentTime = timeToSeek;
+          
+          setIsPlaying(true);
+          controllerRef.current.paused = false;
+        }
+        
+        onSeekComplete();
+      }
+    }, [seekTo, onSeekComplete]);
+
+  const handleOpenForm = () => {
     if (controllerRef.current) {
-      // 1. Save state
       const wasPaused = !isPlaying; 
       setOriginalControl(wasPaused);
 
-      // 2. Capture time reliably
-      // MediaController exposes the actual video element via .media
       const mediaElement = controllerRef.current.media;
       const rawTime = mediaElement ? mediaElement.currentTime : controllerRef.current.mediaCurrentTime;
       const safeTime = isNaN(rawTime) ? 0 : rawTime;
 
-      // 3. Pause
       controllerRef.current.paused = true; 
       setIsPlaying(false);
       
@@ -53,70 +85,57 @@ const handleOpenForm = () => {
     }
   };
   
-    const handleSave = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setIsSubmitting(true);
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
-      try {
-        console.log("Bookmark to be saved:", bookmark.time , bookmark.label, bookmark.type); ;
-        const response = await fetch("/api/lecture/bookmark", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            lectureId,
-            time: bookmark.time,
-            label: bookmark.label,
-            type: bookmark.type, // Now sending the type field
-          }),
-        });
+    try {
+      const response = await fetch("/api/lecture/bookmark", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lectureId,
+          time: bookmark.time,
+          label: bookmark.label,
+          type: bookmark.type,
+        }),
+      });
 
-        if (!response.ok) throw new Error("Failed to save");
+      if (!response.ok) throw new Error("Failed to save");
 
-        const data = await response.json();
-        console.log("Bookmark saved successfully:", data);
-        
-        // Reset UI
-        setShowForm(false);
-        setBookmark({ label: '', type: 'BOOKMARK', time: 0 });
+      const data = await response.json();
+      onBookmarkAdded(data);
+      
+      setShowForm(false);
+      setBookmark({ label: '', type: 'BOOKMARK', time: 0 });
 
-        // Restore video playback state
-        if (controllerRef.current) {
-          const shouldResume = originalControl === false; 
-          controllerRef.current.paused = !shouldResume;
-          setIsPlaying(shouldResume);
-        }
-      } catch (error) {
-        console.error("Save error:", error);
-        // You could add a toast notification here
-      } finally {
-        setIsSubmitting(false);
+      if (controllerRef.current) {
+        const shouldResume = originalControl === false; 
+        controllerRef.current.paused = !shouldResume;
+        setIsPlaying(shouldResume);
       }
-    };
+    } catch (error) {
+      console.error("Save error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   
   const handleCancel = () => {
     setShowForm(false);
     setBookmark({ label: '', type: 'BOOKMARK', time: 0 });
 
-    // 5. RESTORE STATE on Cancel as well
     if (controllerRef.current) {
       const shouldResume = originalControl === false;
       controllerRef.current.paused = !shouldResume;
-      // console.log("Should resume playback:", shouldResume);
       setIsPlaying(shouldResume);
     }
-  
-  }
+  };
 
   const togglePlay = (e?: React.MouseEvent) => {
-    // Prevent event bubbling if necessary
     e?.stopPropagation();
-
     const newPlayingState = !isPlaying;
-    
-    // 1. Update React State (for ReactPlayer)
     setIsPlaying(newPlayingState);
-
-    // 2. Update MediaController Property (for the UI and underlying engine)
     if (controllerRef.current) {
       controllerRef.current.paused = !newPlayingState;
     }
@@ -126,6 +145,8 @@ const handleOpenForm = () => {
 
   const isYouTube = videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be");
   if (isYouTube) {
+    // Note: seeking logic for YouTube iframe requires the YouTube Player API
+    // This implementation is for standard/HLS video sources via ReactPlayer/MediaController
     return (
       <div className="w-full aspect-video bg-black">
         <iframe
@@ -151,8 +172,9 @@ const handleOpenForm = () => {
       noHotkeys={showForm}
     >
       <ReactPlayer
+        
         slot="media"
-        src={videoUrl}
+        src={videoUrl} // Changed from 'src' to 'url' (standard ReactPlayer prop)
         controls={false}
         width="100%"
         height="100%"
@@ -160,17 +182,17 @@ const handleOpenForm = () => {
       />
 
       <div 
-        className="absolute z-10 cursor-default h-[2rem]" 
+        className="absolute z-10 cursor-default" 
         style={{ 
             position: 'absolute',
             inset: 0,
             zIndex: 10,
             cursor: 'default' ,
-            height: 'calc(100% - 2.5rem)',
+            height: 'calc(100% - 3.5rem)', // Adjusted height slightly to avoid covering progress bar
           }}
         onClick={(e) => {
           e.preventDefault();
-          e.stopPropagation(); // Blocks the click from reaching MediaController
+          e.stopPropagation();
         }}
       />
 
@@ -211,12 +233,7 @@ const handleOpenForm = () => {
               <select 
                 className="w-full p-2 mt-1 bg-gray-50 border rounded outline-none"
                 value={bookmark.type}
-                // Using the functional update pattern (prev) ensures you always have the latest state
-                onChange={(e) => {
-                  setBookmark(prev => ({ ...prev, type: e.target.value }))
-                  console.log("Selected type:", e.target.value);
-                }
-              }
+                onChange={(e) => setBookmark(prev => ({ ...prev, type: e.target.value }))}
               >
                 <option value="BOOKMARK">General Bookmark</option>
                 <option value="IMPORTANT">🔥 Important Segment</option>
@@ -226,17 +243,19 @@ const handleOpenForm = () => {
 
             <div className="flex gap-2 mt-2">
               <button 
+                disabled={isSubmitting}
                 type="button"
                 onClick={handleCancel}
-                className="flex-1 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium transition"
+                className="flex-1 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium transition disabled:opacity-50"
               >
                 Cancel
               </button>
               <button 
+                disabled={isSubmitting}
                 type="submit"
-                className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition"
+                className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition disabled:opacity-50"
               >
-                <Save size={18} /> Save
+                {isSubmitting ? "Saving..." : <><Save size={18} /> Save</>}
               </button>
             </div>
           </form>
@@ -265,7 +284,6 @@ const handleOpenForm = () => {
         <MediaSeekBackwardButton seekOffset={10} />
         <MediaSeekForwardButton seekOffset={10} />
         
-        {/* ADD BOOKMARK BUTTON */}
         <button
           type="button"
           onClick={handleOpenForm}
@@ -273,7 +291,7 @@ const handleOpenForm = () => {
           title="Add Bookmark"
         >
           <div 
-            className="p-3  flex items-center justify-center transition-colors"
+            className="p-3 flex items-center justify-center transition-colors"
             style={{ backgroundColor: 'var(--media-secondary-color, rgb(20 20 30 / .7))' }}
           >
             <BookmarkPlus size={20} className="text-white" />

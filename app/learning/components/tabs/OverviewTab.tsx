@@ -8,7 +8,7 @@ export const OverviewTab: React.FC<{ lecture: Lecture }> = ({ lecture }) => {
     month: "long",
     year: "numeric",
   });
-  console.log("Lecture in OverviewTab:", lecture);
+  // console.log("Lecture in OverviewTab:", lecture);
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-8">
       {/* 1. Description Section */}
