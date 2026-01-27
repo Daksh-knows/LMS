@@ -2,33 +2,58 @@
 
 import React, { useState } from "react";
 import { Plus, Loader2 } from "lucide-react";
-import { addModule } from "@/lib/admin-actions";
+import { toast } from "react-hot-toast";
+import { getSession } from "next-auth/react";
 
-export default function AddModuleForm({ courseId }: { courseId: string }) {
+export default function AddModuleForm({ courseId, refreshData}: { courseId: string, refreshData: () => void}) {
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+  
     e.preventDefault();
+    console.log("Section Title to submit:", title);
     if (!title.trim()) return;
-
+    console.log("Submitting new module with title:", title);
+    
     setLoading(true);
-
-    try {
-      // Logic: Calls the action to update both courses.json and courseData.json
-      const result = await addModule(courseId, title);
-
-      if (result.success) {
-        setTitle(""); // Clear input on success
-        alert("Module added successfully!");
-      } else {
-        alert(`Error: ${result.error}`);
+    
+    const addModulePromise = async () => {
+      const user = await getSession();
+      const adminId = user?.user?.id;
+      if (!adminId) {
+        throw new Error("Unauthorized: Admin ID required");
       }
-    } catch (error) {
-      alert("An unexpected error occurred.");
-    } finally {
-      setLoading(false);
-    }
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+      
+      const response = await fetch(`${baseUrl}/api/course/${courseId}/module?adminId=${adminId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sectionTitle: title }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to create module");
+      }
+
+      return result;
+    };
+
+    toast.promise(addModulePromise(), {
+      loading: "Creating module...",
+      success: () => {
+        setTitle(""); // Clear the input
+        refreshData();       // Refresh the curriculum list in the parent page
+        setLoading(false);
+        return "Module added successfully! 📂";
+      },
+      error: (err) => {
+        setLoading(false);
+        return `Error: ${err.message}`;
+      }
+    });
   };
 
   return (

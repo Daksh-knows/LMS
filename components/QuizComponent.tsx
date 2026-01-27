@@ -64,7 +64,7 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture }) => {
     const score = calculateScore();
     return (
       /* Changed max-w-2xl to max-w-full and added pt-16 for navbar clearance */
-      <div className="w-full max-w-full pt-16 pb-12 px-6">
+      <div className="w-full max-w-full pt-16 pb-12 px-6 mt-10">
         <div className="bg-white border-2 border-blue-100 rounded-3xl p-10 text-center shadow-xl max-w-2xl mx-auto">
           <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <Award size={40} className="text-yellow-600" />
@@ -258,7 +258,7 @@ return (
             Quiz Instructions
           </h4>
           <p className="text-gray-600 leading-relaxed text-lg">
-            {metadata.context || "Answer all questions to the best of your ability. You will see your results immediately after completing the final question."}
+            {"Answer all questions to the best of your ability. You will see your results immediately after completing the final question."}
           </p>
         </div>
 
