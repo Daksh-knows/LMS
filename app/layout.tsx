@@ -1,6 +1,7 @@
 import { Inter } from 'next/font/google';
 import './globals.css';
 import AuthProvider from '@/components/SessionProvider';
+import { Toaster } from 'react-hot-toast'; 
 
 const inter = Inter({
   subsets: ['latin'],
@@ -14,12 +15,32 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      {/* Add suppressHydrationWarning here */}
       <body 
         className={`${inter.className} antialiased`} 
         suppressHydrationWarning
       >
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          
+          <Toaster 
+            position="top-center"
+            toastOptions={{
+              style: {
+                borderRadius: '16px',
+                background: '#333',
+                color: '#fff',
+                fontSize: '14px',
+                fontWeight: '600',
+              },
+              success: {
+                iconTheme: {
+                  primary: '#16a34a', 
+                  secondary: '#fff',
+                },
+              },
+            }}
+          />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

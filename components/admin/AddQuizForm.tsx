@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Loader2, Sparkles, FileQuestion, AlignLeft, BarChart, Hash } from "lucide-react";
 import { Lecture } from "@/app/generated/prisma/client";
+import toast from "react-hot-toast";
 
 
 
@@ -51,38 +52,47 @@ export default function AddQuizForm({
   }, [initialData]);
   
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
+  e.preventDefault();
+  setSubmitting(true);
 
-    try {
-      // Call the API route provided
-      const res = await fetch("/api/quiz/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          moduleId: sectionId, // Backend expects 'moduleId'
-          position: 1,         // Default position (backend appends or handles reordering)
-          title,
-          context,
-          difficulty,
-          questionCount,
-        }),
-      });
+  // 1. Wrap the logic in a promise-returning function
+  const generateQuizPromise = async () => {
+    const res = await fetch("/api/quiz/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        moduleId: sectionId,
+        position: 1,
+        title,
+        context,
+        difficulty,
+        questionCount,
+      }),
+    });
 
-      if (!res.ok) {
-        throw new Error("Failed to start quiz generation");
-      }
-
-      // The backend returns immediately (fire-and-forget), so we can close the modal
-      onSuccess();
-
-    } catch (err) {
-      console.error(err);
-      alert("Failed to submit quiz generation request.");
-    } finally {
-      setSubmitting(false);
+    if (!res.ok) {
+      // Extract error message if available, otherwise use fallback
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || "Failed to start quiz generation");
     }
+
+    return await res.json();
   };
+
+  // 2. Execute with Toast feedback
+  toast.promise(generateQuizPromise(), {
+    loading: "AI is crafting your quiz questions...",
+    success: () => {
+      onSuccess(); // Close the modal/form
+      return "Quiz generation started! Check back in a moment. ✨";
+    },
+    error: (err) => {
+      // The button becomes clickable again if it fails
+      setSubmitting(false); 
+      return `Error: ${err.message}`;
+    },
+  });
+};
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 animate-in fade-in slide-in-from-top-2">
