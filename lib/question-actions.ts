@@ -87,7 +87,6 @@ export async function createReply({
         content,
         questionId,
         userId: user.id,
-        parentReplyId: parentReplyId || null,
       },
     });
 
