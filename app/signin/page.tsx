@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, ArrowRight, Loader2, ShieldCheck, Github } from 'lucide-react';
-import { signIn } from "next-auth/react"; // 👈 Import from NextAuth
+import { signIn } from "next-auth/react"; 
 
 export default function SignInPage() {
   const router = useRouter();
@@ -26,7 +26,7 @@ export default function SignInPage() {
       const res = await signIn("credentials", {
         email,
         password,
-        redirect: false, // We handle redirect manually to show errors if needed
+        redirect: false, 
       });
 
       if (res?.error) {

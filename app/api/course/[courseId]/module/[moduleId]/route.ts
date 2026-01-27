@@ -3,10 +3,10 @@ import { db } from "@/lib/db";
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { courseId: string; moduleId: string } }
+  context: { params: Promise<{ courseId: string; moduleId: string }> }
 ) {
   try {
-    const { courseId, moduleId } = await params;
+    const { courseId, moduleId } = await context.params;
     const { searchParams } = new URL(req.url);
     const adminId = searchParams.get("adminId");
 
