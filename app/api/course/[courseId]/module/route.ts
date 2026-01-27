@@ -3,10 +3,10 @@ import { db } from "@/lib/db";
 
 export async function POST(
   req: Request,
-  { params }: { params: { courseId: string } }
+  context: { params: Promise<{ courseId: string }> }
 ) {
   try {
-    const { courseId } = await params;
+    const { courseId } = await context.params;
     const { sectionTitle } = await req.json();
 
     

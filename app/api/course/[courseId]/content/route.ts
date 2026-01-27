@@ -1,12 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
 export async function GET(
-  req: Request,
-  { params }: { params: { courseId: string } }
+  req: NextRequest,
+   context: { params: Promise<{ courseId: string }> }
 ) {
   try {
-    const { courseId } = await params;
+    const { courseId } = await context.params;
     const { searchParams } = new URL(req.url);
     const adminId = searchParams.get("adminId");
 
