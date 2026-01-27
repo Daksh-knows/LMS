@@ -8,11 +8,9 @@ import {
   SpellCheck
 } from "lucide-react"; 
 import Link from "next/link";
-import AddModuleForm from "@/components/admin/AddModuleForm"; // Verify path matches your folder structure
-import AddLectureForm from "@/components/admin/AddLectureForm"; // Verify path matches your folder structure
-import { deleteLecture, deleteSection } from "@/lib/admin-actions";
+import AddModuleForm from "@/components/admin/AddModuleForm"; 
+import AddLectureForm from "@/components/admin/AddLectureForm"; 
 import { toast } from "react-hot-toast";
-import { getCurrentUser } from "@/lib/auth-utils";
 import { getSession } from "next-auth/react";
 
 export default function AddModulePage({ params }: { params: Promise<{ id: string }> }) {
@@ -130,11 +128,11 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
       if (data.success) {
         refreshData(); // Refresh the curriculum list
       } else {
-        alert(data.error || "Failed to delete content.");
+        toast.error(data.error || "Failed to delete content.");
       }
     } catch (error) {
       console.error("Delete Error:", error);
-      alert("An error occurred while deleting the lecture.");
+      toast.error("An error occurred while deleting the lecture.");
     }
 };
   /**
@@ -307,20 +305,6 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
                                 <Edit size={16} strokeWidth={2.5} />
                               </button>
 
-                              {/* DELETE BUTTON */}
-                              {/* <button
-                                onClick={async (e) => {
-                                  e.preventDefault();
-                                  if (confirm("Delete this item?")) {
-                                    const res = await deleteLecture(id, section.id, lecture.id);
-                                    if (res.success) refreshData();
-                                  }
-                                }}
-                                className="p-2 bg-gray-100 text-gray-400 hover:bg-red-100 hover:text-red-600 rounded-xl transition-all shadow-sm"
-                                title="Delete Content"
-                              >
-                                <Trash2 size={16} strokeWidth={2.5} />
-                              </button> */}
                               {/* DELETE BUTTON */}
                               <button
                                 onClick={() => handleDelete(section.id, lecture.id, lecture.title)}
