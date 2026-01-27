@@ -1,15 +1,15 @@
-import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { NextResponse } from "next/server";
-import cloudinary from "@/lib/cloudinary"; // Your Cloudinary configuration
+import { NextRequest, NextResponse } from "next/server";
+import cloudinary from "@/lib/cloudinary"; 
 
 
 export async function GET(
-  request: Request,
-  { params }: { params: { courseId: string } }
+  request: NextRequest,
+  context: { params: Promise<{ courseId: string }> }
+
 ) {
   try {
-    const { courseId } = await params;
+    const { courseId } = await context.params;
 
     const course = await db.course.findUnique({
       where: { 
@@ -53,11 +53,11 @@ export async function GET(
 }
 
 export async function DELETE(
-  req: Request,
-  { params }: { params: { courseId: string } }
+  req: NextRequest,
+  context: { params: Promise<{ courseId: string }> }
 ) {
   try {
-    const { courseId } = await params;
+    const { courseId } = await context.params;
 
     // 1. Ownership & Existence Check
     const course = await db.course.findUnique({
@@ -109,11 +109,11 @@ export async function DELETE(
 }
 
 export async function PATCH(
-  req: Request,
-  { params }: { params: { courseId: string } }
+  req: NextRequest,
+  context: { params: Promise<{ courseId: string }> }
 ) {
   try {
-    const { courseId } = await params;
+    const { courseId } = await context.params;
     const { searchParams } = new URL(req.url);
     const adminId = searchParams.get("adminId");
 

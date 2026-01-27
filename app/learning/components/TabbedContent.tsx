@@ -88,7 +88,6 @@ const [activeTab, setActiveTab] = useState<"overview" | "qa" | "Bookmarks" | "re
             key={lecture.id}
             lectureId={lecture.id}
             currentUserId={userId || ""}
-            reviews={lecture.reviews || []}
           />
         )}
       </div>

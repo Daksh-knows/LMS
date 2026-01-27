@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 import { LogOut, Camera, Loader2 } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { updateProfile } from "@/lib/auth-actions";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function ProfileClient({ initialData }: { initialData: any }) {
   const router = useRouter();
@@ -22,14 +22,40 @@ export default function ProfileClient({ initialData }: { initialData: any }) {
 
   const handleSave = async () => {
     setLoading(true);
-    const res = await updateProfile(formData);
-    if (res.success) {
-      setIsEditing(false);
-      router.refresh(); // Refresh to update server-side initials and data
-    } else {
-      alert(res.error);
-    }
-    setLoading(false);
+
+    // 1. Define the API call promise
+    const updatePromise = async () => {
+      const response = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to update profile");
+      }
+
+      return result;
+    };
+
+    // 2. Execute with Toast UI
+    toast.promise(updatePromise(), {
+      loading: "Saving changes...",
+      success: () => {
+        setIsEditing(false); // Switch back to view mode
+        setLoading(false);
+        router.refresh();    // Update server components (like the Header name)
+        return "Profile updated successfully! ✅";
+      },
+      error: (err) => {
+        setLoading(false);
+        return `Error: ${err.message}`;
+      },
+    });
   };
 
   return (
