@@ -55,7 +55,11 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture }) => {
       return userOptId === correctOpt?.id ? score + 1 : score;
     }, 0);
   };
+  const handleSubmitQuiz = () => {
 
+
+  }
+  
   if (quizState === 'result') {
     const score = calculateScore();
     return (
@@ -71,7 +75,7 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture }) => {
             Score: {Math.round((score / questions.length) * 100)}%
           </p>
           <button 
-            onClick={() => console.log("End Quiz")}
+            onClick={handleSubmitQuiz}
             className="w-full max-w-xs bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg"
           >
             End Quiz
@@ -262,7 +266,7 @@ return (
         <div className="flex flex-col items-center">
           <button 
             onClick={() => setQuizState('active')}
-            className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-black py-6 px-20 rounded-4xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-blue-200 flex items-center justify-center gap-4 text-2xl group"
+            className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-black py-6 px-10 rounded-2xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-blue-200 flex items-center justify-center gap-4 text-2xl group"
           >
             <PlayCircle size={32} className="group-hover:rotate-12 transition-transform" />
             Start Attempt
