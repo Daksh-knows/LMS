@@ -26,3 +26,36 @@ export async function POST(req: Request) {
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
+
+export async function GET(req: Request) {
+  try {
+    const user = await getCurrentUser();
+    const userId = user?.id;
+    
+    if (!userId) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const lectureId = searchParams.get("lectureId");
+
+    if (!lectureId) {
+      return new NextResponse("Lecture ID missing", { status: 400 });
+    }
+
+    const bookmarks = await db.bookmark.findMany({
+      where: {
+        lectureId: lectureId,
+        userId: userId, 
+      },
+      orderBy: {
+        time: "asc", 
+      },
+    });
+
+    return NextResponse.json(bookmarks);
+  } catch (error) {
+    console.error("[BOOKMARKS_GET]", error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}

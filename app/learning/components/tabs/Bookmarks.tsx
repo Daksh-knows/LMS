@@ -12,12 +12,12 @@ import {
 } from "lucide-react";
 import { saveNote } from "@/app/actions/saveNote";
 
-interface NotesTabProps {
+interface BookmarksProps {
   lecture: Lecture;
   currentUserId: string;
 }
 
-export const NotesTab: React.FC<NotesTabProps> = ({
+export const BookmarksTab: React.FC<BookmarksProps> = ({
   lecture,
   currentUserId,
 }) => {
@@ -28,11 +28,41 @@ export const NotesTab: React.FC<NotesTabProps> = ({
   const [noteContent, setNoteContent] = useState(initialNote);
   const [isPending, startTransition] = useTransition();
   const [showSuccess, setShowSuccess] = useState(false);
+  const [bookmarks, setBookmarks] = useState([]);
+  const [loadingBookmarks, setLoadingBookmarks] = useState(false);
 
-  // Sync state if switching between lectures
   useEffect(() => {
     setNoteContent(initialNote);
   }, [initialNote, lecture.id]);
+
+
+  useEffect(() => {
+    const fetchBookmarks = async () => {
+      setLoadingBookmarks(true);
+      try {
+        const response = await fetch(`/api/lecture/bookmark?lectureId=${lecture.id}`);
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch bookmarks");
+        }
+
+        const data = await response.json();
+        
+        // --- LOGGING THE DATA ---
+        console.log(`📌 Bookmarks for Lecture [${lecture.id}]:`, data);
+        
+        setBookmarks(data);
+      } catch (error) {
+        console.error("Error fetching bookmarks:", error);
+      } finally {
+        setLoadingBookmarks(false);
+      }
+    };
+
+    if (lecture.id) {
+      fetchBookmarks();
+    }
+  }, [lecture.id]);
 
   const handleSaveNote = () => {
     startTransition(async () => {
@@ -43,7 +73,7 @@ export const NotesTab: React.FC<NotesTabProps> = ({
       }
     });
   };
-
+  console.log("Rendering BookmarksTab for lecture:", lecture.id, "User:", currentUserId);
   return (
     <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-2 duration-500">
       {/* Editor Toolbar */}

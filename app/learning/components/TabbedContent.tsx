@@ -1,11 +1,11 @@
 "use client";
-import React, { useState } from "react";
-import { Lecture } from "../types";
+import React, { useEffect, useState } from "react";
 import { OverviewTab } from "./tabs/OverviewTab";
 import QnaTab from "./tabs/QnaTab";
-import { NotesTab } from "./tabs/NotesTab";
+import { BookmarksTab } from "./tabs/Bookmarks";
 import { ReviewsTab } from "./tabs/ReviewsTab";
-import { BookOpen, MessageSquare, Edit3, Star } from "lucide-react";
+import { BookOpen, MessageSquare, Edit3, Star, BookmarkPlus, Book } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 interface Props {
   lecture: any;   
@@ -14,17 +14,19 @@ interface Props {
 }
 
 const TabbedContent: React.FC<Props> = ({ lecture , courseId , adminId}) => {
-  const [activeTab, setActiveTab] = useState<
-    "overview" | "qa" | "notes" | "reviews"
-  >("overview");
+const [activeTab, setActiveTab] = useState<"overview" | "qa" | "Bookmarks" | "reviews">("overview");
+  
+  const { data: session, status } = useSession();
+  const userId = session?.user?.id; 
+  const isLoadingUser = status === "loading";
 
-  const TEST_USER_ID = "cmkcija2h0000u0esuroeb24t";
   const tabs = [
     { id: "overview", label: "Overview", icon: BookOpen },
     { id: "qa", label: "FAQ", icon: MessageSquare },
-    { id: "notes", label: "Notes", icon: Edit3 },
+    { id: "Bookmarks", label: "Bookmarks", icon: BookmarkPlus },
     { id: "reviews", label: "Reviews", icon: Star },
   ] as const;
+
 
   return (
     <div className="mt-6 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
@@ -66,14 +68,14 @@ const TabbedContent: React.FC<Props> = ({ lecture , courseId , adminId}) => {
       <div className="p-8 min-h-[400px]">
         {activeTab === "overview" && <OverviewTab lecture={lecture} />}
         {activeTab === "qa" && <QnaTab lectureId={lecture.id} courseId={courseId} adminId={adminId} />}
-        {activeTab === "notes" && (
-          <NotesTab lecture={lecture} currentUserId={TEST_USER_ID} />
+        {activeTab === "Bookmarks" && (
+          <BookmarksTab lecture={lecture} currentUserId={userId || ""} />
         )}
         {activeTab === "reviews" && (
           <ReviewsTab
             key={lecture.id}
             lectureId={lecture.id}
-            currentUserId={TEST_USER_ID}
+            currentUserId={userId || ""}
             reviews={lecture.reviews || []}
           />
         )}
