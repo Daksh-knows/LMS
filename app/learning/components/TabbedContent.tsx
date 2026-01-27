@@ -14,8 +14,8 @@ interface Props {
 }
 
 const TabbedContent: React.FC<Props> = ({ lecture , courseId , adminId}) => {
-const [activeTab, setActiveTab] = useState<"overview" | "qa" | "Bookmarks" | "reviews">("overview");
-  
+  const [activeTab, setActiveTab] = useState<"overview" | "qa" | "Bookmarks" | "reviews">("overview");
+  console.log("Lecture Data in TabbedContent:", lecture);
   const { data: session, status } = useSession();
   const userId = session?.user?.id; 
   const isLoadingUser = status === "loading";
@@ -76,7 +76,6 @@ const [activeTab, setActiveTab] = useState<"overview" | "qa" | "Bookmarks" | "re
             key={lecture.id}
             lectureId={lecture.id}
             currentUserId={userId || ""}
-            reviews={lecture.reviews || []}
           />
         )}
       </div>
