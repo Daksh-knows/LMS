@@ -34,10 +34,11 @@ model Account {
 
 // User Schema
 model User {
-  id        String     @id @default(cuid())
-  email     String     @unique
-  password  String     @default("helloworld")
-  questions Question[]
+  id          String                 @id @default(cuid())
+  email       String                 @unique
+  password    String                 @default("helloworld")
+  questions   Question[]
+  submissions AssignmentSubmission[]
 
   name          String?
   image         String? // Stores the avatar URL
@@ -67,8 +68,8 @@ model User {
   notes        Note[]
   reviews      Review[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   replies   Reply[]
   bookmarks Bookmark[]
 }
@@ -210,16 +211,16 @@ model Lecture {
 
   faqs FAQ[]
 
-  enrollments Enrollment[]
-  bookmarks Bookmark[]
+  enrollments   Enrollment[]
+  bookmarks     Bookmark[]
   // --- NEW RELATIONS FOR QUIZ & ASSIGNMENT ---
   quizQuestions QuizQuestion[]
 
-  submissions   AssignmentSubmission[]
+  submissions AssignmentSubmission[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([moduleId])
 }
 
@@ -304,36 +305,36 @@ model Category {
 }
 
 model Question {
-  id          String          @id @default(cuid())
-  title       String          @db.VarChar(255)
-  description String          @db.Text
-  
+  id          String @id @default(cuid())
+  title       String @db.VarChar(255)
+  description String @db.Text
+
   // Relations
-  images      QuestionImage[] // Changed from imageUrl: String?
+  images QuestionImage[] // Changed from imageUrl: String?
 
-  userId      String
-  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  lectureId   String
-  lecture     Lecture         @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  lectureId String
+  lecture   Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 
-  replies     Reply[]
+  replies Reply[]
 
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([lectureId])
 }
 
 model QuestionImage {
-  id         String   @id @default(cuid())
-  url        String   @db.Text
-  
+  id  String @id @default(cuid())
+  url String @db.Text
+
   questionId String
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 // 2. Specialized Quiz Tables
@@ -343,8 +344,8 @@ model QuizQuestion {
   position Int
 
   lectureId String
-  lecture   Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
-  options AnswerOption[]
+  lecture   Lecture        @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  options   AnswerOption[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -368,7 +369,7 @@ model AssignmentSubmission {
   lecture   Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 
   studentId String
-  // user     User     @relation(fields: [studentId], references: [id])
+  user      User   @relation(fields: [studentId], references: [id])
 
   grade    Float?
   feedback String? @db.Text
@@ -396,7 +397,6 @@ model Reply {
   @@index([userId])
 }
 
-
 enum BookmarkType {
   BOOKMARK
   IMPORTANT
@@ -405,21 +405,21 @@ enum BookmarkType {
 }
 
 model Bookmark {
-  id        String   @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // The timestamp in seconds
-  time      Float
-  label     String?
-  
+  time  Float
+  label String?
+
   // NEW: The type of bookmark
-  type      BookmarkType @default(BOOKMARK)
+  type BookmarkType @default(BOOKMARK)
 
   // Relations
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   lectureId String
-  lecture   Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  lecture   Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
