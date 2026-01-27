@@ -11,9 +11,14 @@ interface Props {
   lecture: any;   
   courseId: string; 
   adminId?: string;
+  onBookmarkClick: (time: string) => void;
+  bookmarks?: any[];
+  loadingBookmarks?: boolean;
+  setBookmarks?: React.Dispatch<React.SetStateAction<any[]>>;
+  setLoadingBookmarks?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const TabbedContent: React.FC<Props> = ({ lecture , courseId , adminId}) => {
+const TabbedContent: React.FC<Props> = ({ lecture , courseId , adminId , onBookmarkClick , bookmarks, loadingBookmarks, setBookmarks, setLoadingBookmarks }) => {
 const [activeTab, setActiveTab] = useState<"overview" | "qa" | "Bookmarks" | "reviews">("overview");
   
   const { data: session, status } = useSession();
@@ -69,7 +74,14 @@ const [activeTab, setActiveTab] = useState<"overview" | "qa" | "Bookmarks" | "re
         {activeTab === "overview" && <OverviewTab lecture={lecture} />}
         {activeTab === "qa" && <QnaTab lectureId={lecture.id} courseId={courseId} adminId={adminId} />}
         {activeTab === "Bookmarks" && (
-          <BookmarksTab lecture={lecture} currentUserId={userId || ""} />
+          <BookmarksTab 
+             lecture={lecture} currentUserId={userId || ""} 
+             onBookmarkClick={onBookmarkClick}
+             bookmarks={bookmarks || []}
+             loadingBookmarks={loadingBookmarks}
+             setBookmarks={setBookmarks}
+             setLoadingBookmarks={setLoadingBookmarks}
+             />
         )}
         {activeTab === "reviews" && (
           <ReviewsTab

@@ -23,6 +23,7 @@
     "next": "16.1.1",
     "next-auth": "^5.0.0-beta.30",
     "next-cloudinary": "^6.17.5",
+    "next-video": "^2.6.0",
     "nodemailer": "^7.0.12",
     "razorpay": "^2.9.6",
     "react": "19.2.3",
@@ -30,6 +31,10 @@
     "react-hot-toast": "^2.6.0",
     "react-player": "^3.4.0",
     "resend": "^6.7.0",
+    "video.js": "^8.23.4",
+    "videojs-contrib-quality-levels": "^4.1.0",
+    "videojs-hls-quality-selector": "^2.0.0",
+    "videojs-http-source-selector": "^1.1.6",
     "ws": "^8.19.0"
   },
   "devDependencies": {
