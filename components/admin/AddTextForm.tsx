@@ -1,7 +1,8 @@
 "use client";
 import React, { useState } from "react";
-import { addCourseItem, updateCourseItem } from "@/lib/admin-actions";
 import { Loader2, AlignLeft } from "lucide-react";
+import { toast } from "react-hot-toast";
+import { getSession } from "next-auth/react";
 
 export default function AddTextForm({ courseId, sectionId, initialData, onSuccess, onCancel }: any) {
   const [loading, setLoading] = useState(false);
@@ -14,19 +15,54 @@ export default function AddTextForm({ courseId, sectionId, initialData, onSucces
     setLoading(true);
 
     const payload = {
-      courseId, moduleId: sectionId, title, type: "TEXT", isFree,
-      htmlContent
+      courseId,
+      moduleId: sectionId,
+      title,
+      type: "TEXT",
+      isFree,
+      htmlContent // This maps to 'textContent' in your API logic
     };
 
-    const result = initialData 
-      ? await updateCourseItem(initialData.id, payload)
-      : await addCourseItem(payload);
+    const saveTextPromise = async () => {
+      const isUpdate = !!initialData;
+      const session = await getSession();
+      const adminId = session?.user?.id;
+      if (!adminId) throw new Error("Unauthorized");
 
-    if (result.success) onSuccess();
-    else alert(result.error);
-    setLoading(false);
+      // Target the unified lecture API with query params
+      const url = isUpdate 
+        ? `/api/lecture?adminId=${adminId}&itemId=${initialData.id}` 
+        : `/api/lecture?adminId=${adminId}`;
+
+      const response = await fetch(url, {
+        method: isUpdate ? "PATCH" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to save text content");
+      }
+
+      return result;
+    };
+
+    toast.promise(saveTextPromise(), {
+      loading: "Saving text lecture...",
+      success: () => {
+        onSuccess(); // Triggers the refreshData() in the parent page
+        return "Content saved successfully! 📄";
+      },
+      error: (err) => {
+        setLoading(false);
+        return `Error: ${err.message}`;
+      },
+    });
   };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
        <div className="space-y-1">

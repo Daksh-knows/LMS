@@ -1,7 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import AddCoursePageClient from "./ClientComp";
-import { addCourse } from "@/lib/admin-actions";
 
 export default async function AddCoursePage() {
   const session = await auth();
@@ -12,6 +11,6 @@ export default async function AddCoursePage() {
   }
 
   return (
-    <AddCoursePageClient addCourseAction={addCourse} />
+    <AddCoursePageClient  user={session.user} />
   );
 }

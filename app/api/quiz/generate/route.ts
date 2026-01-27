@@ -22,6 +22,11 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+    const lastItem = await db.lecture.findFirst({
+      where: { moduleId: moduleId },
+      orderBy: { position: 'desc' }
+    });
+    const newPosition = (lastItem?.position || 0) + 1;
     /**
      * 1️⃣ Create the QUIZ lecture immediately
      * (NO questions yet)
@@ -31,7 +36,7 @@ export async function POST(req: Request) {
         title,
         type: "QUIZ",
         moduleId,
-        position,
+        position: newPosition,
         description: JSON.stringify({
           context,
           difficulty,
