@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const user = await getCurrentUser();
-    const { courseId } = params;
+    const { courseId } = await params;
 
     if (!user || !user.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

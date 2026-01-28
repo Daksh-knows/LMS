@@ -54,7 +54,7 @@ const CourseSidebar: React.FC<Props> = ({
 }) => {
   
 const [openSections, setOpenSections] = useState<string[]>([]);
-
+  console.log("Section data received in CourseSidebar:", sections);
   // 1. Load state on Mount
   useEffect(() => {
     const saved = sessionStorage.getItem("sidebar_state");
@@ -140,8 +140,29 @@ const [openSections, setOpenSections] = useState<string[]>([]);
   /**
    * Helper: Render the Checkmark or Lock icon
    */
-  const getStatusIndicator = (item: CourseItem, isActive: boolean) => {
-    // 1. If Active, show a pulsing dot or specific active indicator
+const getStatusIndicator = (item: CourseItem, isActive: boolean) => {
+    const status = getCompletionStatus(item);
+    const isCompleted = status === "completed";
+
+    // 1. If Locked (Not enrolled & Not free)
+    if (!isEnrolled && !item.isFree) {
+      return <Lock size={16} className="text-gray-300" />;
+    }
+
+    // 2. If Completed (Show this even if active, or combine them)
+    if (isCompleted) {
+      return (
+        <div className="relative flex items-center justify-center">
+          <CheckCircle2 size={18} className="text-green-600 fill-green-50" />
+          {/* Optional: Add a small purple ring if it's both completed AND active */}
+          {isActive && (
+            <span className="absolute -inset-1 rounded-full border-2 border-purple-400 animate-pulse" />
+          )}
+        </div>
+      );
+    }
+
+    // 3. If Active but NOT completed
     if (isActive) {
       return (
         <div className="relative flex items-center justify-center w-5 h-5">
@@ -149,17 +170,6 @@ const [openSections, setOpenSections] = useState<string[]>([]);
           <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-600"></span>
         </div>
       );
-    }
-
-    // 2. If Locked (Not enrolled & Not free)
-    if (!isEnrolled && !item.isFree) {
-      return <Lock size={16} className="text-gray-300" />;
-    }
-
-    // 3. If Completed
-    const status = getCompletionStatus(item);
-    if (status === "completed") {
-      return <CheckCircle2 size={18} className="text-green-600 fill-green-50" />;
     }
 
     // 4. Default empty circle

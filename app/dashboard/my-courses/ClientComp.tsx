@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export interface EnrolledCourse {
@@ -14,15 +14,31 @@ export interface EnrolledCourse {
   status: "Not Started" | "In Progress" | "Completed";
 }
 
-export default function CourseFilterList({
-  initialCourses,
-}: {
-  initialCourses: EnrolledCourse[];
-}) {
+export default function CourseFilterList() {
   const [filter, setFilter] = useState("All");
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [initialCourses, setInitialCourses] = useState<EnrolledCourse[]>([]);
+  const [loading, setLoading] = useState(true); // Loading state for the initial fetch
   const router = useRouter();
+  
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/user/courses"); // The API we created earlier
+        if (!response.ok) throw new Error("Failed to fetch");
+        const data = await response.json();
+        setInitialCourses(data);
+      } catch (error) {
+        console.error("Error loading courses:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchCourses();
+  }, []);
+  
   const filteredCourses = initialCourses.filter((course) => {
     if (filter === "All") return true;
     return course.status === filter;
@@ -36,7 +52,7 @@ export default function CourseFilterList({
       // 1. Fetch the last viewed lecture for this specific user and course
       const lastViewedRes = await fetch(`${baseUrl}/api/course/${courseId}/last-viewed`);
       const lastViewedData = await lastViewedRes.json();
-
+      console.log("Last viewed data:", lastViewedData);
       // 2. If a last viewed lecture exists, redirect there immediately
       if (lastViewedData && lastViewedData.lastLectureId) {
         router.push(`/learning/${courseId}/${lastViewedData.lastLectureId}`);

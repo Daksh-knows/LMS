@@ -21,22 +21,23 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const file = formData.get("file") as File;
     const lectureId = formData.get("lectureId") as string;
+    // Ensure courseId is passed from the client to help create progress if it doesn't exist
+    const courseId = formData.get("courseId") as string; 
 
     if (!file || !lectureId) {
       return NextResponse.json({ error: "Missing file or lecture ID" }, { status: 400 });
     }
 
-    // 2. Convert file to Buffer
+    // 1. Convert file to Buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // 3. Upload to Cloudinary
+    // 2. Upload to Cloudinary
     const uploadResponse: any = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           resource_type: "raw",
           folder: "student_submissions",
-          // Including userId in public_id helps avoid overwrites in Cloudinary
           public_id: `submission_${lectureId}_${userId}`, 
         },
         (error, result) => {
@@ -49,30 +50,54 @@ export async function POST(req: NextRequest) {
 
     const fileUrl = uploadResponse.secure_url;
 
-    // 4. Save to Database (Upsert: Create new or update existing)
-    const submission = await db.assignmentSubmission.upsert({
-      where: {
-        studentId_lectureId: {
+    // 3. Database Transaction: Update Submission AND Progress
+    const [submission, progress] = await db.$transaction([
+      // Upsert the Assignment Submission
+      db.assignmentSubmission.upsert({
+        where: {
+          studentId_lectureId: {
+            studentId: userId,
+            lectureId: lectureId,
+          },
+        },
+        update: {
+          fileUrl: fileUrl,
+          grade: null,
+          feedback: null,
+        },
+        create: {
           studentId: userId,
           lectureId: lectureId,
+          fileUrl: fileUrl,
         },
-      },
-      update: {
-        fileUrl: fileUrl,
-        // Reset grade/feedback if they resubmit? (Optional)
-        grade: null,
-        feedback: null,
-      },
-      create: {
-        studentId: userId,
-        lectureId: lectureId,
-        fileUrl: fileUrl,
-      },
-    });
+      }),
+
+      // Upsert the User Progress to "SUBMITTED"
+      db.userProgress.upsert({
+        where: {
+          userId_lectureId: {
+            userId: userId,
+            lectureId: lectureId,
+          },
+        },
+        update: {
+          assignmentStatus: "SUBMITTED",
+          // You might want to mark it as completed here, or wait for grading
+          // isCompleted: true, 
+        },
+        create: {
+          userId: userId,
+          lectureId: lectureId,
+          courseId: courseId || "", // Defaulting to empty if not provided
+          assignmentStatus: "SUBMITTED",
+        },
+      }),
+    ]);
 
     return NextResponse.json({ 
       success: true, 
       submissionId: submission.id,
+      progressStatus: progress.assignmentStatus,
       url: fileUrl 
     });
 

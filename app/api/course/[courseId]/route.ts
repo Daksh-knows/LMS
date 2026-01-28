@@ -1,15 +1,17 @@
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary"; 
+import { getCurrentUser } from "@/lib/auth-utils";
 
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ courseId: string }> }
-
+  context: { params: Promise<{ courseId: string , userId: string }> }
 ) {
+  const { courseId , userId } = await context.params;
+  if(userId) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+
   try {
-    const { courseId } = await context.params;
 
     const course = await db.course.findUnique({
       where: { 
@@ -19,7 +21,7 @@ export async function GET(
         id: true,
         title: true,
         description: true,
-        adminId: true, // <--- ADDED THIS FIELD HERE
+        adminId: true, 
         modules: {
           orderBy: { position: "asc" },
           select: {
@@ -34,13 +36,21 @@ export async function GET(
                 position: true,
                 videoUrl: true, 
                 type: true,
+                userProgress: {
+                  where: {
+                    userId: userId
+                  },
+                  select: {
+                    isCompleted: true
+                  }
+                }
               }
             }
           }
         }
       }
     });
-
+    console.log("Course fetched:", course);
     if (!course) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
