@@ -6,12 +6,12 @@ import { getCurrentUser } from "@/lib/auth-utils";
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ courseId: string , userId: string }> }
+  context: { params: Promise<{ courseId: string }> }
 ) {
   const { courseId } = await context.params;
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get("userId");
-  if(userId) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+  if(!userId) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   try {
 
