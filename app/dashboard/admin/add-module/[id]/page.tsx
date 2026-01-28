@@ -134,7 +134,7 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
       console.error("Delete Error:", error);
       toast.error("An error occurred while deleting the lecture.");
     }
-};
+  };
   /**
    * Helper to get distinct visual styles for each content type
    */
@@ -169,6 +169,13 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
           label: "Assignment",
           meta: "Task"
         };
+      case "LIVE":
+        return{
+          icon: <Video size={18} />,
+          color: "text-red-600 bg-red-50",
+          label: "Live Session",
+          meta: lecture.duration ? `${lecture.duration} min` : "0 min"
+        }
       default:
         return {
           icon: <Layout size={18} />,

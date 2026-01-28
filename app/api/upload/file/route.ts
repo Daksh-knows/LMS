@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     const uploadResult: any = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         { 
-          resource_type: "auto", // Auto-detects (image, video, raw/pdf)
+          resource_type: file.type === "application/pdf" ? "image" : "auto",
           folder: "assignments" 
         }, 
         (error, result) => {

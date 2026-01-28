@@ -21,7 +21,7 @@ interface Props {
 
 export default function AddLectureForm({ courseId, sectionId, initialData, onSuccess, onCancel }: Props) {
   // Default to VIDEO, or use the type from initialData
-  console.log(initialData);
+  // console.log(initialData);
   const [type, setType] = useState<ItemType>(initialData?.type || "VIDEO");
   // Keep type in sync if initialData changes (e.g. switching between edit modes)
   useEffect(() => {
@@ -66,7 +66,7 @@ export default function AddLectureForm({ courseId, sectionId, initialData, onSuc
       {/* --- FORM RENDERER --- */}
       {/* You need to ensure AddVideoForm and AddTextForm exist similarly to the ones below */}
       
-      {type === "VIDEO" && (
+      {(type === "VIDEO" || type === "LIVE") && (
         <AddVideoForm 
           courseId={courseId} 
           sectionId={sectionId} 

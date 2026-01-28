@@ -44,3 +44,5 @@ next-env.d.ts
 seed.ts
 
 simulate-auth.ts
+
+.vscode/

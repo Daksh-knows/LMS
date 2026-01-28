@@ -195,7 +195,7 @@ function GradingRow({
           className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all"
         >
           <FileText size={14} />
-          View File
+            View File
           <ExternalLink size={12} />
         </a>
       </td>
