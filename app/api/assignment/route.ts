@@ -1,83 +1,73 @@
 import { NextRequest, NextResponse } from "next/server";
-import { v2 as cloudinary } from "cloudinary";
-import { db } from "@/lib/db"; 
-import { getCurrentUser } from "@/lib/auth-utils";
+import { Storage } from "@google-cloud/storage";
+import { db } from "@/lib/db";
+import { auth } from "@/auth";
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+const storage = new Storage({
+  projectId: process.env.GCS_PROJECT_ID,
+  credentials: {
+    client_email: process.env.GCS_CLIENT_EMAIL,
+    // Replace literal newlines in the private key string
+    private_key: process.env.GCS_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+  },
 });
+
+const bucket = storage.bucket(process.env.GCS_BUCKET_NAME!);
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getCurrentUser();
-    const userId = user?.id;
+    const session = await auth();
+    const userId = session?.user?.id;
 
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const formData = await req.formData();
     const file = formData.get("file") as File;
     const lectureId = formData.get("lectureId") as string;
 
-    if (!file || !lectureId) {
-      return NextResponse.json({ error: "Missing file or lecture ID" }, { status: 400 });
+    if (!file || file.type !== "application/pdf") {
+      return NextResponse.json({ error: "Only PDFs are allowed" }, { status: 400 });
     }
 
-    // 2. Convert file to Buffer
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    // Define the path inside the bucket
+    const fileName = `submissions/${lectureId}/${userId}.pdf`;
+    const blob = bucket.file(fileName);
 
-    // 3. Upload to Cloudinary
-    const uploadResponse: any = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          resource_type: "raw",
-          folder: "student_submissions",
-          // Including userId in public_id helps avoid overwrites in Cloudinary
-          public_id: `submission_${lectureId}_${userId}`, 
-        },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      );
-      uploadStream.end(buffer);
+    const blobStream = blob.createWriteStream({
+      resumable: false,
+      contentType: "application/pdf",
+      metadata: {
+        // This is the CRITICAL metadata for opening in a new tab
+        contentDisposition: "inline", 
+      },
     });
 
-    const fileUrl = uploadResponse.secure_url;
+    const buffer = Buffer.from(await file.arrayBuffer());
 
-    // 4. Save to Database (Upsert: Create new or update existing)
-    const submission = await db.assignmentSubmission.upsert({
+    // Stream the file to GCS
+    await new Promise((resolve, reject) => {
+      blobStream.on("error", (err) => reject(err));
+      blobStream.on("finish", () => resolve(true));
+      blobStream.end(buffer);
+    });
+
+    // Option: Make the file public (requires the bucket to allow public access)
+    // await blob.makePublic(); 
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+
+    // Update your database
+    await db.assignmentSubmission.upsert({
       where: {
-        studentId_lectureId: {
-          studentId: userId,
-          lectureId: lectureId,
-        },
+        studentId_lectureId: { studentId: userId, lectureId }
       },
-      update: {
-        fileUrl: fileUrl,
-        // Reset grade/feedback if they resubmit? (Optional)
-        grade: null,
-        feedback: null,
-      },
-      create: {
-        studentId: userId,
-        lectureId: lectureId,
-        fileUrl: fileUrl,
-      },
+      update: { fileUrl: publicUrl },
+      create: { studentId: userId, lectureId, fileUrl: publicUrl },
     });
 
-    return NextResponse.json({ 
-      success: true, 
-      submissionId: submission.id,
-      url: fileUrl 
-    });
+    return NextResponse.json({ success: true, url: publicUrl });
 
-  } catch (error) {
-    console.error("Assignment Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  } catch (error: any) {
+    console.error("GCS_ERROR", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

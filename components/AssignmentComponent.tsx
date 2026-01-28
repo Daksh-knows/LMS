@@ -87,7 +87,7 @@ const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
       <div className="space-y-4">
         <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide">Reference Materials</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {lecture.resources.map((res) => (
+          {lecture.resources && lecture.resources.length > 0 && lecture.resources.map((res) => (
             <a
               key={res.id}
               href={res.url}

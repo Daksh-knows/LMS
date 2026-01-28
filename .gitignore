@@ -46,3 +46,4 @@ seed.ts
 simulate-auth.ts
 
 .vscode/
+setup-gcs
