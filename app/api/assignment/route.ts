@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
     // Stream the file to GCS
     await new Promise((resolve, reject) => {
-      blobStream.on("error", (err) => reject(err));
+      blobStream.on("error", (err: any) => reject(err));
       blobStream.on("finish", () => resolve(true));
       blobStream.end(buffer);
     });
