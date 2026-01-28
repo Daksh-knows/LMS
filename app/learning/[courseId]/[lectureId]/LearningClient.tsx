@@ -10,6 +10,7 @@ import VideoPlayer from "../../components/VideoPlayer";
 import CourseSidebar from "../../components/CourseSidebar";
 import TabbedContent from "../../components/TabbedContent";
 import QuizComponent from "@/components/QuizComponent";
+import AssignmentComponent from "@/components/AssignmentComponent";
 
 interface LearningClientProps {
   course: any;
@@ -36,6 +37,28 @@ export default function LearningClient({ course, lectureId }: LearningClientProp
   const handleAddBookmark = (newBookmark: Bookmark) => {
     setBookmarks((prev) => [newBookmark, ...prev]);
   };
+  
+  useEffect(() => {
+    const updateProgress = async () => {
+      try {
+        await fetch("/api/lecture/progress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lectureId: lectureId,
+            courseId: course.id
+          }),
+        });
+      } catch (error) {
+        console.error("Failed to update last viewed pulse:", error);
+      }
+    };
+
+    if (lectureId) {
+      updateProgress();
+    } 
+    console.log("Updating progress for lectureId:", lectureId);
+  }, [lectureId]);
 
   useEffect(() => {
     const fetchLecture = async () => {
@@ -123,7 +146,7 @@ export default function LearningClient({ course, lectureId }: LearningClientProp
                   {/* Added bg-black to keep the stage distinct and max-h to reduce size */}
                   <div className="w-full bg-black flex justify-center items-center max-h-[60vh] md:max-h-[65vh] overflow-hidden shadow-inner">
                     <div className="w-full h-full max-w-5xl mx-auto">
-                      {/* --- VIDEO PLAYER --- */}
+                      {/* --- lecture UI --- */}
                       {currentLecture.type === 'VIDEO' && (
                         <div className="aspect-video w-full h-full">
                           <VideoPlayer  
@@ -139,7 +162,14 @@ export default function LearningClient({ course, lectureId }: LearningClientProp
                       {/* --- QUIZ UI --- */}
                       {currentLecture.type === 'QUIZ' && quizData && (
                         <div className="h-full w-full bg-white overflow-y-auto">
-                          <QuizComponent lecture={currentLecture} />
+                          <QuizComponent lecture={currentLecture} courseId={course.id} />
+                        </div>
+                      )}
+
+                      {/* ASSIGNMENT UI */}
+                      {currentLecture.type === 'ASSIGNMENT' && (
+                        <div className="h-full w-full bg-white overflow-y-auto scrollbar-hide">
+                          <AssignmentComponent lecture={currentLecture} />
                         </div>
                       )}
                     </div>

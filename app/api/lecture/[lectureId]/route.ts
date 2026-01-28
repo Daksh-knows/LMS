@@ -5,9 +5,7 @@ import  cloudinary  from "@/lib/cloudinary";
 
 export async function GET(
   request: NextRequest,
-  // Ensure the param name matches your folder name [lectureId]
   context: { params: Promise<{ lectureId: string }> }
-
 ) {
   try {
     const { lectureId } = await context.params;
@@ -20,12 +18,12 @@ export async function GET(
         id: true,
         title: true,
         description: true,
-        type: true,
+        type: true, // "VIDEO", "LIVE", "TEXT", "QUIZ", "ASSIGNMENT"
         videoUrl: true,
         position: true,
         moduleId: true,
-        quizQuestions :{
-          include:{options : true} ,
+        quizQuestions: {
+          include: { options: true },
           orderBy: { position: 'asc' }
         },
       },
@@ -35,7 +33,43 @@ export async function GET(
       return NextResponse.json({ error: "Item not found" }, { status: 404 });
     }
 
-    return NextResponse.json(lecture);
+    // --- LOGIC: Handle Quiz Type & Randomization ---
+    
+    let finalQuestions: any[] = [];
+
+    // Check if the enum type is "QUIZ"
+    if (lecture.type === "QUIZ") {
+      finalQuestions = lecture.quizQuestions;
+
+      // Parse description for potential questionCount limit
+      if (lecture.description) {
+        try {
+          const config = JSON.parse(lecture.description);
+          const limit = config.questionCount;
+
+          if (typeof limit === "number" && limit > 0) {
+            // Shuffle in-memory
+            const shuffled = [...lecture.quizQuestions]
+              .map((value) => ({ value, sort: Math.random() }))
+              .sort((a, b) => a.sort - b.sort)
+              .map(({ value }) => value);
+
+            finalQuestions = shuffled.slice(0, limit);
+          }
+        } catch (e) {
+          console.warn("Description is not valid JSON, returning all questions.");
+        }
+      }
+    } else {
+      // If the type is VIDEO, LIVE, TEXT, or ASSIGNMENT, ensure the array is empty
+      finalQuestions = [];
+    }
+
+    return NextResponse.json({
+      ...lecture,
+      quizQuestions: finalQuestions
+    });
+
   } catch (error) {
     console.error("[COURSE_ITEM_GET_API]", error);
     return NextResponse.json(

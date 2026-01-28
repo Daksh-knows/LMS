@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
-import { BrainCircuit, HelpCircle, PlayCircle, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Award } from "lucide-react";
+import React, { useEffect, useState } from 'react';
+import { BrainCircuit, HelpCircle, PlayCircle, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Award, Loader2 } from "lucide-react";
+import { useRouter } from 'next/navigation';
 
 interface Option {
   id: string;
@@ -17,35 +18,103 @@ interface QuizQuestion {
 
 interface QuizUIProps {
   lecture: {
+    id: string;
     title: string;
     description: string;
     quizQuestions: QuizQuestion[];
-  };
+  } ,
+  courseId: string;
 }
 
-const QuizUI: React.FC<QuizUIProps> = ({ lecture }) => {
-  const [quizState, setQuizState] = useState<'intro' | 'active' | 'result'>('intro');
+const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
+  const router = useRouter();
+  const [quizState, setQuizState] = useState<'intro' | 'active' | 'result' | 'already-submitted'>('intro');
+  const [prevSubmission, setPrevSubmission] = useState<{score: number, date: string} | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  // Existing Quiz Logic States
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState<Record<number, string>>({}); 
   const [submitted, setSubmitted] = useState<Record<number, boolean>>({});
 
   const questions = lecture.quizQuestions || [];
-  
-  const metadata = React.useMemo(() => {
+
+  // --- 1. Check for Existing Submission ---
+
+    const metadata = React.useMemo(() => {
     try {
       return JSON.parse(lecture.description);
     } catch (e) {
       return { context: "Test your knowledge", difficulty: "MEDIUM" };
     }
   }, [lecture.description]);
+  
+  useEffect(() => {
+    const checkQuizStatus = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/lecture/quiz-status/${lecture.id}`);
+        const data = await res.json();
 
-  const handleSelect = (optionId: string) => {
-    if (submitted[currentIdx]) return;
-    setSelectedOptions({ ...selectedOptions, [currentIdx]: optionId });
-  };
+        if (data.hasSubmitted) {
+          setPrevSubmission({
+            score: data.score,
+            date: new Date(data.completedAt).toLocaleDateString()
+          });
+          setQuizState('already-submitted');
+        }
+      } catch (error) {
+        console.error("Error checking quiz status:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleSubmitAnswer = () => {
-    setSubmitted({ ...submitted, [currentIdx]: true });
+    checkQuizStatus();
+  }, [lecture.id]);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmitQuiz = async () => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    
+    const scoreCount = calculateScore();
+    const percentage = Math.round((scoreCount / questions.length) * 100);
+
+    try {
+      const response = await fetch("/api/lecture/quiz-progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lectureId: lecture.id,
+          courseId: courseId,
+          score: percentage,
+        }),
+      });
+
+      if (response.ok) {
+        // 1. Update Server Data (for Sidebar/Nav)
+        router.refresh(); 
+
+        // 2. UPDATE LOCAL STATE INSTANTLY
+        // This ensures the UI changes without a manual reload
+        setPrevSubmission({
+          score: percentage,
+          date: new Date().toLocaleDateString()
+        });
+        
+        // 3. Move to the submitted view
+        setQuizState('already-submitted'); 
+        
+      } else {
+        alert("Failed to save progress.");
+      }
+    } catch (error) {
+      console.error("Submission failed:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const calculateScore = () => {
@@ -55,11 +124,44 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture }) => {
       return userOptId === correctOpt?.id ? score + 1 : score;
     }, 0);
   };
-  const handleSubmitQuiz = () => {
 
+  const handleSelect = (optionId: string) => {
 
-  }
+    if (submitted[currentIdx]) return;
+
+    setSelectedOptions({ ...selectedOptions, [currentIdx]: optionId });
+
+  };
+
+  const handleSubmitAnswer = () => {
+
+    setSubmitted({ ...submitted, [currentIdx]: true });
+
+  };
   
+  if (loading) return (
+    <div className="w-full h-screen flex items-center justify-center">
+      <Loader2 className="animate-spin text-blue-600" size={40} />
+    </div>
+  );
+  
+  if (quizState === 'already-submitted') {
+    return (
+      <div className="w-full max-w-full pt-20 pb-12 px-6 flex flex-col items-center">
+        <div className="bg-white border-2 border-green-100 rounded-3xl p-10 text-center shadow-xl max-w-2xl w-full">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 size={40} className="text-green-600" />
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Quiz Completed!</h2>
+          <p className="text-gray-500 mb-6">Submitted on {prevSubmission?.date}</p>
+          <div className="text-6xl font-black text-green-600 mb-4">{prevSubmission?.score}%</div>
+          <p className="text-lg text-gray-600 mb-8">You have already received credit for this quiz.</p>
+
+        </div>
+      </div>
+    );
+  }
+
   if (quizState === 'result') {
     const score = calculateScore();
     return (
@@ -75,10 +177,18 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture }) => {
             Score: {Math.round((score / questions.length) * 100)}%
           </p>
           <button 
+            disabled={isSubmitting}
             onClick={handleSubmitQuiz}
-            className="w-full max-w-xs bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg"
+            className="w-full max-w-xs bg-blue-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2"
           >
-            End Quiz
+            {isSubmitting ? (
+              <>
+                <Loader2 className="animate-spin" size={20} />
+                Saving...
+              </>
+            ) : (
+              "Save & End Quiz"
+            )}
           </button>
         </div>
       </div>

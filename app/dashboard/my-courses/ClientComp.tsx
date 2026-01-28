@@ -3,15 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-// Updated Interface to match what we will calculate in page.tsx
 export interface EnrolledCourse {
   id: string;
   title: string;
-  subtitle: string; // Will show "Next: [Lecture Title]" or Description
+  subtitle: string; 
   image: string;
-  modulesCompleted: number; // Actually "Lectures Completed"
-  totalModules: number; // Actually "Total Lectures"
-  progress: number; // Percentage (0-100)
+  modulesCompleted: number; 
+  totalModules: number; 
+  progress: number; 
   status: "Not Started" | "In Progress" | "Completed";
 }
 
@@ -31,36 +30,43 @@ export default function CourseFilterList({
 
   const handleCourseSelect = async (courseId: string) => {
     try {
-      setLoadingId(courseId); 
-      
+      setLoadingId(courseId);
       const baseUrl = window.location.origin;
-      
 
-      const response = await fetch(`${baseUrl}/api/course/${courseId}`, {
+      // 1. Fetch the last viewed lecture for this specific user and course
+      const lastViewedRes = await fetch(`${baseUrl}/api/course/${courseId}/last-viewed`);
+      const lastViewedData = await lastViewedRes.json();
+
+      // 2. If a last viewed lecture exists, redirect there immediately
+      if (lastViewedData && lastViewedData.lastLectureId) {
+        router.push(`/learning/${courseId}/${lastViewedData.lastLectureId}`);
+        return; // Exit early
+      }
+
+      // 3. FALLBACK: If no progress exists, fetch course structure to find the first lecture
+      const courseResponse = await fetch(`${baseUrl}/api/course/${courseId}`, {
         cache: 'no-store'
       });
 
-      if (!response.ok) throw new Error("Failed to fetch course data");
+      if (!courseResponse.ok) throw new Error("Failed to fetch course data");
+      const courseData = await courseResponse.json();
 
-      const courseData = await response.json();
-
-
-      //TODO: Handle cases where there are no modules or lectures 
-      //TODO: Use user progress to continue from last visited lecture
+      // Get the first lecture of the first module
       const firstLectureId = courseData.modules?.[0]?.lectures?.[0]?.id;
 
       if (firstLectureId) {
         router.push(`/learning/${courseId}/${firstLectureId}`);
       } else {
-        alert("This course has no lectures available.");
+        alert("This course has no lectures available yet.");
       }
     } catch (error) {
       console.error("Redirection error:", error);
+      // Final fallback to a general course page
       router.push(`/learning/${courseId}`);
     } finally {
       setLoadingId(null);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
