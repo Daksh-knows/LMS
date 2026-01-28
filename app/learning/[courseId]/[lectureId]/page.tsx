@@ -17,7 +17,7 @@ async function Page({ params }: PageProps) {
   let course = null;
   console.log("User in Page component:", user);
   try {
-    const response = await fetch(`${baseUrl}/api/course/${courseId}`, {
+    const response = await fetch(`${baseUrl}/api/course/${courseId}?userId=${user?.id}`, {
       cache: 'no-store', 
     });
     console.log("Fetch response status:", response);
