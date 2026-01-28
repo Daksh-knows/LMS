@@ -15,11 +15,15 @@ model Account {
   providerAccountId String
   refresh_token     String?
   access_token      String?
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
   id_token          String?
+  id_token          String?
   session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
@@ -58,13 +62,23 @@ model StudentProfile {
   userId        String  @unique
   fullName      String
   domain        String?
+  id            String  @id @default(cuid())
+  userId        String  @unique
+  fullName      String
+  domain        String?
   collegeName   String?
   collegeDegree String?
   collegeYear   Int?
   user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserStats {
+  id               String @id @default(cuid())
+  userId           String @unique
+  videoWatchedMins Int    @default(0)
+  questionsSolved  Int    @default(0)
+  user             User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   id               String @id @default(cuid())
   userId           String @unique
   videoWatchedMins Int    @default(0)
@@ -96,10 +110,16 @@ model Enrollment {
   id               String   @id @default(cuid())
   userId           String
   courseId         String
+  id               String   @id @default(cuid())
+  userId           String
+  courseId         String
   currentLectureId String?
   enrolledAt       DateTime @default(now())
   course           Course   @relation(fields: [courseId], references: [id])
+  enrolledAt       DateTime @default(now())
+  course           Course   @relation(fields: [courseId], references: [id])
   currentLecture   Lecture? @relation(fields: [currentLectureId], references: [id])
+  user             User     @relation(fields: [userId], references: [id])
   user             User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, courseId])
@@ -107,8 +127,16 @@ model Enrollment {
 
 model Module {
   id          String    @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
   description String?
+  position    Int
+  isPublished Boolean   @default(false)
+  courseId    String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lectures    Lecture[]
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
   position    Int
   isPublished Boolean   @default(false)
   courseId    String
@@ -146,6 +174,17 @@ model Lecture {
   reviews       Review[]
   userProgress  UserProgress[]
 
+  resources     Attachment[]
+  bookmarks     Bookmark[]
+  enrollments   Enrollment[]
+  faqs          FAQ[]
+  module        Module                 @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  notes         Note[]
+  questions     Question[]
+  quizQuestions QuizQuestion[]
+  reviews       Review[]
+  userProgress  UserProgress[]
+
   @@index([moduleId])
 }
 
@@ -153,9 +192,13 @@ model FAQ {
   id        String   @id @default(cuid())
   question  String
   answer    String
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
   lectureId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  lecture   Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
   lecture   Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }
 
@@ -164,8 +207,13 @@ model Attachment {
   title     String
   url       String
   type      String   @default("FILE")
+  id        String   @id @default(cuid())
+  title     String
+  url       String
+  type      String   @default("FILE")
   lectureId String
   createdAt DateTime @default(now())
+  lecture   Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
   lecture   Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }
 
@@ -186,15 +234,21 @@ model UserProgress {
   @@unique([userId, lectureId])
   @@index([userId, courseId])
   @@index([userId, lectureId])
+  @@index([userId, courseId])
 }
 
 model Note {
   id        String   @id @default(cuid())
   content   String
   userId    String
+  id        String   @id @default(cuid())
+  content   String
+  userId    String
   lectureId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  lecture   Lecture  @relation(fields: [lectureId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
   lecture   Lecture  @relation(fields: [lectureId], references: [id])
   user      User     @relation(fields: [userId], references: [id])
 }
@@ -204,16 +258,25 @@ model Review {
   rating    Int
   comment   String?
   userId    String
+  id        String   @id @default(cuid())
+  rating    Int
+  comment   String?
+  userId    String
   lectureId String
   createdAt DateTime @default(now())
   lecture   Lecture  @relation(fields: [lectureId], references: [id])
   user      User     @relation(fields: [userId], references: [id])
+  lecture   Lecture  @relation(fields: [lectureId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
+  @@unique([userId, lectureId])
   @@unique([userId, lectureId])
 }
 
 model Category {
   id      String   @id @default(cuid())
+  name    String   @unique
+  courses Course[]
   name    String   @unique
   courses Course[]
 }
@@ -222,11 +285,16 @@ model Question {
   id          String          @id @default(cuid())
   title       String          @db.VarChar(255)
   description String
+  description String
   userId      String
   lectureId   String
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
   lecture     Lecture         @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  images      QuestionImage[]
   user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   images      QuestionImage[]
   replies     Reply[]
@@ -238,7 +306,9 @@ model Question {
 model QuestionImage {
   id         String   @id @default(cuid())
   url        String
+  url        String
   questionId String
+  createdAt  DateTime @default(now())
   createdAt  DateTime @default(now())
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }
@@ -247,7 +317,14 @@ model QuizQuestion {
   id        String         @id @default(cuid())
   text      String
   position  Int
+  id        String         @id @default(cuid())
+  text      String
+  position  Int
   lectureId String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  options   AnswerOption[]
+  lecture   Lecture        @relation(fields: [lectureId], references: [id], onDelete: Cascade)
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
   options   AnswerOption[]
@@ -258,6 +335,9 @@ model AnswerOption {
   id             String       @id @default(cuid())
   text           String
   isCorrect      Boolean      @default(false)
+  id             String       @id @default(cuid())
+  text           String
+  isCorrect      Boolean      @default(false)
   quizQuestionId String
   quizQuestion   QuizQuestion @relation(fields: [quizQuestionId], references: [id], onDelete: Cascade)
 }
@@ -265,8 +345,13 @@ model AnswerOption {
 model AssignmentSubmission {
   id        String   @id @default(cuid())
   fileUrl   String
+  id        String   @id @default(cuid())
+  fileUrl   String
   lectureId String
   studentId String
+  user      User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  grade     Float?
+  feedback  String?
   grade     Float?
   feedback  String?
   createdAt DateTime @default(now())
@@ -280,11 +365,17 @@ model AssignmentSubmission {
 model Reply {
   id         String   @id @default(cuid())
   content    String
+  id         String   @id @default(cuid())
+  content    String
   questionId String
   userId     String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  userId     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([questionId])

@@ -16,7 +16,7 @@ export default function Sidebar({ user }: { user: any }) {
   const isAdmin = user?.role === "ADMIN" || user?.role === "admin";
 
   const navItems = [
-    { label: "Overview", icon: LayoutDashboard, href: "/dashboard" },
+    { label: "Overview", icon: LayoutDashboard, href: isAdmin? "/dashboard/admin-overview" :"/dashboard" },
 
     ...(isAdmin
       ? [
