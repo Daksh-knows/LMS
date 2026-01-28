@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import ReactPlayer from 'react-player';
-import { BookmarkPlus , Save } from "lucide-react";
-import { useParams, useRouter } from 'next/navigation'; 
+import { BookmarkPlus, Save } from "lucide-react";
+import { useParams, useRouter } from 'next/navigation';
 
 import {
   MediaController,
@@ -20,15 +20,15 @@ import {
 
 interface Props {
   videoUrl: string;
-  lectureId: string; 
-  seekTo: string  | null; // Updated to accept number or string
+  lectureId: string;
+  seekTo: string | null;
   onSeekComplete: () => void;
   onBookmarkAdded: (bookmark: any) => void;
 }
 
 const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekComplete, onBookmarkAdded }) => {
   const controllerRef = useRef<any>(null);
-  const router = useRouter() ;
+  const router = useRouter();
   const params = useParams();
   const [isMounted, setIsMounted] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -36,15 +36,20 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
   const [isPlaying, setIsPlaying] = useState(true);
   const [originalControl, setOriginalControl] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasCompleted, setHasCompleted] = useState(false); 
-
+  const [hasCompleted, setHasCompleted] = useState(false);
 
   useEffect(() => { setIsMounted(true); }, []);
-  
-  const handleProgress = async (state: { played: number }) => {
-    if (state.played >= 0.95 && !hasCompleted) {
-      setHasCompleted(true); 
-      
+
+  // --- NEW PROGRESS LOGIC ---
+  // Using the native timeupdate event which MediaController passes through
+  const handleTimeUpdate = async (e: any) => {
+    const video = e.target;
+    if (!video || !video.duration || hasCompleted) return;
+
+    const playedFraction = video.currentTime / video.duration;
+
+    if (playedFraction >= 0.95) {
+      setHasCompleted(true);
       const courseId = params.courseId as string;
 
       try {
@@ -59,7 +64,7 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
 
         if (response.ok) {
           console.log("Lecture marked as completed automatically!");
-          router.refresh(); 
+          router.refresh();
         }
       } catch (error) {
         console.error("Auto-complete error:", error);
@@ -67,55 +72,50 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
     }
   };
 
-
   // --- SEEKING LOGIC ---
-    useEffect(() => {
-      if (seekTo !== null && controllerRef.current) {
-        let timeToSeek: number = 0;
+  useEffect(() => {
+    if (seekTo !== null && controllerRef.current) {
+      let timeToSeek: number = 0;
 
-        if (typeof seekTo === 'string' && seekTo.includes(':')) {
-          // Handle "MM:SS" or "HH:MM:SS"
-          const parts = seekTo.split(':').map(Number);
-          if (parts.length === 2) {
-            // [minutes, seconds]
-            timeToSeek = parts[0] * 60 + parts[1];
-          } else if (parts.length === 3) {
-            // [hours, minutes, seconds]
-            timeToSeek = parts[0] * 3600 + parts[1] * 60 + parts[2];
-          }
-        } else {
-          timeToSeek = typeof seekTo === 'string' ? parseFloat(seekTo) : seekTo;
+      if (typeof seekTo === 'string' && seekTo.includes(':')) {
+        const parts = seekTo.split(':').map(Number);
+        if (parts.length === 2) {
+          timeToSeek = parts[0] * 60 + parts[1];
+        } else if (parts.length === 3) {
+          timeToSeek = parts[0] * 3600 + parts[1] * 60 + parts[2];
         }
-
-
-        if (!isNaN(timeToSeek)) {
-          controllerRef.current.media.currentTime = timeToSeek;
-          
-          setIsPlaying(true);
-          controllerRef.current.paused = false;
-        }
-        
-        onSeekComplete();
+      } else {
+        timeToSeek = typeof seekTo === 'string' ? parseFloat(seekTo) : seekTo;
       }
-    }, [seekTo, onSeekComplete]);
+
+      if (!isNaN(timeToSeek)) {
+        // Media-chrome allows setting time via the controller
+        controllerRef.current.media.currentTime = timeToSeek;
+        setIsPlaying(true);
+        controllerRef.current.paused = false;
+      }
+
+      onSeekComplete();
+    }
+  }, [seekTo, onSeekComplete]);
 
   const handleOpenForm = () => {
     if (controllerRef.current) {
-      const wasPaused = !isPlaying; 
+      const wasPaused = !isPlaying;
       setOriginalControl(wasPaused);
 
       const mediaElement = controllerRef.current.media;
-      const rawTime = mediaElement ? mediaElement.currentTime : controllerRef.current.mediaCurrentTime;
+      const rawTime = mediaElement ? mediaElement.currentTime : 0;
       const safeTime = isNaN(rawTime) ? 0 : rawTime;
 
-      controllerRef.current.paused = true; 
+      controllerRef.current.paused = true;
       setIsPlaying(false);
-      
+
       setBookmark(prev => ({ ...prev, time: safeTime }));
       setShowForm(true);
     }
   };
-  
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -136,12 +136,12 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
 
       const data = await response.json();
       onBookmarkAdded(data);
-      
+
       setShowForm(false);
       setBookmark({ label: '', type: 'BOOKMARK', time: 0 });
 
       if (controllerRef.current) {
-        const shouldResume = originalControl === false; 
+        const shouldResume = originalControl === false;
         controllerRef.current.paused = !shouldResume;
         setIsPlaying(shouldResume);
       }
@@ -151,7 +151,7 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
       setIsSubmitting(false);
     }
   };
-  
+
   const handleCancel = () => {
     setShowForm(false);
     setBookmark({ label: '', type: 'BOOKMARK', time: 0 });
@@ -176,8 +176,6 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
 
   const isYouTube = videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be");
   if (isYouTube) {
-    // Note: seeking logic for YouTube iframe requires the YouTube Player API
-    // This implementation is for standard/HLS video sources via ReactPlayer/MediaController
     return (
       <div className="w-full aspect-video bg-black">
         <iframe
@@ -203,24 +201,25 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
       noHotkeys={showForm}
     >
       <ReactPlayer
-        onProgress={handleProgress}
         slot="media"
-        src={videoUrl} // Changed from 'src' to 'url' (standard ReactPlayer prop)
+        src={videoUrl} // Changed from src to url
         controls={false}
+        onTimeUpdate={handleTimeUpdate} // Switched from onProgress to handle native updates
         width="100%"
         height="100%"
         playing={isPlaying}
+        playsinline
       />
 
-      <div 
-        className="absolute z-10 cursor-default" 
-        style={{ 
-            position: 'absolute',
-            inset: 0,
-            zIndex: 10,
-            cursor: 'default' ,
-            height: 'calc(100% - 3.5rem)', // Adjusted height slightly to avoid covering progress bar
-          }}
+      <div
+        className="absolute z-10 cursor-default"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          zIndex: 10,
+          cursor: 'default',
+          height: 'calc(100% - 3.5rem)',
+        }}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -229,39 +228,39 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
 
       {/* --- BOOKMARK OVERLAY FORM --- */}
       {showForm && (
-        <div 
-        className="absolute inset-0 flex items-center justify-center bg-black/60 z-50 animate-in fade-in duration-200"
-        onKeyDown={(e) => e.stopPropagation()} 
-        onClick={(e) => e.stopPropagation()}
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-black/60 z-50 animate-in fade-in duration-200"
+          onKeyDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
-          <form 
+          <form
             onSubmit={handleSave}
             className="bg-white p-6 rounded-xl shadow-2xl w-[90%] max-w-sm flex flex-col gap-4 text-black"
           >
             <div className="flex justify-between items-center">
               <h3 className="font-bold text-lg">Add Bookmark</h3>
               <span className="text-sm font-mono bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                  at {Number.isFinite(bookmark.time) 
-                    ? new Date(bookmark.time * 1000).toISOString().substr(14, 5) 
-                    : "00:00"}
+                at {Number.isFinite(bookmark.time)
+                  ? new Date(bookmark.time * 1000).toISOString().substr(14, 5)
+                  : "00:00"}
               </span>
             </div>
 
             <div>
               <label className="text-xs font-bold text-gray-500 uppercase">Label</label>
-              <input 
+              <input
                 autoFocus
                 required
                 className="w-full p-2 border-b-2 border-gray-200 focus:border-blue-600 outline-none transition-colors"
                 placeholder="What's happening here?"
                 value={bookmark.label}
-                onChange={(e) => setBookmark({...bookmark, label: e.target.value})}
+                onChange={(e) => setBookmark({ ...bookmark, label: e.target.value })}
               />
             </div>
 
             <div>
               <label className="text-xs font-bold text-gray-500 uppercase">Type</label>
-              <select 
+              <select
                 className="w-full p-2 mt-1 bg-gray-50 border rounded outline-none"
                 value={bookmark.type}
                 onChange={(e) => setBookmark(prev => ({ ...prev, type: e.target.value }))}
@@ -273,7 +272,7 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
             </div>
 
             <div className="flex gap-2 mt-2">
-              <button 
+              <button
                 disabled={isSubmitting}
                 type="button"
                 onClick={handleCancel}
@@ -281,7 +280,7 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
               >
                 Cancel
               </button>
-              <button 
+              <button
                 disabled={isSubmitting}
                 type="submit"
                 className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition disabled:opacity-50"
@@ -296,32 +295,32 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
       {/* --- CONTROLS --- */}
       <MediaControlBar>
         <button
-            type="button"
-            onClick={togglePlay}
-            className="p-2 text-white hover:text-blue-400 transition-colors"
-            title={isPlaying ? "Pause" : "Play"}
-            style={{ backgroundColor: 'var(--media-secondary-color, rgb(20 20 30 / .7))' }}
-          >
-            {isPlaying ? (
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-              </svg>
-            ) : (
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            )}
+          type="button"
+          onClick={togglePlay}
+          className="p-2 text-white hover:text-blue-400 transition-colors"
+          title={isPlaying ? "Pause" : "Play"}
+          style={{ backgroundColor: 'var(--media-secondary-color, rgb(20 20 30 / .7))' }}
+        >
+          {isPlaying ? (
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          )}
         </button>
         <MediaSeekBackwardButton seekOffset={10} />
         <MediaSeekForwardButton seekOffset={10} />
-        
+
         <button
           type="button"
           onClick={handleOpenForm}
           className="transition-transform hover:scale-110 active:scale-95"
           title="Add Bookmark"
         >
-          <div 
+          <div
             className="p-3 flex items-center justify-center transition-colors"
             style={{ backgroundColor: 'var(--media-secondary-color, rgb(20 20 30 / .7))' }}
           >
