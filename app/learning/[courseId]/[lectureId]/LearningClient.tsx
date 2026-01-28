@@ -15,6 +15,7 @@ import AssignmentComponent from "@/components/AssignmentComponent";
 interface LearningClientProps {
   course: any;
   lectureId: string;
+  user: any ;
 }
 
 interface Bookmark {
@@ -24,7 +25,7 @@ interface Bookmark {
   type: "BOOKMARK" | "IMPORTANT" | "QUESTION";
 }
 
-export default function LearningClient({ course, lectureId }: LearningClientProps) {
+export default function LearningClient({ course, lectureId , user }: LearningClientProps) {
   const [currentLecture, setCurrentLecture] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [seekTo, setSeekTo] = useState<string | null>(null);

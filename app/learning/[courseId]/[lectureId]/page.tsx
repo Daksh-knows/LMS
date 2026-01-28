@@ -1,3 +1,4 @@
+import { getCurrentUser } from '@/lib/auth-utils';
 import LearningClient from './LearningClient';
 import { notFound } from "next/navigation";
 
@@ -12,9 +13,9 @@ async function Page({ params }: PageProps) {
   const { courseId, lectureId } = await params;
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-
+  const user = await getCurrentUser();
   let course = null;
-
+  console.log("User in Page component:", user);
   try {
     const response = await fetch(`${baseUrl}/api/course/${courseId}`, {
       cache: 'no-store', 
@@ -41,6 +42,7 @@ async function Page({ params }: PageProps) {
       <LearningClient 
         course={course} 
         lectureId={lectureId} 
+        user={user}
       />
     </div>
   );

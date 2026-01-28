@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import ReactPlayer from 'react-player';
-import { BookmarkPlus, X, Save } from "lucide-react";
+import { BookmarkPlus , Save } from "lucide-react";
+import { useParams, useRouter } from 'next/navigation'; 
 
 import {
   MediaController,
@@ -27,16 +28,46 @@ interface Props {
 
 const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekComplete, onBookmarkAdded }) => {
   const controllerRef = useRef<any>(null);
-  const playerRef = useRef<any>(null);
+  const router = useRouter() ;
+  const params = useParams();
   const [isMounted, setIsMounted] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [bookmark, setBookmark] = useState({ label: '', type: 'BOOKMARK', time: 0 });
   const [isPlaying, setIsPlaying] = useState(true);
   const [originalControl, setOriginalControl] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasCompleted, setHasCompleted] = useState(false); 
+
 
   useEffect(() => { setIsMounted(true); }, []);
   
+  const handleProgress = async (state: { played: number }) => {
+    if (state.played >= 0.95 && !hasCompleted) {
+      setHasCompleted(true); 
+      
+      const courseId = params.courseId as string;
+
+      try {
+        const response = await fetch("/api/lecture/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lectureId,
+            courseId,
+          }),
+        });
+
+        if (response.ok) {
+          console.log("Lecture marked as completed automatically!");
+          router.refresh(); 
+        }
+      } catch (error) {
+        console.error("Auto-complete error:", error);
+      }
+    }
+  };
+
+
   // --- SEEKING LOGIC ---
     useEffect(() => {
       if (seekTo !== null && controllerRef.current) {
@@ -172,7 +203,7 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
       noHotkeys={showForm}
     >
       <ReactPlayer
-        
+        onProgress={handleProgress}
         slot="media"
         src={videoUrl} // Changed from 'src' to 'url' (standard ReactPlayer prop)
         controls={false}
