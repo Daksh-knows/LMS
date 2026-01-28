@@ -127,24 +127,22 @@ export default function AssignmentGradingPage({ params }: { params: Promise<{ id
                 <thead>
                   <tr className="bg-gray-50/50 border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500 font-bold">
                     <th className="p-6">Student</th>
-                    <th className="p-6">Submitted</th>
+                    <th className="p-6">Submitted At</th>
                     <th className="p-6">Work</th>
                     <th className="p-6 w-32">Grade (0-100)</th>
-                    <th className="p-6 w-1/3">Feedback</th>
-                    <th className="p-6 w-24">Action</th>
+                    <th className="p-6 w-24 text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {submissions.map((sub) => (
-                    <GradingRow 
-                      key={sub.id} 
-                      submission={sub} 
-                      onSave={handleGradeSubmit} 
-                      isSaving={savingId === sub.id} 
-                    />
-                  ))}
-                </tbody>
-              </table>
+                {/* No single <tbody> here, GradingRow will provide its own grouped <tbody> */}
+                {submissions.map((sub) => (
+                  <GradingRow 
+                    key={sub.id} 
+                    submission={sub} 
+                    onSave={handleGradeSubmit} 
+                    isSaving={savingId === sub.id} 
+                  />
+                ))}
+              </table>            
             </div>
           )}
         </div>
@@ -170,82 +168,106 @@ function GradingRow({
   const isGraded = submission.grade !== null;
 
   return (
-    <tr className="hover:bg-blue-50/30 transition-colors group">
-      <td className="p-6">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">
-             {submission.user.name.charAt(0)}
+    // Use <tbody> to group the two rows together for one student
+    <tbody className="group border-b border-gray-100 last:border-0">
+      <tr className="hover:bg-blue-50/10 transition-colors">
+        <td className="p-6">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">
+               {submission.user.name.charAt(0)}
+            </div>
+            <div>
+              <p className="font-bold text-gray-900 text-sm">{submission.user.name}</p>
+              <p className="text-xs text-gray-400">{submission.user.email}</p>
+            </div>
           </div>
-          <div>
-            <p className="font-bold text-gray-900 text-sm">{submission.user.name}</p>
-            <p className="text-xs text-gray-400">{submission.user.email}</p>
-          </div>
-        </div>
-      </td>
-      
-      <td className="p-6 text-sm text-gray-500">
-        {new Date(submission.createdAt).toLocaleDateString()}
-      </td>
-      
-      <td className="p-6">
-        <a 
-          href={submission.fileUrl} 
-          target="_blank" 
-          rel="noreferrer"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all"
-        >
-          <FileText size={14} />
-            View File
-          <ExternalLink size={12} />
-        </a>
-      </td>
-      
-      <td className="p-6">
-        <input 
-          type="number" 
-          min="0" 
-          max="100"
-          value={grade}
-          onChange={(e) => {
-            setGrade(e.target.value);
-            setIsDirty(true);
-          }}
-          placeholder="-"
-          className="w-20 p-2 text-center bg-gray-50 border border-gray-200 rounded-lg font-bold text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none"
-        />
-      </td>
-      
-      <td className="p-6">
-        <input 
-          type="text" 
-          value={feedback}
-          onChange={(e) => {
-            setFeedback(e.target.value);
-            setIsDirty(true);
-          }}
-          placeholder="Write feedback..."
-          className="w-full p-2 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-blue-500 outline-none text-sm transition-all"
-        />
-      </td>
-      
-      <td className="p-6">
-        {isSaving ? (
-          <Loader2 className="animate-spin text-blue-600" size={20} />
-        ) : isDirty ? (
-          <button 
-            onClick={() => onSave(submission.id, parseFloat(grade), feedback)}
-            className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-95"
+        </td>
+        
+        <td className="p-6 text-sm text-gray-500">
+          {new Date(submission.createdAt).toLocaleDateString()}
+        </td>
+        
+        <td className="p-6">
+          <a 
+            href={submission.fileUrl} 
+            target="_blank" 
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all"
           >
-            <Save size={18} />
-          </button>
-        ) : isGraded ? (
-          <div className="text-green-500 flex justify-center">
-            <CheckCircle2 size={24} />
+            <FileText size={14} />
+              View File
+            <ExternalLink size={12} />
+          </a>
+        </td>
+        
+        <td className="p-6">
+          <input 
+            type="number" 
+            min="0" 
+            max="100"
+            value={grade}
+            onChange={(e) => {
+              let value = parseInt(e.target.value);
+              if (isNaN(value)) {
+                setGrade("");
+                return;
+              }
+              if (value > 100) value = 100;
+              if (value < 0) value = 0;
+
+              setGrade(value.toString());
+              setIsDirty(true);
+            }}
+            placeholder="-"
+            className="w-20 p-2 text-center bg-gray-50 border border-gray-200 rounded-lg font-bold text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none"
+          />
+        </td>
+        
+        {/* Action button moved here to be on the primary row */}
+        <td className="p-6 text-right">
+          {isSaving ? (
+            <Loader2 className="animate-spin text-blue-600 ml-auto" size={20} />
+          ) : isDirty ? (
+            <button 
+              onClick={() => {
+                onSave(submission.id, parseFloat(grade) || 0, feedback);
+                setIsDirty(false); // Reset dirty state after save trigger
+              }}
+              className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-95 ml-auto block"
+            >
+              <Save size={18} />
+            </button>
+          ) : isGraded ? (
+            <div className="text-green-500 flex justify-end">
+              <CheckCircle2 size={24} />
+            </div>
+          ) : (
+            <div className="w-9 h-9 ml-auto" /> 
+          )}
+        </td>
+      </tr>
+
+      {/* New Row for Feedback spanning all columns except the last */}
+      <tr>
+        <td colSpan={5} className="px-6 pb-6 pt-0">
+          {/* Added 'max-w-md' to limit width, and 'mx-auto' if you want it centered */}
+          <div className="max-w-md bg-gray-50 rounded-xl p-3 border border-gray-100 focus-within:border-blue-200 transition-all">
+            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 px-1">
+              Feedback
+            </p>
+            <textarea 
+              value={feedback}
+              onChange={(e) => {
+                setFeedback(e.target.value);
+                setIsDirty(true);
+              }}
+              placeholder="Provide guidance or corrections..."
+              className="w-full bg-transparent text-sm text-gray-700 outline-none resize-none min-h-[40px] px-1"
+              rows={2}
+            />
           </div>
-        ) : (
-          <div className="w-9 h-9" /> // Spacer
-        )}
-      </td>
-    </tr>
+        </td>
+      </tr>
+    </tbody>
   );
 }
