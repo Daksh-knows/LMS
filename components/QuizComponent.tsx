@@ -50,6 +50,7 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
   }, [lecture.description]);
   
   useEffect(() => {
+    console.log("Loaded quiz " , lecture) ;
     const checkQuizStatus = async () => {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/lecture/quiz-status/${lecture.id}`);

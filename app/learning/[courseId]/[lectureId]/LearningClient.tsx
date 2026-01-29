@@ -95,6 +95,8 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
       fetchLecture();
       fetchBookmarks() ;
     }
+
+    // console.log("FL" , currentLecture) ; 
   }, [lectureId]);
 
   const handleSelectLecture = (selectedLecture: any) => {

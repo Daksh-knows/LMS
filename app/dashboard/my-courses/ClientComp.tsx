@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth-utils";
 import { useSession } from "next-auth/react";
+import { Loader2 } from "lucide-react";
 
 export interface EnrolledCourse {
   id: string;
@@ -84,6 +85,18 @@ export default function CourseFilterList() {
     }
   };
 
+  const handleDownloadCertificate = (courseTitle: string) => {
+    console.log(`Generating certificate for: ${courseTitle}`);
+    alert(`Certificate generation started for ${courseTitle}!`);
+  };
+  
+  if(loading) {
+    return (
+    <div className="w-full h-screen flex items-center justify-center">
+      <Loader2 className="animate-spin text-blue-600" size={40} />
+    </div>
+    );
+  }
   return (
     <div className="space-y-6">
       <div className="flex gap-4">
@@ -171,19 +184,32 @@ export default function CourseFilterList() {
                 </svg>
               </div>
 
-              {/* DYNAMIC BUTTON LOGIC */}
-              <button
-                onClick={() => handleCourseSelect(course.id)}
-                className={`px-6 py-2 rounded-lg font-bold transition-colors whitespace-nowrap ${
-                  course.status === "Completed"
-                    ? "bg-green-100 text-green-700 hover:bg-green-200"
-                    : "bg-orange-100 text-orange-600 hover:bg-orange-200"
-                }`}
-              >
-                {course.status === "Not Started" && "Start Course"}
-                {course.status === "In Progress" && "Continue Learning"}
-                {course.status === "Completed" && "Review Course"}
-              </button>
+              
+              <div className=" flex gap-2">
+                  {/* 1. Only show Download button if progress is exactly 100% */}
+                    {course.progress === 100 && (
+                      <button
+                        onClick={() => handleDownloadCertificate(course.title)}
+                        className="px-3 py-2 rounded-lg font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm shadow-sm"
+                      >
+                        Download Certificate
+                      </button>
+                  )} 
+
+                  {/* DYNAMIC BUTTON LOGIC */}
+                  <button
+                    onClick={() => handleCourseSelect(course.id)}
+                    className={`px-6 py-2 rounded-lg font-bold transition-colors whitespace-nowrap ${
+                      course.status === "Completed"
+                        ? "bg-green-100 text-green-700 hover:bg-green-200"
+                        : "bg-orange-100 text-orange-600 hover:bg-orange-200"
+                    }`}
+                  >
+                    {course.status === "Not Started" && "Start Course"}
+                    {course.status === "In Progress" && "Continue Learning"}
+                    {course.status === "Completed" && "Review Course"}
+                  </button>
+              </div>
             </div>
           </div>
         ))}
