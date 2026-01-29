@@ -208,7 +208,7 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
         width="100%"
         height="100%"
         playing={isPlaying}
-        playsinline
+        playsInline
       />
 
       <div
