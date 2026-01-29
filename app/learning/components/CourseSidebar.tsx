@@ -90,21 +90,20 @@ const [openSections, setOpenSections] = useState<string[]>([]);
 
   const toggleSection = (id: string) => {
     setOpenSections((prev) => {
-      const newState = prev.includes(id) 
-        ? prev.filter((s) => s !== id) 
-        : [...prev, id];
+      const newState = prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id];
       
       sessionStorage.setItem("sidebar_state", JSON.stringify(newState));
       return newState;
     });
+    console.log("new openSections state: ", openSections);
   };
-
+    
     useEffect(() => {
-  // We define the cleanup function
-  return () => {
-    localStorage.removeItem("sidebar_open_sections");
-  };
-}, []);
+        // We define the cleanup function
+        return () => {
+          localStorage.removeItem("sidebar_state");
+        };
+    }, []);
 
   /**
    * Helper: Get Status (Watched/Unwatched)
@@ -227,7 +226,7 @@ const getStatusIndicator = (item: CourseItem, isActive: boolean) => {
                     {section.lectures.map((item) => {
                       const isActive = item.id === currentLectureId;
                       const isLocked = !isEnrolled && !item.isFree;
-                      console.log("Item " , item) ;
+                      // console.log("Item " , item) ;
                       return (
                         <div
                           key={item.id}
