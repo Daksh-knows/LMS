@@ -2,17 +2,13 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { 
-  CheckCircle2, 
-  AlertCircle, 
-  Loader2, 
-  FileText, 
-  ArrowRight,
-  BookOpen,
-  ChevronDown,
-  ChevronRight
+  CheckCircle2, AlertCircle, Loader2, FileText, ArrowRight, BookOpen, 
+  ChevronDown, ChevronRight, ShieldAlert, CreditCard
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
+// ... [Keep your existing AssignmentSummary interface] ...
 interface AssignmentSummary {
   id: string;
   title: string;
@@ -23,31 +19,41 @@ interface AssignmentSummary {
 
 export default function AdminAssignmentsOverview() {
   const [assignments, setAssignments] = useState<AssignmentSummary[]>([]);
+  const [refundCount, setRefundCount] = useState(0); // NEW STATE
   const [loading, setLoading] = useState(true);
-  
-  // Track which course sections are expanded
   const [expandedCourses, setExpandedCourses] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     async function load() {
       try {
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "";
-        const response = await fetch(`${baseUrl}/api/admin/assignments`);
-        const result = await response.json();
         
-        if (result.success) {
-          setAssignments(result.data || []);
-          
-          // Optionally: Auto-expand courses that have pending reviews
+        // Parallel Fetch: Assignments + Refund Stats
+        const [assignRes, refundRes] = await Promise.all([
+          fetch(`${baseUrl}/api/admin/assignments`),
+          fetch(`${baseUrl}/api/admin/refund/stats`) // New Endpoint
+        ]);
+
+        const assignResult = await assignRes.json();
+        const refundResult = await refundRes.json();
+        
+        if (assignResult.success) {
+          setAssignments(assignResult.data || []);
+          // Auto-expand logic (kept same)
           const initialExpanded: Record<string, boolean> = {};
-          const groups = result.data.reduce((acc: any, curr: AssignmentSummary) => {
+          const groups = assignResult.data.reduce((acc: any, curr: AssignmentSummary) => {
             if (curr.pendingReviews > 0) initialExpanded[curr.courseName] = true;
             return acc;
           }, {});
           setExpandedCourses(initialExpanded);
         }
+
+        if (refundResult.success) {
+          setRefundCount(refundResult.pendingCount || 0);
+        }
+
       } catch (error) {
-        console.error("Failed to fetch assignments:", error);
+        console.error("Failed to fetch data:", error);
       } finally {
         setLoading(false);
       }
@@ -55,10 +61,9 @@ export default function AdminAssignmentsOverview() {
     load();
   }, []);
 
-  // Group assignments and calculate per-course pending counts
+  // ... [Keep your groupedData useMemo and toggleCourse function exactly as is] ...
   const groupedData = useMemo(() => {
     const groups: Record<string, { items: AssignmentSummary[]; coursePending: number }> = {};
-    
     assignments.forEach((item) => {
       if (!groups[item.courseName]) {
         groups[item.courseName] = { items: [], coursePending: 0 };
@@ -66,15 +71,11 @@ export default function AdminAssignmentsOverview() {
       groups[item.courseName].items.push(item);
       groups[item.courseName].coursePending += item.pendingReviews;
     });
-    
     return groups;
   }, [assignments]);
 
   const toggleCourse = (courseName: string) => {
-    setExpandedCourses(prev => ({
-      ...prev,
-      [courseName]: !prev[courseName]
-    }));
+    setExpandedCourses(prev => ({ ...prev, [courseName]: !prev[courseName] }));
   };
 
   const totalPending = assignments.reduce((acc, curr) => acc + curr.pendingReviews, 0);
@@ -91,8 +92,8 @@ export default function AdminAssignmentsOverview() {
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-12">
       
-      {/* STATS HEADER (White UI) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* STATS HEADER - Updated Grid to 3 columns to fit Refunds */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard 
           title="Pending Reviews" 
           value={totalPending} 
@@ -101,6 +102,21 @@ export default function AdminAssignmentsOverview() {
           badgeText="Needs Action"
           footer="Submissions waiting for your feedback"
         />
+        
+        {/* NEW REFUND CARD */}
+        <Link href="/dashboard/admin/refunds" className="block">
+          <StatCard 
+            title="Refund Requests" 
+            value={refundCount} 
+            icon={<CreditCard size={28} strokeWidth={2.5} />}
+            showBadge={refundCount > 0}
+            badgeText="Urgent"
+            badgeColor="red" // Custom color prop support
+            footer="Students requesting money back"
+            isInteractive={true} // Add hover effect
+          />
+        </Link>
+
         <StatCard 
           title="Total Received" 
           value={totalReceived} 
@@ -109,7 +125,7 @@ export default function AdminAssignmentsOverview() {
         />
       </div>
 
-      {/* GROUPED COLLAPSIBLE LIST */}
+      {/* GROUPED COLLAPSIBLE LIST (Kept exactly same) */}
       <div className="space-y-6">
         <h3 className="text-2xl font-black text-gray-900">Assignment Queue</h3>
         
@@ -119,10 +135,8 @@ export default function AdminAssignmentsOverview() {
           <div className="space-y-4">
             {Object.entries(groupedData).map(([courseName, group]) => {
               const isExpanded = expandedCourses[courseName];
-              
               return (
                 <div key={courseName} className="border border-gray-100 rounded-3xl overflow-hidden bg-white shadow-sm">
-                  {/* COURSE BANNER / TOGGLE */}
                   <button 
                     onClick={() => toggleCourse(courseName)}
                     className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors text-left"
@@ -152,7 +166,6 @@ export default function AdminAssignmentsOverview() {
                     </div>
                   </button>
 
-                  {/* ASSIGNMENT ITEMS (COLLAPSIBLE) */}
                   {isExpanded && (
                     <div className="p-6 pt-0 space-y-3 animate-in slide-in-from-top-2 duration-300">
                       <div className="h-px bg-gray-100 mb-4" />
@@ -171,15 +184,18 @@ export default function AdminAssignmentsOverview() {
   );
 }
 
-// --- SUB-COMPONENTS FOR CLEANER CODE ---
+// Updated StatCard to handle different colors and interactivity
+function StatCard({ title, value, icon, showBadge, badgeText, badgeColor = "amber", footer, isInteractive }: any) {
+  const badgeClasses = badgeColor === "red" 
+    ? "bg-red-50 text-red-700 border-red-100" 
+    : "bg-amber-50 text-amber-700 border-amber-100";
 
-function StatCard({ title, value, icon, showBadge, badgeText, footer }: any) {
   return (
-    <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden group hover:border-indigo-100 transition-all">
+    <div className={`bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden group transition-all ${isInteractive ? 'hover:border-blue-300 hover:shadow-md cursor-pointer' : 'hover:border-indigo-100'}`}>
       <div className="flex items-center justify-between mb-8">
-        <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600">{icon}</div>
+        <div className={`p-3 rounded-2xl ${badgeColor === 'red' ? 'bg-red-50 text-red-600' : 'bg-indigo-50 text-indigo-600'}`}>{icon}</div>
         {showBadge && (
-          <span className="bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-amber-100">
+          <span className={`${badgeClasses} text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border`}>
             {badgeText}
           </span>
         )}
@@ -195,6 +211,7 @@ function StatCard({ title, value, icon, showBadge, badgeText, footer }: any) {
   );
 }
 
+// ... [Keep AssignmentRow and EmptyState exactly as they were] ...
 function AssignmentRow({ assignment }: { assignment: AssignmentSummary }) {
   const hasPending = assignment.pendingReviews > 0;
   return (
