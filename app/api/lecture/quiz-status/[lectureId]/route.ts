@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth-utils";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { lectureId: string } }
+  { params }: { params: Promise<{ lectureId: string }> }
 ) {
   try {
     const user = await getCurrentUser();
