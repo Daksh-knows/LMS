@@ -1,7 +1,6 @@
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary"; 
-import { getCurrentUser } from "@/lib/auth-utils";
 
 
 export async function GET(
@@ -10,7 +9,7 @@ export async function GET(
 ) {
   const { courseId } = await context.params;
   const { searchParams } = new URL(request.url);
-  const userId = searchParams.get("userId");
+  let userId = searchParams.get("userId");
   if(!userId) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   try {
