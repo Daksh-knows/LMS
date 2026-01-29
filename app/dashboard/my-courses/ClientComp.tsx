@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth-utils";
 import { useSession } from "next-auth/react";
 import { Loader2 } from "lucide-react";
+import { generateCertificate } from "@/lib/certificate-generator";
 
 export interface EnrolledCourse {
   id: string;
@@ -85,10 +86,12 @@ export default function CourseFilterList() {
     }
   };
 
-  const handleDownloadCertificate = (courseTitle: string) => {
-    console.log(`Generating certificate for: ${courseTitle}`);
-    alert(`Certificate generation started for ${courseTitle}!`);
-  };
+    const handleDownloadCertificate = (courseTitle: string) => {
+        generateCertificate({
+          userName: session?.user?.name || "Valued Student",
+          courseTitle: courseTitle
+        });
+      };
   
   if(loading) {
     return (
