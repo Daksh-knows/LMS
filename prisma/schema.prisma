@@ -51,6 +51,8 @@ model User {
   reviews              Review[]
   profile              StudentProfile?
   userProgress         UserProgress[]
+  payments             Payment[]
+  refundRequests       RefundRequest[]
   stats                UserStats?
 }
 
@@ -308,6 +310,45 @@ model Bookmark {
   @@index([lectureId])
 }
 
+model Payment {
+  id                String   @id @default(cuid())
+  amount            Float
+  currency          String   @default("INR")
+  status            String   @default("SUCCESS")
+  method            String?   // e.g., "UPI", "CARD", "NETBANKING"
+  planType          String   // "COHORT", "PREMIUM_DISCOUNT", "PREMIUM_STANDARD"
+  
+  // Razorpay Details (Vital for refunds)
+  razorpayOrderId   String   @unique
+  razorpayPaymentId String   @unique
+  razorpaySignature String
+
+  refundRequest RefundRequest?
+  
+  // Relation to User
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime @default(now())
+}
+
+model RefundRequest {
+  id        String       @id @default(cuid())
+  reason    String
+  status    RefundStatus @default(PENDING)
+  
+  // Relations
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  
+  // Optional: Link to a specific Payment if you have that table
+  paymentId String?    @unique
+  payment   Payment? @relation(fields: [paymentId], references: [id])
+
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
 enum ItemType {
   VIDEO
   TEXT
@@ -327,4 +368,10 @@ enum BookmarkType {
   IMPORTANT
   QUESTION
   RESOURCE
+}
+
+enum RefundStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
