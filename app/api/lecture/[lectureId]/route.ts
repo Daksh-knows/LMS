@@ -22,6 +22,7 @@ export async function GET(
         videoUrl: true,
         position: true,
         moduleId: true,
+        textContent: true,
         quizQuestions: {
           include: { options: true },
           orderBy: { position: 'asc' }
