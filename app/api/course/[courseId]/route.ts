@@ -37,6 +37,7 @@ export async function GET(
                 title: true,
                 position: true,
                 videoUrl: true, 
+                textContent: true,
                 type: true,
                 userProgress: {
                   where: {

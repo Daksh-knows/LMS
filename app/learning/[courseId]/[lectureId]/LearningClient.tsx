@@ -11,6 +11,7 @@ import CourseSidebar from "../../components/CourseSidebar";
 import TabbedContent from "../../components/TabbedContent";
 import QuizComponent from "@/components/QuizComponent";
 import AssignmentComponent from "@/components/AssignmentComponent";
+import ArticleComponent from "../../components/ArticleComponent";
 
 interface LearningClientProps {
   course: any;
@@ -171,6 +172,12 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
                       {currentLecture.type === 'ASSIGNMENT' && (
                         <div className="h-full w-full bg-white overflow-y-auto scrollbar-hide">
                           <AssignmentComponent lecture={currentLecture} />
+                        </div>
+                      )}
+                      {/* TEXT / ARTICLE UI */}
+                      {currentLecture.type === 'TEXT' && (
+                        <div className="h-full w-full bg-white overflow-y-auto scrollbar-hide">
+                          <ArticleComponent lecture={currentLecture} />
                         </div>
                       )}
                     </div>
