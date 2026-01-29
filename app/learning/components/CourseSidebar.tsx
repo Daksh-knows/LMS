@@ -54,7 +54,7 @@ const CourseSidebar: React.FC<Props> = ({
 }) => {
   
 const [openSections, setOpenSections] = useState<string[]>([]);
-  console.log("Section data received in CourseSidebar:", sections);
+  // console.log("Section data received in CourseSidebar:", sections);
   // 1. Load state on Mount
   useEffect(() => {
     const saved = sessionStorage.getItem("sidebar_state");
@@ -227,7 +227,7 @@ const getStatusIndicator = (item: CourseItem, isActive: boolean) => {
                     {section.lectures.map((item) => {
                       const isActive = item.id === currentLectureId;
                       const isLocked = !isEnrolled && !item.isFree;
-                      console.log("Item " , item) ;
+                      // console.log("Item " , item) ;
                       return (
                         <div
                           key={item.id}
