@@ -95,6 +95,8 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
       fetchLecture();
       fetchBookmarks() ;
     }
+
+    // console.log("FL" , currentLecture) ; 
   }, [lectureId]);
 
   const handleSelectLecture = (selectedLecture: any) => {
@@ -168,12 +170,15 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
                         </div>
                       )}
 
+
                       {/* ASSIGNMENT UI */}
                       {currentLecture.type === 'ASSIGNMENT' && (
                         <div className="h-full w-full bg-white overflow-y-auto scrollbar-hide">
                           <AssignmentComponent lecture={currentLecture} />
                         </div>
                       )}
+
+
                       {/* TEXT / ARTICLE UI */}
                       {currentLecture.type === 'TEXT' && (
                         <div className="h-full w-full bg-white overflow-y-auto scrollbar-hide">
@@ -214,7 +219,8 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
             </div>
           )}
         </main>
-
+         
+         {/* Course Sidebar */}
         <aside className="w-[350px] shrink-0 border-l border-gray-200 hidden md:block h-full">
           <CourseSidebar
             sections={course.modules || []}
