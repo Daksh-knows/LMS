@@ -81,11 +81,17 @@ Github({
         token.id = user.id!;
         token.role = (user as any).role;
         token.hasPremium = (user as any).hasPremium;
+        token.hasRegistered = (user as any).hasRegistered;
       }
 
       // Update session trigger (e.g. after Buying Premium)
       if (trigger === "update" && session) {
-        token.hasPremium = session.hasPremium;
+        if (session.hasPremium !== undefined) {
+           token.hasPremium = session.hasPremium;
+        }
+        if (session.hasRegistered !== undefined) {
+           token.hasRegistered = session.hasRegistered;
+        }
       }
       
       return token;
@@ -96,6 +102,7 @@ Github({
         session.user.id = token.id as string;
         session.user.role = token.role as string;
         session.user.hasPremium = token.hasPremium as boolean;
+        session.user.hasRegistered = (token as any).hasRegistered as boolean;
       }
       return session;
     },
