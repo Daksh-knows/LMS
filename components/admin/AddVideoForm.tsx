@@ -9,12 +9,10 @@ import toast from "react-hot-toast";
 import { getSession } from "next-auth/react";
 import axios from "axios"; // Ensure you have axios installed for upload progress
 
-interface Resource {
+interface FileAttachment {
   title: string;
-  url: string;
-  type: string;
+  file: File | null;
 }
-
 interface Props {
   courseId: string;
   sectionId: string;
@@ -30,7 +28,7 @@ export default function AddVideoForm({ courseId, sectionId, initialData, onSucce
   const [lectureType, setLectureType] = useState<"VIDEO" | "LIVE">(initialData?.type === "LIVE" ? "LIVE" : "VIDEO");
   const [title, setTitle] = useState(initialData?.title || "");
   const [isFree, setIsFree] = useState(initialData?.isFree || false);
-  const [attachments, setAttachments] = useState<Resource[]>(initialData?.attachments || []);
+  const [attachments, setAttachments] = useState<FileAttachment[]>(initialData?.attachments || []);
 
   // --- Video Mode State ---
   const [videoMode, setVideoMode] = useState<"URL" | "UPLOAD">(initialData?.videoUrl && !initialData?.videoUrl.includes("cloudinary") ? "URL" : "UPLOAD");
@@ -52,18 +50,24 @@ export default function AddVideoForm({ courseId, sectionId, initialData, onSucce
   const [liveTime, setLiveTime] = useState(parsedDesc.time || "");
   const [liveLink, setLiveLink] = useState(parsedDesc.link || initialData?.videoUrl || "");
 
-  // --- Resource Helpers ---
+  // --- Resource Actions ---
   const addResource = () => {
-    setAttachments([...attachments, { title: "", url: "", type: "FILE" }]);
+    setAttachments([...attachments, { title: "", file: null }]);
   };
 
   const removeResource = (index: number) => {
     setAttachments(attachments.filter((_, i) => i !== index));
   };
 
-  const updateResource = (index: number, field: keyof Resource, value: string) => {
+  const updateResource = (index: number, field: keyof FileAttachment, value: any) => {
     const newResources = [...attachments];
     newResources[index] = { ...newResources[index], [field]: value };
+    
+    // Auto-fill title with filename if title is empty
+    if (field === 'file' && value instanceof File && !newResources[index].title) {
+      newResources[index].title = value.name;
+    }
+    
     setAttachments(newResources);
   };
 
@@ -108,15 +112,48 @@ export default function AddVideoForm({ courseId, sectionId, initialData, onSucce
     setLoading(true);
 
     const savePromise = async () => {
+      // --- STEP 1: Upload Files to Google Cloud ---
+      const uploadPromises = attachments.map(async (att) => {
+        if (!att.file) return null; 
+
+        // 1. Create FormData for the file
+        const formData = new FormData();
+        formData.append("file", att.file);
+
+        // 2. Send to your upload API
+        const response = await fetch("/api/upload/google", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to upload file: ${att.title}`);
+        }
+
+        const data = await response.json();
+
+        // 3. Return the formatted object expected by the Lecture API
+        return {
+          title: att.title || att.file.name, // Fallback to filename if title is empty
+          url: data.url, // The GCS URL returned by your backend
+          type: "FILE"
+        };
+      });
+
+      // Wait for all uploads to complete and filter out any failed/null entries
+      const uploadedResources = (await Promise.all(uploadPromises)).filter((item) => item !== null);
+
+      // --- STEP 2: Construct Payload ---
       let payload: any = {
         courseId,
         moduleId: sectionId,
         title,
         isFree,
-        attachments: attachments.filter(a => a.title.trim() !== "" && a.url.trim() !== "")
+        // Use the newly uploaded resources here
+        attachments: uploadedResources 
       };
 
-      // Construct Payload based on Type
+      // --- STEP 3: Handle Lecture Types (LIVE vs VIDEO) ---
       if (lectureType === "LIVE") {
         // Validation
         if (!liveDate || !liveTime || !liveLink) throw new Error("Please fill all live session details");
@@ -131,9 +168,9 @@ export default function AddVideoForm({ courseId, sectionId, initialData, onSucce
         payload = {
           ...payload,
           type: "LIVE",
-          videoUrl: liveLink, // Also store link in videoUrl for easy access
-          duration: duration || "60", // Default duration for live
-          description: JSON.stringify(liveData) // Store extra data as JSON in description
+          videoUrl: liveLink, 
+          duration: duration || "60", 
+          description: JSON.stringify(liveData) 
         };
       } else {
         // VIDEO MODE
@@ -145,11 +182,12 @@ export default function AddVideoForm({ courseId, sectionId, initialData, onSucce
           ...payload,
           type: "VIDEO",
           videoUrl: videoUrl,
-          duration,
+          duration: duration ? parseInt(duration) : 0, // Ensure duration is a number
           description: null
         };
       }
 
+      // --- STEP 4: Save to Database ---
       const session = await getSession();
       const adminId = session?.user?.id;
       if (!adminId) throw new Error("Unauthorized");
@@ -174,7 +212,7 @@ export default function AddVideoForm({ courseId, sectionId, initialData, onSucce
     };
 
     toast.promise(savePromise(), {
-      loading: "Saving lecture details...",
+      loading: "Uploading files & saving lecture...",
       success: () => {
         onSuccess();
         return lectureType === "LIVE" ? "Live session scheduled! 📅" : "Video lecture saved! 🎥";
@@ -374,68 +412,74 @@ export default function AddVideoForm({ courseId, sectionId, initialData, onSucce
         </>
       )}
 
-      {/* --- LECTURE RESOURCES --- */}
-      <div className="space-y-4 pt-4 border-t border-gray-100">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FileText size={16} className="text-gray-400" />
-            <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">
-              Lecture Resources (Optional)
-            </label>
-          </div>
+      {/* --- File Attachments Section --- */}
+      <div className="space-y-3 pt-4 border-t">
+        <div className="flex justify-between items-center">
+          <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-2">
+            <FileText size={14} /> Supporting Files
+          </label>
           <button 
             type="button" 
-            onClick={addResource}
-            className="flex items-center gap-2 text-[11px] font-bold text-blue-600 bg-blue-50 px-4 py-2 rounded-xl hover:bg-blue-100 transition-all"
+            onClick={addResource} 
+            className="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg font-bold hover:bg-blue-100 transition-colors"
           >
-            <Plus size={14} /> Add Resource
+            + Add File
           </button>
         </div>
 
-        <div className="space-y-3">
-          {attachments.map((res, index) => (
-            <div key={index} className="flex items-center gap-3 animate-in slide-in-from-left-2 duration-300">
-              <div className="relative min-w-[140px]">
-                <select 
-                  value={res.type}
-                  onChange={(e) => updateResource(index, "type", e.target.value)}
-                  className="w-full p-3 bg-white border border-gray-200 rounded-2xl text-xs font-bold text-gray-700 outline-none appearance-none pr-8"
-                >
-                  <option value="FILE">📄 File/PDF</option>
-                  <option value="CODE">💻 Code Link</option>
-                  <option value="LINK">🔗 External Link</option>
-                </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                  <ChevronDown size={14} />
+        <div className="space-y-2">
+          {attachments.map((att, index) => (
+            <div key={index} className="flex gap-2 animate-in fade-in slide-in-from-left-4 duration-300">
+              
+              {/* File Title */}
+              <input 
+                required
+                value={att.title}
+                onChange={(e) => updateResource(index, 'title', e.target.value)}
+                placeholder="Document Title"
+                className="flex-[2] p-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium outline-none focus:bg-white focus:border-blue-300 transition-all"
+              />
+
+              {/* Custom File Input UI */}
+              <div className="flex-[3] relative group">
+                <input 
+                  type="file"
+                  required // Ensures user actually picks a file
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    updateResource(index, 'file', file);
+                  }}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                />
+                
+                <div className={`h-full px-4 rounded-xl border border-dashed flex items-center gap-2 text-sm transition-all ${
+                  att.file 
+                    ? 'bg-blue-50 border-blue-200 text-blue-700' 
+                    : 'bg-white border-gray-300 text-gray-400 hover:border-blue-400'
+                }`}>
+                  <UploadCloud size={16} className={att.file ? "text-blue-600" : "text-gray-400"} />
+                  <span className="truncate max-w-[180px]">
+                    {att.file ? att.file.name : "Click to select file..."}
+                  </span>
                 </div>
               </div>
 
-              <input 
-                value={res.title}
-                onChange={(e) => updateResource(index, "title", e.target.value)}
-                placeholder="Title"
-                className="flex-1 p-3 bg-white border border-gray-200 rounded-2xl text-sm font-medium outline-none focus:border-blue-300"
-              />
-
-              <input 
-                value={res.url}
-                onChange={(e) => updateResource(index, "url", e.target.value)}
-                placeholder="URL"
-                className="flex-1 p-3 bg-white border border-gray-200 rounded-2xl text-sm font-medium outline-none focus:border-blue-300"
-              />
-
+              {/* Delete Button */}
               <button 
                 type="button"
                 onClick={() => removeResource(index)}
-                className="p-3 text-gray-300 hover:text-red-500 transition-colors"
+                className="p-3 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                title="Remove file"
               >
-                <Trash2 size={20} />
+                <Trash2 size={18} />
               </button>
             </div>
           ))}
+
           {attachments.length === 0 && (
-            <div className="p-4 border border-dashed border-gray-100 rounded-2xl text-center">
-              <p className="text-[10px] text-gray-400 uppercase font-bold">No resources added</p>
+            <div className="py-8 border-2 border-dashed border-gray-100 rounded-xl flex flex-col items-center justify-center text-gray-400">
+               <FileText size={24} className="mb-2 opacity-50" />
+               <p className="text-xs font-medium">No files attached yet</p>
             </div>
           )}
         </div>
