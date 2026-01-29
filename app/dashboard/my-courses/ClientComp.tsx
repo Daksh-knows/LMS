@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth-utils";
+import { useSession } from "next-auth/react";
 
 export interface EnrolledCourse {
   id: string;
@@ -20,6 +22,8 @@ export default function CourseFilterList() {
   const [initialCourses, setInitialCourses] = useState<EnrolledCourse[]>([]);
   const [loading, setLoading] = useState(true); // Loading state for the initial fetch
   const router = useRouter();
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
   
   useEffect(() => {
     const fetchCourses = async () => {
@@ -48,25 +52,22 @@ export default function CourseFilterList() {
     try {
       setLoadingId(courseId);
       const baseUrl = window.location.origin;
-
       // 1. Fetch the last viewed lecture for this specific user and course
       const lastViewedRes = await fetch(`${baseUrl}/api/course/${courseId}/last-viewed`);
       const lastViewedData = await lastViewedRes.json();
-      console.log("Last viewed data:", lastViewedData);
+
       // 2. If a last viewed lecture exists, redirect there immediately
       if (lastViewedData && lastViewedData.lastLectureId) {
         router.push(`/learning/${courseId}/${lastViewedData.lastLectureId}`);
         return; // Exit early
       }
-
       // 3. FALLBACK: If no progress exists, fetch course structure to find the first lecture
-      const courseResponse = await fetch(`${baseUrl}/api/course/${courseId}`, {
+      const courseResponse = await fetch(`${baseUrl}/api/course/${courseId}?userId=${userId}`, {
         cache: 'no-store'
       });
 
       if (!courseResponse.ok) throw new Error("Failed to fetch course data");
       const courseData = await courseResponse.json();
-
       // Get the first lecture of the first module
       const firstLectureId = courseData.modules?.[0]?.lectures?.[0]?.id;
 
@@ -77,8 +78,7 @@ export default function CourseFilterList() {
       }
     } catch (error) {
       console.error("Redirection error:", error);
-      // Final fallback to a general course page
-      router.push(`/learning/${courseId}`);
+      alert("An error occurred while trying to start the course.");
     } finally {
       setLoadingId(null);
     }
