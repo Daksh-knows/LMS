@@ -148,11 +148,11 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
                 <>
                   {/* --- THE STAGE (Video/Quiz Parent) --- */}
                   {/* Added bg-black to keep the stage distinct and max-h to reduce size */}
-                  <div className="w-full bg-black flex justify-center items-center max-h-[60vh] md:max-h-[65vh] overflow-hidden shadow-inner">
+                  <div className="w-full bg-black flex justify-center items-center h-[50vh] md:h-[60vh] lg:h-[65vh] overflow-hidden shadow-inner">
                     <div className="w-full h-full max-w-5xl mx-auto">
                       {/* --- lecture UI --- */}
                       {currentLecture.type === 'VIDEO' && (
-                        <div className="aspect-video w-full h-full">
+                        <div className="flex justify-center aspect-video w-full h-full">
                           <VideoPlayer  
                              videoUrl={currentLecture.videoUrl} 
                              lectureId={currentLecture.id} 
@@ -164,27 +164,28 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
                       )}
 
                       {/* --- QUIZ UI --- */}
-                      {currentLecture.type === 'QUIZ' && quizData && (
+                      {/* {currentLecture.type === 'QUIZ' && quizData && (
                         <div className="h-full w-full bg-white overflow-y-auto">
                           <QuizComponent lecture={currentLecture} courseId={course.id} />
                         </div>
-                      )}
+                      )} */}
 
 
                       {/* ASSIGNMENT UI */}
-                      {currentLecture.type === 'ASSIGNMENT' && (
+                      {/* {currentLecture.type === 'ASSIGNMENT' && (
                         <div className="h-full w-full bg-white overflow-y-auto scrollbar-hide">
                           <AssignmentComponent lecture={currentLecture} />
                         </div>
-                      )}
+                      )} */}
 
 
                       {/* TEXT / ARTICLE UI */}
-                      {currentLecture.type === 'TEXT' && (
+                      {/* {currentLecture.type === 'TEXT' && (
                         <div className="h-full w-full bg-white overflow-y-auto scrollbar-hide">
                           <ArticleComponent lecture={currentLecture} />
                         </div>
-                      )}
+                      )} */}
+                      
                     </div>
                   </div>
 
