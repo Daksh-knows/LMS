@@ -9,6 +9,10 @@ interface Review {
   id?: string;
   rating: number;
   userId: string;
+  user: {
+    name: string;
+    image?: string | null;
+  };
   comment?: string | null;
   createdAt?: Date | string;
 }
@@ -35,7 +39,7 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
     const fetchReviews = async () => {
       try {
         setIsLoading(true);
-        const res = await fetch(`/api/lecture/${lectureId}/review`); // Note the plural 'reviews'
+        const res = await fetch(`/api/lecture/${lectureId}/review`); 
         if (!res.ok) throw new Error("Failed to fetch reviews");
         const data = await res.json();
         setReviews(data.reviews || []);
@@ -50,6 +54,11 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
       fetchReviews();
     }
   }, [lectureId]);
+
+  useEffect(() => {
+    console.log("Reviews state updated:", reviews);
+  }, [reviews]);
+
 
   // Identify the user's review and other students' reviews
   const myReview = reviews.find((r) => r.userId === currentUserId);
@@ -259,12 +268,20 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
                 className="bg-white border border-gray-100 rounded-2xl p-5 flex gap-4 shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="shrink-0">
-                  <UserCircle size={40} className="text-gray-300" />
+                  {rev.user?.image ? (
+                    <img
+                      src={rev.user.image}
+                      alt={rev.user.name || "User avatar"}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <UserCircle size={40} className="text-gray-300" />
+                  )}
                 </div>
                 <div className="space-y-1 flex-1">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold text-gray-900">
-                      Student
+                      {rev.user?.name || "Anonymous"}
                     </span>
                     <div className="flex text-yellow-400">
                       {[1, 2, 3, 4, 5].map((s) => (
