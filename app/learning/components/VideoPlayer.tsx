@@ -34,6 +34,32 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
   const controllerRef = useRef<any>(null);
   const watchStartTime = useRef<number | null>(null);
   const totalSecondsWatched = useRef<number>(0);
+  
+
+  const [isMarkingComplete, setIsMarkingComplete] = useState(false);
+  const markAsComplete = async () => {
+    if (hasCompleted) return;
+    setIsMarkingComplete(true);
+    
+    const courseId = params.courseId as string;
+    try {
+      const response = await fetch("/api/lecture/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lectureId, courseId }),
+      });
+
+      if (response.ok) {
+        setHasCompleted(true);
+        console.log("Lecture marked as completed!");
+        router.refresh();
+      }
+    } catch (error) {
+      console.error("Manual completion error:", error);
+    } finally {
+      setIsMarkingComplete(false);
+    }
+  };
 
   const storageKey = `watch-progress-${userId}-${lectureId}`;
 
@@ -259,6 +285,24 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
           allowFullScreen
           className="w-full h-full"
         ></iframe>
+
+      <div className="absolute top-4 right-4 z-20">
+          <button
+            onClick={markAsComplete}
+            disabled={hasCompleted || isMarkingComplete}
+            className={`px-4 py-2 rounded-lg font-bold transition-all shadow-lg flex items-center gap-2 ${
+              hasCompleted 
+                ? "bg-green-500 text-white cursor-default" 
+                : "bg-white/90 hover:bg-white text-black active:scale-95"
+            }`}
+          >
+            {hasCompleted ? (
+              <>Completed ✓</>
+            ) : (
+              <>{isMarkingComplete ? "Processing..." : "Mark as Completed"}</>
+            )}
+          </button>
+        </div>
       </div>
     );
   }

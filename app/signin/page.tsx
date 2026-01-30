@@ -3,13 +3,14 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, Lock, ArrowRight, Loader2, ShieldCheck, Github } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2, ShieldCheck, Github, EyeOff, Eye } from 'lucide-react';
 import { signIn } from "next-auth/react"; 
 
 export default function SignInPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState<string | null>(null); // Track which button is loading
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false); 
 
   // --- 1. Credentials Login Handler ---
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -51,11 +52,11 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-start md:justify-center p-6 relative overflow-y-auto">
+    <div className="my-auto min-h-screen bg-slate-50 flex flex-col items-center justify-start md:justify-center p-6 relative overflow-y-auto">
       
-      <div className="max-w-md w-full my-12">
+      <div className="max-w-md w-full">
         {/* Header Section */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-1">
           <div className="bg-blue-600 w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-blue-100">
             <ShieldCheck className="text-white w-8 h-8" />
           </div>
@@ -93,21 +94,37 @@ export default function SignInPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 ml-1">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                <input
-                  name="password"
-                  type="password"
-                  required
-                  disabled={!!isLoading}
-                  placeholder="••••••••"
-                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all outline-none font-bold text-slate-800 placeholder:text-slate-300 disabled:opacity-50"
-                />
-              </div>
-            </div>
+      <label className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 ml-1">
+        Password
+      </label>
+      <div className="relative">
+        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+        
+        <input
+          name="password"
+          // Toggle type between "password" and "text"
+          type={showPassword ? "text" : "password"}
+          required
+          disabled={!!isLoading}
+          placeholder="••••••••"
+          className="w-full pl-12 pr-12 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all outline-none font-bold text-slate-800 placeholder:text-slate-300 disabled:opacity-50"
+        />
+
+        {/* Visibility Toggle Button */}
+        <button
+          type="button" // Important: set to "button" so it doesn't submit the form
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+          tabIndex={-1} // Prevents tabbing to this button for a smoother keyboard experience
+        >
+          {showPassword ? (
+            <EyeOff className="w-5 h-5" />
+          ) : ( 
+            <Eye className="w-5 h-5" />
+          )}
+        </button>
+      </div>
+    </div>
 
             <button
               type="submit"
@@ -129,7 +146,7 @@ export default function SignInPage() {
           </form>
 
           {/* Divider */}
-          <div className="relative my-8">
+          <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-slate-100"></div>
             </div>
@@ -178,7 +195,7 @@ export default function SignInPage() {
           </div>
 
           {/* Redirection to Signup */}
-          <div className="mt-8 pt-8 border-t border-slate-50 text-center">
+          <div className="pt-8 border-t border-slate-50 text-center">
             <p className="text-slate-500 text-sm font-medium">
               Don't have an account?{' '}
               <Link 
