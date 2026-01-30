@@ -164,27 +164,27 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
                       )}
 
                       {/* --- QUIZ UI --- */}
-                      {/* {currentLecture.type === 'QUIZ' && quizData && (
+                      {currentLecture.type === 'QUIZ' && quizData && (
                         <div className="h-full w-full bg-white overflow-y-auto">
                           <QuizComponent lecture={currentLecture} courseId={course.id} />
                         </div>
-                      )} */}
+                      )}
 
 
                       {/* ASSIGNMENT UI */}
-                      {/* {currentLecture.type === 'ASSIGNMENT' && (
+                      {currentLecture.type === 'ASSIGNMENT' && (
                         <div className="h-full w-full bg-white overflow-y-auto scrollbar-hide">
                           <AssignmentComponent lecture={currentLecture} />
                         </div>
-                      )} */}
+                      )}
 
 
                       {/* TEXT / ARTICLE UI */}
-                      {/* {currentLecture.type === 'TEXT' && (
+                      {currentLecture.type === 'TEXT' && (
                         <div className="h-full w-full bg-white overflow-y-auto scrollbar-hide">
                           <ArticleComponent lecture={currentLecture} />
                         </div>
-                      )} */}
+                      )}
                       
                     </div>
                   </div>

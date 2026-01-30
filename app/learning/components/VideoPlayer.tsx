@@ -17,6 +17,7 @@ import {
   MediaMuteButton,
   MediaFullscreenButton,
 } from "media-chrome/react";
+import { useSession } from 'next-auth/react';
 
 interface Props {
   videoUrl: string;
@@ -27,18 +28,82 @@ interface Props {
 }
 
 const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekComplete, onBookmarkAdded }) => {
+  const { data: session, status } = useSession();
+  const userId = session?.user?.id;
+  console.log("VideoURL :" , videoUrl)
   const controllerRef = useRef<any>(null);
+  const watchStartTime = useRef<number | null>(null);
+  const totalSecondsWatched = useRef<number>(0);
+
+  const storageKey = `watch-progress-${userId}-${lectureId}`;
+
+  useEffect(() => {
+    const savedTime = localStorage.getItem(storageKey);
+    if (savedTime) {
+      totalSecondsWatched.current = parseFloat(savedTime);
+    }
+  }, [lectureId, userId]);
+
+
   const router = useRouter();
   const params = useParams();
   const [isMounted, setIsMounted] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [bookmark, setBookmark] = useState({ label: '', type: 'BOOKMARK', time: 0 });
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [originalControl, setOriginalControl] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasCompleted, setHasCompleted] = useState(false);
 
   useEffect(() => { setIsMounted(true); }, []);
+
+  //function to track user activity
+    const saveWatchActivity = async () => {
+      if (totalSecondsWatched.current <= 0) return;
+
+      const minutesToSave = totalSecondsWatched.current / 60;
+      
+      const success = await fetch(`/api/user/activity?userId=${userId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "VIDEO_WATCH",
+          duration: minutesToSave,
+        }),
+      });
+
+      if (success.ok) {
+        totalSecondsWatched.current = 0;
+        localStorage.removeItem(storageKey); 
+      }
+    };
+
+    useEffect(() => {
+      let timer: NodeJS.Timeout;
+      if (isPlaying) {
+        timer = setInterval(() => {
+          totalSecondsWatched.current += 1;
+          localStorage.setItem(storageKey, totalSecondsWatched.current.toString());
+        }, 1000);
+      }
+      return () => clearInterval(timer);
+    }, [isPlaying, storageKey]);
+
+    useEffect(() => {
+        const heartbeat = setInterval(() => {
+          if (isPlaying) {
+            saveWatchActivity();
+          }
+        }, 30000); 
+        return () => {
+          clearInterval(heartbeat);
+          saveWatchActivity(); 
+        };
+    }, [isPlaying, lectureId]);
+
+
+
+
 
   // --- NEW PROGRESS LOGIC ---
   // Using the native timeupdate event which MediaController passes through
@@ -173,7 +238,14 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
   };
 
   if (!isMounted) return null;
-
+  
+  if(!videoUrl || videoUrl.trim() === "") { 
+    return (
+      <div className="w-full aspect-video bg-black flex items-center justify-center">
+        <p className="text-white">No video URL provided.</p>
+      </div>
+    );
+  }
   const isYouTube = videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be");
   if (isYouTube) {
     return (
