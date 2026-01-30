@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       contentType: file.type,
     });
 
-    return new Promise((resolve, reject) => {
+    return new Promise<NextResponse>((resolve, reject) => {
       blobStream.on("error", (err) => {
         console.error("GCS Upload Error:", err);
         reject(NextResponse.json({ error: "Upload failed" }, { status: 500 }));

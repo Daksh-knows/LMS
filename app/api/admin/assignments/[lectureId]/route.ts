@@ -19,7 +19,7 @@ export async function GET(
         title: true,
         submissions: {
           include: {
-            user: {
+            User: {
               select: { id: true, name: true, email: true, image: true },
             },
           },

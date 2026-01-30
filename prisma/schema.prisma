@@ -30,6 +30,7 @@ model User {
   email                String                 @unique
   password             String                 @default("helloworld")
   name                 String?
+  batch                String?                @default("Batch 1")
   image                String?
   emailVerified        DateTime?
   otp                  String?                @default("123456")
@@ -53,6 +54,8 @@ model User {
   reviews              Review[]
   profile              StudentProfile?
   userProgress         UserProgress[]
+  tickets              SupportTicket[]
+  supportMessages      SupportMessage[]
   stats                UserStats?
 }
 
@@ -331,11 +334,14 @@ model RefundRequest {
   reason    String
   status    RefundStatus @default(PENDING)
   userId    String
-  paymentId String?      @unique
+  user      User         @relation(fields: [userId], references: [id])
+  
+  // Optional: Link to a specific Payment if you have that table
+  paymentId String?    @unique
+  payment   Payment? @relation(fields: [paymentId], references: [id])
+
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
-  payment   Payment?     @relation(fields: [paymentId], references: [id])
-  user      User         @relation(fields: [userId], references: [id])
 }
 
 enum ItemType {
@@ -364,6 +370,54 @@ enum RefundStatus {
   APPROVED
   REJECTED
 }
+
+enum ActivityType {
+  VIDEO_WATCH
+  QUIZ_ATTEMPT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+// Add these models
+model SupportTicket {
+  id          String         @id @default(cuid())
+  subject     String
+  status      TicketStatus   @default(OPEN)
+  priority    TicketPriority @default(MEDIUM)
+  
+  // Relations
+  userId      String
+  user        User           @relation(fields: [userId], references: [id])
+  
+  messages    SupportMessage[]
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model SupportMessage {
+  id          String        @id @default(cuid())
+  message     String        @db.Text
+  
+  ticketId    String
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  senderId    String
+  sender      User          @relation(fields: [senderId], references: [id])
+
+  createdAt   DateTime      @default(now())
+}
+
 
 model UserActivity {
   id          String   @id @default(cuid())
