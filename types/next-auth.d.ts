@@ -9,6 +9,7 @@ declare module "next-auth" {
       id: string;
       role: string;
       hasPremium: boolean;
+      hasRegistered: boolean;
     } & DefaultSession["user"];
   }
 
@@ -16,6 +17,7 @@ declare module "next-auth" {
   interface User {
     role: string;
     hasPremium: boolean;
+    hasRegistered: boolean;
   }
 }
 
@@ -25,6 +27,7 @@ declare module "next-auth/jwt" {
     id: string;
     role: string;
     hasPremium: boolean;
+    hasRegistered: boolean;
   }
 }
 
@@ -33,5 +36,6 @@ declare module "@auth/core/adapters" {
   interface AdapterUser {
     role: string;
     hasPremium: boolean;
+    hasRegistered: boolean;
   }
 }
