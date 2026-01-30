@@ -20,6 +20,7 @@ export async function getCurrentUser() {
     email: session.user.email?? "",
     name: session.user.name??"user",
     role: session.user.role,
+    hasRegistered: session.user.hasRegistered?? false,
     hasPremium: session.user.hasPremium?? false,
     image: session.user.image,
   };
