@@ -14,6 +14,14 @@ export async function GET(
       where: {
         lectureId, 
       },
+      include: {
+        user: {
+          select: {
+            name: true,
+            image: true,
+          },
+        },
+      },
       orderBy: {
         createdAt: "desc",
       },
