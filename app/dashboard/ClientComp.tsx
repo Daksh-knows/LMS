@@ -1,19 +1,51 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { Info, ExternalLink, Loader2 } from "lucide-react";
+import { Info, ExternalLink, Loader2, FileQuestion, Video, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths } from "date-fns";
 
 export default function OverviewClient({ data }: { data: any }) {
   const [courseType, setCourseType] = useState("All");
+  const [viewDate, setViewDate] = useState(new Date());
   const [courses, setCourses] = useState<any[]>([]); // State to hold DB courses
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const router = useRouter();
-  
-  const { stats } = data;
+  const [loading, setLoading] = useState(true);
+  const { data: session } = useSession();
+  const [stats, setStats] = useState({
+    videoWatchedMins: 0,
+    quizzesCompleted: 0,
+    activeDays: [] as string[] // Array of dates like ["2024-05-20", "2024-05-21"]
+  });
 
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!session?.user?.id) return;
+      
+      try {
+        const response = await fetch(`/api/user/activity?userId=${session.user.id}`);
+        const data = await response.json();
+        setStats(data);
+        console.log("Fetched dashboard stats:", data);
+      } catch (error) {
+        console.error("Failed to fetch dashboard stats", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+
+  }, [session?.user?.id]);
+  
+   const daysInMonth = useMemo(() => {
+    return eachDayOfInterval({ start: startOfMonth(viewDate), end: endOfMonth(viewDate) });
+  }, [viewDate]);
   // Fetch courses from DB on mount
   useEffect(() => {
     async function load() {
@@ -98,25 +130,101 @@ export default function OverviewClient({ data }: { data: any }) {
   return (
     <div className="max-w-6xl ml-5 mt-5 space-y-10 pb-20">
       {/* 1. Progress Section (Unchanged) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-          <h3 className="text-gray-700 font-bold mb-8 flex items-center gap-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4 px-3 rounded-2xl">
+        
+        {/* Today's Progress - Simplified Display */}
+        <div className="lg:col-span-1 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <h3 className="text-gray-700 font-bold mb-6 flex items-center gap-2">
             Today's Progress <Info size={14} className="text-gray-400" />
           </h3>
-          <div className="flex justify-around items-center py-4">
-            <ProgressCircle value={stats?.videoWatchedMins} label="Mins Video Watched" color="text-blue-500" />
-            <ProgressCircle value={stats?.questionsAttempted} label="Questions Attempted" color="text-green-500" />
+          <div className="flex flex-col gap-5 justify-around">
+            <div className="bg-blue-50/50 px-6 py-6 rounded-2xl border border-blue-100 flex justify-between">
+              <div className="flex items-center gap-3 mb-2">
+                <Video className="text-blue-600" size={20} />
+                <span className="text-sm font-medium text-blue-800 uppercase tracking-wider">Video Time</span>
+              </div>
+              <p className="text-4xl font-black text-blue-900 ">
+                {Math.round(stats.videoWatchedMins || 0)} <span className="text-lg font-normal">mins</span>
+              </p>
+            </div>
+
+            <div className="bg-green-100 p-6 rounded-2xl border border-green-100 flex justify-between">
+              <div className="flex items-center gap-3 mb-2">
+                <FileQuestion className="text-green-600" size={20} />
+                <span className="text-sm font-medium text-green-800 uppercase tracking-wider">Quizzes</span>
+              </div>
+              <p className="text-4xl font-black text-green-900">
+                {stats.quizzesCompleted || 0} <span className="text-lg font-normal">completed</span>
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col justify-center">
-            <h3 className="text-gray-700 font-bold mb-6 text-sm">Monthly Activity</h3>
-            <div className="grid grid-cols-7 gap-1 opacity-50">
-                {Array.from({ length: 28 }).map((_, i) => (
-                    <div key={i} className="h-2 w-2 bg-gray-200 rounded-sm"></div>
-                ))}
+        {/* Monthly Activity Heatmap */}
+          <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between mb-10">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gray-100 rounded-lg text-gray-600">
+                  <CalendarDays size={20} />
+                </div>
+                <div>
+                  <h3 className="text-gray-800 font-bold text-lg">Activity</h3>
+                  <p className="text-sm font-medium text-blue-600">{format(viewDate, "MMMM yyyy")}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center bg-gray-50 p-1 rounded-xl border border-gray-200">
+                <button 
+                  onClick={() => setViewDate(subMonths(viewDate, 1))} 
+                  className="p-2 hover:bg-white rounded-lg transition-all"
+                >
+                  <ChevronLeft size={20}/>
+                </button>
+                <button 
+                  onClick={() => setViewDate(addMonths(viewDate, 1))} 
+                  className="p-2 hover:bg-white rounded-lg transition-all"
+                >
+                  <ChevronRight size={20}/>
+                </button>
+              </div>
             </div>
-        </div>
+
+            {/* FIXED GRID: Exactly 7 columns */}
+            <div className="grid grid-cols-7 gap-2 sm:gap-3">
+              {/* 1. Weekday Headers - Ensure exactly 7 items */}
+              {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map((day) => (
+                <div 
+                  key={day} 
+                  className="text-[10px] sm:text-xs text-center text-gray-400 font-bold mb-2 uppercase tracking-tighter"
+                >
+                  {day}
+                </div>
+              ))}
+              
+              {/* 2. Padding logic - This shifts the 1st of the month to the correct day */}
+              {Array.from({ length: startOfMonth(viewDate).getDay() }).map((_, i) => (
+                <div key={`pad-${i}`} className="aspect-square w-full" />
+              ))}
+
+              {/* 3. Actual Calendar Days */}
+              {daysInMonth.map((date) => {
+                const dateStr = format(date, "yyyy-MM-dd");
+                const isActive = stats.activeDays?.includes(dateStr);
+                return (
+                  <div 
+                    key={dateStr}
+                    className={`aspect-square w-full max-w-[45px] rounded-lg mx-auto flex items-center justify-center text-[11px] font-bold transition-all duration-300 ${
+                      isActive 
+                        ? "bg-green-500 text-white shadow-md ring-2 ring-white" 
+                        : "bg-gray-50 text-gray-400 border border-gray-100"
+                    }`}
+                  >
+                    {format(date, "d")}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
       </div>
 
       {/* 2. Recommended Courses Section */}

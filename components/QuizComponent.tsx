@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrainCircuit, HelpCircle, PlayCircle, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Award, Loader2 } from "lucide-react";
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 interface Option {
   id: string;
@@ -36,7 +37,8 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState<Record<number, string>>({}); 
   const [submitted, setSubmitted] = useState<Record<number, boolean>>({});
-
+  const { data: session } = useSession() ;
+  const userId = session?.user?.id;
   const questions = lecture.quizQuestions || [];
 
   // --- 1. Check for Existing Submission ---
@@ -95,6 +97,15 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
       });
 
       if (response.ok) {
+        await fetch(`/api/user/activity?userId=${userId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "QUIZ_ATTEMPT",
+            duration: 5, // Give them 5 minutes of 'activity credit' for finishing a quiz
+            lectureId: lecture.id
+          }),
+        });
         // 1. Update Server Data (for Sidebar/Nav)
         router.refresh(); 
 
