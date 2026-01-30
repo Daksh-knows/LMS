@@ -26,7 +26,7 @@ export default function Sidebar({ user }: { user: any }) {
 
     { label: "My Courses", icon: Library, href: "/dashboard/my-courses" },
 
-    { label: "Support", icon: HeadphonesIcon, href: "/dashboard/support" },
+    { label: "Support", icon: HeadphonesIcon, href: isAdmin ? "/dashboard/admin/support" : "/dashboard/support" },
     { label: "Career Services", icon: Briefcase, href: "/dashboard/career-services" },
   ];
 

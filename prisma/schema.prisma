@@ -54,6 +54,8 @@ model User {
   reviews              Review[]
   profile              StudentProfile?
   userProgress         UserProgress[]
+  tickets              SupportTicket[]
+  supportMessages      SupportMessage[]
   stats                UserStats?
 }
 
@@ -379,4 +381,46 @@ enum RefundStatus {
 enum ActivityType {
   VIDEO_WATCH
   QUIZ_ATTEMPT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+// Add these models
+model SupportTicket {
+  id          String         @id @default(cuid())
+  subject     String
+  status      TicketStatus   @default(OPEN)
+  priority    TicketPriority @default(MEDIUM)
+  
+  // Relations
+  userId      String
+  user        User           @relation(fields: [userId], references: [id])
+  
+  messages    SupportMessage[]
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model SupportMessage {
+  id          String        @id @default(cuid())
+  message     String        @db.Text
+  
+  ticketId    String
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  senderId    String
+  sender      User          @relation(fields: [senderId], references: [id])
+
+  createdAt   DateTime      @default(now())
 }
