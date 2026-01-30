@@ -97,7 +97,7 @@ export default function ProfileClient({ initialData, hasPendingRefund }: { initi
         {/* Navigation Tabs */}
         <div className="flex gap-8 border-b border-gray-100 mb-8">
           <button className="pb-3 border-b-2 border-red-500 text-sm font-bold text-gray-800">Profile Details</button>
-          <button className="pb-3 text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors">My Purchases</button>
+          {/* <button className="pb-3 text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors">My Purchases</button> */}
         </div>
 
         {/* --- REFUND STATUS BANNER --- */}
