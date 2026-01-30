@@ -30,6 +30,7 @@ model User {
   email                String                 @unique
   password             String                 @default("helloworld")
   name                 String?
+  batch                String?                @default("Batch 1")
   image                String?
   emailVerified        DateTime?
   otp                  String?                @default("123456")
