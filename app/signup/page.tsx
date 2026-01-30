@@ -12,7 +12,9 @@ import {
   Lock, 
   Loader2, 
   User, 
-  Github 
+  Github, 
+  EyeOff,
+  Eye
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -138,10 +140,10 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-start md:justify-center p-6 relative overflow-y-auto">
       
-      <div className="max-w-md w-full my-12">
+      <div className="max-w-md w-full">
         
         {/* Header - Changes based on step */}
-        <div className="text-center mb-8">
+        <div className="text-center ">
           {step === 1 && (
              <>
                 <div className="bg-blue-600 w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-blue-100">
@@ -283,7 +285,7 @@ export default function SignupPage() {
                 </button>
               </div>
 
-              <div className="mt-8 pt-8 border-t border-slate-50 text-center">
+              <div className="pt-8 border-t border-slate-50 text-center">
                 <p className="text-slate-500 text-sm font-medium">
                   Already have an account?{' '}
                   <Link 
@@ -366,8 +368,14 @@ export default function SignupPage() {
   );
 }
 
-// Reusable UI Component for Inputs
 function Input({ label, icon, placeholder, type = "text", disabled, onChange }: any) {
+  // Local state to handle password visibility
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Determine actual input type
+  const isPassword = type === "password";
+  const inputType = isPassword ? (showPassword ? "text" : "password") : type;
+
   return (
     <div className="space-y-1">
       {label && (
@@ -379,14 +387,32 @@ function Input({ label, icon, placeholder, type = "text", disabled, onChange }: 
         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
           {icon}
         </div>
+        
         <input 
-          type={type} 
+          type={inputType} 
           placeholder={placeholder} 
           required
           disabled={disabled}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all outline-none font-bold text-slate-800 placeholder:text-slate-300 disabled:opacity-50"
+          className="w-full pl-12 pr-12 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all outline-none font-bold text-slate-800 placeholder:text-slate-300 disabled:opacity-50"
         />
+
+        {/* Render Eye Toggle ONLY if the original type was "password" */}
+        {isPassword && (
+          <button
+            type="button" // Prevents form submission
+            onClick={() => setShowPassword(!showPassword)}
+            disabled={disabled}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none disabled:opacity-50"
+            tabIndex={-1}
+          >
+            {showPassword ? (
+              <EyeOff className="w-5 h-5" />
+            ) : (
+              <Eye className="w-5 h-5" />
+            )}
+          </button>
+        )}
       </div>
     </div>
   );

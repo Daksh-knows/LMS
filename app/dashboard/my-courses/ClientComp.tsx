@@ -101,13 +101,14 @@ export default function CourseFilterList() {
     );
   }
   return (
-    <div className="space-y-6">
-      <div className="flex gap-4">
+      <div className="space-y-6">
+      {/* Filters: Allow horizontal scrolling on very small screens */}
+      <div className="flex gap-2 md:gap-4 overflow-x-auto pb-2 no-scrollbar">
         {["All", "Completed", "In Progress"].map((tab) => (
           <button
             key={tab}
             onClick={() => setFilter(tab)}
-            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+            className={`px-4 md:px-6 py-2 rounded-full text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
               filter === tab
                 ? "bg-gray-800 text-white"
                 : "bg-white text-gray-500 border border-gray-200"
@@ -129,10 +130,10 @@ export default function CourseFilterList() {
         {filteredCourses.map((course) => (
           <div
             key={course.id}
-            className="bg-white rounded-2xl p-4 flex gap-6 shadow-sm border border-gray-100 items-center hover:shadow-md transition-shadow"
+            className="bg-white rounded-2xl p-4 flex flex-col md:flex-row gap-4 md:gap-6 shadow-sm border border-gray-100 items-start md:items-center hover:shadow-md transition-shadow"
           >
-            {/* Thumbnail */}
-            <div className="w-48 h-28 rounded-xl overflow-hidden shrink-0 bg-gray-100 relative">
+            {/* Thumbnail: Full width on mobile, fixed width on desktop */}
+            <div className="w-full md:w-48 h-40 md:h-28 rounded-xl overflow-hidden shrink-0 bg-gray-100 relative">
               {course.image ? (
                 <img
                   src={course.image}
@@ -146,23 +147,22 @@ export default function CourseFilterList() {
               )}
             </div>
 
-            {/* Info */}
-            <div className="flex-1">
-              <h3 className="font-bold text-gray-800 text-lg mb-1">
+            {/* Info Section */}
+            <div className="flex-1 w-full">
+              <h3 className="font-bold text-gray-800 text-base md:text-lg mb-1 leading-tight">
                 {course.title}
               </h3>
-              <p className="text-gray-500 text-sm mb-3">{course.subtitle}</p>
-              <p className="text-gray-400 text-xs uppercase tracking-wide font-semibold">
-                {course.modulesCompleted} / {course.totalModules} Lectures
-                Completed
+              <p className="text-gray-500 text-sm mb-3 line-clamp-2">{course.subtitle}</p>
+              <p className="text-gray-400 text-[10px] md:text-xs uppercase tracking-wide font-semibold">
+                {course.modulesCompleted} / {course.totalModules} Lectures Completed
               </p>
             </div>
 
-            {/* Progress & Action */}
-            <div className="flex flex-col items-end gap-4">
-              <div className="relative w-10 h-10">
+            {/* Progress & Action Section */}
+            <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-4 pt-4 md:pt-0 border-t md:border-t-0 border-gray-50">
+              {/* Progress Circle: Hidden or resized for mobile if space is tight */}
+              <div className="relative w-10 h-10 shrink-0">
                 <svg className="w-full h-full" viewBox="0 0 36 36">
-                  {/* Background Circle */}
                   <path
                     className="text-gray-100"
                     strokeWidth="3"
@@ -170,13 +170,8 @@ export default function CourseFilterList() {
                     fill="none"
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                   />
-                  {/* Progress Circle */}
                   <path
-                    className={
-                      course.progress === 100
-                        ? "text-green-500"
-                        : "text-purple-600"
-                    }
+                    className={course.progress === 100 ? "text-green-500" : "text-purple-600"}
                     strokeDasharray={`${course.progress}, 100`}
                     strokeWidth="3"
                     strokeLinecap="round"
@@ -187,31 +182,28 @@ export default function CourseFilterList() {
                 </svg>
               </div>
 
-              
-              <div className=" flex gap-2">
-                  {/* 1. Only show Download button if progress is exactly 100% */}
-                    {course.progress === 100 && (
-                      <button
-                        onClick={() => handleDownloadCertificate(course.title)}
-                        className="px-3 py-2 rounded-lg font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm shadow-sm"
-                      >
-                        Download Certificate
-                      </button>
-                  )} 
-
-                  {/* DYNAMIC BUTTON LOGIC */}
+              <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-2 w-full sm:w-auto">
+                {course.progress === 100 && (
                   <button
-                    onClick={() => handleCourseSelect(course.id)}
-                    className={`px-6 py-2 rounded-lg font-bold transition-colors whitespace-nowrap ${
-                      course.status === "Completed"
-                        ? "bg-green-100 text-green-700 hover:bg-green-200"
-                        : "bg-orange-100 text-orange-600 hover:bg-orange-200"
-                    }`}
+                    onClick={() => handleDownloadCertificate(course.title)}
+                    className="px-3 py-2 rounded-lg font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors text-xs shadow-sm whitespace-nowrap"
                   >
-                    {course.status === "Not Started" && "Start Course"}
-                    {course.status === "In Progress" && "Continue Learning"}
-                    {course.status === "Completed" && "Review Course"}
+                    Download Certificate
                   </button>
+                )}
+
+                <button
+                  onClick={() => handleCourseSelect(course.id)}
+                  className={`px-4 md:px-6 py-2 rounded-lg font-bold transition-colors whitespace-nowrap text-xs md:text-sm flex-1 justify-center ${
+                    course.status === "Completed"
+                      ? "bg-green-100 text-green-700 hover:bg-green-200"
+                      : "bg-orange-100 text-orange-600 hover:bg-orange-200"
+                  }`}
+                >
+                  {course.status === "Not Started" && "Start Course"}
+                  {course.status === "In Progress" && "Continue"}
+                  {course.status === "Completed" && "Review"}
+                </button>
               </div>
             </div>
           </div>
