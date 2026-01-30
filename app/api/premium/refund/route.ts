@@ -13,22 +13,48 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Reason is required" }, { status: 400 });
     }
 
-    // 1. Check if a pending request already exists
-    const existingRequest = await db.refundRequest.findFirst({
+    // 1. Find the eligible payment to be refunded
+    // We look for either the Discounted Premium (7k) or Standard Premium (9k)
+    const paymentToRefund = await db.payment.findFirst({
       where: {
         userId: user.id,
+        status: "SUCCESS",
+        planType: {
+          in: ["PREMIUM_DISCOUNT", "PREMIUM_STANDARD"],
+        },
+      },
+      orderBy: {
+        createdAt: "desc", // Get the most recent payment
+      },
+    });
+
+    if (!paymentToRefund) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "No eligible premium payment found to refund." 
+      }, { status: 404 });
+    }
+
+    // 2. Check if a pending request already exists for this SPECIFIC payment
+    const existingRequest = await db.refundRequest.findFirst({
+      where: {
+        paymentId: paymentToRefund.id,
         status: "PENDING",
       },
     });
 
     if (existingRequest) {
-      return NextResponse.json({ success: false, error: "You already have a pending refund request." }, { status: 400 });
+      return NextResponse.json({ 
+        success: false, 
+        error: "A refund request for this payment is already pending." 
+      }, { status: 400 });
     }
 
-    // 2. Create the request
+    // 3. Create the request linked to the specific payment
     await db.refundRequest.create({
       data: {
         userId: user.id,
+        paymentId: paymentToRefund.id, // Storing the specific payment ID
         reason: reason,
         status: "PENDING",
       },
