@@ -50,7 +50,7 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
   }, [lecture.description]);
   
   useEffect(() => {
-    console.log("Loaded quiz " , lecture) ;
+    // console.log("Loaded quiz " , lecture)
     const checkQuizStatus = async () => {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/lecture/quiz-status/${lecture.id}`);
@@ -317,78 +317,45 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
 
   // Intro View (Also updated for spacing)
 return (
-    <div className="w-full max-w-full pt-20 pb-12 px-6 min-h-[calc(100vh-80px)] flex flex-col items-center">
-      <div className="bg-gradient-to-br from-blue-50 via-white to-blue-50 border border-blue-100 rounded-[32px] p-12 shadow-sm w-full max-w-5xl">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row items-center gap-8 mb-12">
-          <div className="bg-blue-600 p-6 rounded-[2rem] text-white shadow-2xl shadow-blue-200 shrink-0">
-            <BrainCircuit size={56} />
-          </div>
-          <div className="text-center md:text-left">
-            <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">
-              {lecture.title}
-            </h2>
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-3">
-              <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
-                Module Quiz
-              </span>
-              <span className="text-gray-400">•</span>
-              <span className="text-gray-500 font-medium italic">
-                {metadata.status || "Ready"}
-              </span>
-            </div>
-          </div>
+  <div className="w-full h-full flex items-center justify-center p-4">
+    <div className="bg-white border border-blue-100 rounded-2xl p-6 shadow-sm max-w-2xl w-full">
+      <div className="flex items-center gap-4 mb-6">
+        <div className="bg-blue-600 p-3 rounded-xl text-white shadow-lg shrink-0">
+          <BrainCircuit size={32} />
         </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white/60 backdrop-blur-sm p-8 rounded-3xl border border-white shadow-sm flex flex-col items-center md:items-start">
-            <p className="text-xs text-blue-600 font-bold uppercase tracking-widest mb-2">Total Questions</p>
-            <p className="text-3xl font-black text-gray-800">{questions.length}</p>
-          </div>
-          
-          <div className="bg-white/60 backdrop-blur-sm p-8 rounded-3xl border border-white shadow-sm flex flex-col items-center md:items-start">
-            <p className="text-xs text-blue-600 font-bold uppercase tracking-widest mb-2">Difficulty</p>
-            <p className="text-3xl font-black text-gray-800 capitalize">
-              {(metadata.difficulty || "Medium").toLowerCase()}
-            </p>
-          </div>
-
-          <div className="bg-white/60 backdrop-blur-sm p-8 rounded-3xl border border-white shadow-sm flex flex-col items-center md:items-start">
-            <p className="text-xs text-blue-600 font-bold uppercase tracking-widest mb-2">Passing Score</p>
-            <p className="text-3xl font-black text-gray-800">
-              {Math.ceil(questions.length * 0.7)} <span className="text-lg font-medium text-gray-400">Items</span>
-            </p>
-          </div>
-        </div>
-
-        {/* Context / Instructions Box */}
-        <div className="bg-blue-900/5 rounded-[2rem] p-8 mb-12 border border-blue-100/50">
-          <h4 className="text-gray-900 font-bold mb-3 flex items-center gap-2">
-            <HelpCircle size={20} className="text-blue-600" />
-            Quiz Instructions
-          </h4>
-          <p className="text-gray-600 leading-relaxed text-lg">
-            {"Answer all questions to the best of your ability. You will see your results immediately after completing the final question."}
-          </p>
-        </div>
-
-        {/* Action Button */}
-        <div className="flex flex-col items-center">
-          <button 
-            onClick={() => setQuizState('active')}
-            className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-black py-6 px-10 rounded-2xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-blue-200 flex items-center justify-center gap-4 text-2xl group"
-          >
-            <PlayCircle size={32} className="group-hover:rotate-12 transition-transform" />
-            Start Attempt
-          </button>
-          <p className="mt-6 text-gray-400 text-sm font-medium">
-            Good luck! Your progress will be tracked.
-          </p>
+        <div>
+          <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+            {lecture.title}
+          </h2>
+          <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
+            Quiz
+          </span>
         </div>
       </div>
+
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        {[
+          { label: "Questions", val: questions.length },
+          { label: "Difficulty", val: metadata.difficulty || "Medium" },
+          { label: "Passing", val: `${Math.ceil(questions.length * 0.7)} pts` }
+        ].map((stat, i) => (
+          <div key={i} className="bg-gray-50 p-3 rounded-xl border border-gray-100 text-center">
+            <p className="text-[10px] text-blue-600 font-bold uppercase mb-1">{stat.label}</p>
+            <p className="text-lg font-black text-gray-800">{stat.val}</p>
+          </div>
+        ))}
+      </div>
+
+      <button 
+        onClick={() => setQuizState('active')}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 text-lg shadow-md"
+      >
+        <PlayCircle size={20} />
+        Start Attempt
+      </button>
     </div>
-  );
+  </div>
+);
 };
 
 export default QuizUI;
