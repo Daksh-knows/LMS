@@ -202,9 +202,9 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
     >
       <ReactPlayer
         slot="media"
-        src={videoUrl} // Changed from src to url
+        src={videoUrl} 
         controls={false}
-        onTimeUpdate={handleTimeUpdate} // Switched from onProgress to handle native updates
+        onTimeUpdate={handleTimeUpdate} 
         width="100%"
         height="100%"
         playing={isPlaying}
