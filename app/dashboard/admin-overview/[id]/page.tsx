@@ -19,7 +19,7 @@ interface Submission {
   grade: number | null;
   feedback: string | null;
   createdAt: string;
-  user: {
+  User: {
     id: string;
     name: string;
     email: string;
@@ -164,7 +164,7 @@ function GradingRow({
   const [grade, setGrade] = useState<string>(submission.grade?.toString() || "");
   const [feedback, setFeedback] = useState(submission.feedback || "");
   const [isDirty, setIsDirty] = useState(false);
-
+  console.log(submission);
   const isGraded = submission.grade !== null;
 
   return (
@@ -174,11 +174,11 @@ function GradingRow({
         <td className="p-6">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">
-               {submission.user.name.charAt(0)}
+               {submission.User?.name.charAt(0)||'John Doe'}
             </div>
             <div>
-              <p className="font-bold text-gray-900 text-sm">{submission.user.name}</p>
-              <p className="text-xs text-gray-400">{submission.user.email}</p>
+              <p className="font-bold text-gray-900 text-sm">{submission.User?.name}</p>
+              <p className="text-xs text-gray-400">{submission.User?.email}</p>
             </div>
           </div>
         </td>
