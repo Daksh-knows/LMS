@@ -62,8 +62,8 @@ export async function POST(req: NextRequest) {
       where: {
         studentId_lectureId: { studentId: userId, lectureId }
       },
-      update: { fileUrl: publicUrl },
-      create: { studentId: userId, lectureId, fileUrl: publicUrl },
+      update: { fileUrl: publicUrl, status: "SUBMITTED" },
+      create: { studentId: userId, lectureId, fileUrl: publicUrl, status: "SUBMITTED" },
     });
 
     return NextResponse.json({ success: true, url: publicUrl });

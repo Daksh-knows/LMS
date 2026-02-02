@@ -249,8 +249,8 @@ export default function OverviewClient({ data }: { data: any }) {
       {/* 2. Recommended Courses Section */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm md:text-lg lg:text-xl font-extrabold text-gray-900 tracking-tight">Recommended for You</h3>
-          <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
+          <h3 className="text-sm md:text-lg lg:text-xl font-extrabold text-gray-900 tracking-tight">All Courses</h3>
+          {/* <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
             {["All", "Frontend", "Advanced"].map((type) => (
               <button
                 key={type}
@@ -262,7 +262,7 @@ export default function OverviewClient({ data }: { data: any }) {
                 {type}
               </button>
             ))}
-          </div>
+          </div> */}
         </div>
 
         {loadingCourses ? (

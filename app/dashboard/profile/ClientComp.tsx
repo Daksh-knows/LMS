@@ -134,12 +134,12 @@ export default function ProfileClient({ initialData, hasPendingRefund }: { initi
           <ProfileInput label="Current Domain" value={formData.domain} disabled={!isEditing} onChange={(val: string) => setFormData({...formData, domain: val})} />
         </div>
 
-        <h2 className="text-lg font-bold text-gray-800 mb-8">Academic Details</h2>
+        {/* <h2 className="text-lg font-bold text-gray-800 mb-8">Academic Details</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-8 mb-12">
           <ProfileInput label="College Name" value={formData.collegeName} disabled={!isEditing} onChange={(val: string) => setFormData({...formData, collegeName: val})} />
           <ProfileInput label="College Degree" value={formData.collegeDegree} disabled={!isEditing} onChange={(val: string) => setFormData({...formData, collegeDegree: val})} />
           <ProfileInput label="Current Year" type="number" value={formData.collegeYear} disabled={!isEditing} onChange={(val: string) => setFormData({...formData, collegeYear: val})} />
-        </div>
+        </div> */}
 
         {/* Action Buttons */}
         <div className="flex justify-between items-center pt-8 border-t border-gray-50">

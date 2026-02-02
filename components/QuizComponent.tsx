@@ -363,7 +363,7 @@ return (
         {[
           { label: "Questions", val: questions.length },
           { label: "Difficulty", val: metadata.difficulty || "Medium" },
-          { label: "Passing", val: `${Math.ceil(questions.length * 0.7)} pts` }
+          { label: "Passing", val: `${Math.ceil(questions.length * 0.8)} pts` }
         ].map((stat, i) => (
           <div key={i} className="bg-gray-50 p-3 rounded-xl border border-gray-100 text-center">
             <p className="text-[10px] text-blue-600 font-bold uppercase mb-1">{stat.label}</p>

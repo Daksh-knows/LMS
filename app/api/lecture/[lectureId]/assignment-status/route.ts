@@ -38,17 +38,19 @@ export async function GET(
         select: {
           fileUrl: true,
           grade: true,
+          status: true,
           feedback: true,
           createdAt: true,
         },
       }),
     ]);
-
+    console.log("user id:", user.id, "\nlectureId:", lectureId);
+    console.log("Progress:", progress, "\nSubmission:", submission);
     // If no progress exists yet, the user hasn't interacted with this assignment
     return NextResponse.json({
-      status: progress?.assignmentStatus || "NOT_STARTED",
+      status: submission?.status || "NOT_SUBMITTED",
       isCompleted: progress?.isCompleted || false,
-      submission: submission || null, // Contains fileUrl, grade, etc.
+      submission: submission || null, 
     });
 
   } catch (error) {
