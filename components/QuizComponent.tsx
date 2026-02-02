@@ -159,18 +159,36 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
   
   if (quizState === 'already-submitted') {
     return (
-      <div className="w-full max-w-full pt-20 pb-12 px-6 flex flex-col items-center">
-        <div className="bg-white border-2 border-green-100 rounded-3xl p-10 text-center shadow-xl max-w-2xl w-full">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 size={40} className="text-green-600" />
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Quiz Completed!</h2>
-          <p className="text-gray-500 mb-6">Submitted on {prevSubmission?.date}</p>
-          <div className="text-6xl font-black text-green-600 mb-4">{prevSubmission?.score}%</div>
-          <p className="text-lg text-gray-600 mb-8">You have already received credit for this quiz.</p>
+          <div className="w-full max-w-full pt-4 md:pt-10 px-4 md:px-6 flex flex-col items-center">
+              <div className="bg-white border-2 border-green-100 rounded-2xl md:rounded-3xl p-6 md:pt-10 text-center shadow-xl max-w-2xl w-full">
+                
+                {/* Icon: Slightly smaller on mobile */}
+                <div className="w-16 h-16 md:w-20 md:h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6">
+                  <CheckCircle2 className="size-8 md:size-[40px] text-green-600" />
+                </div>
 
-        </div>
-      </div>
+                {/* Heading: Responsive font size */}
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                  Quiz Completed!
+                </h2>
+
+                {/* Date: Reduced text size */}
+                <p className="text-xs md:text-sm text-gray-500 mb-4 md:mb-6">
+                  Submitted on {prevSubmission?.date}
+                </p>
+
+                {/* Score: Dramatic reduction from mobile to desktop */}
+                <div className="text-5xl md:text-6xl font-black text-green-600 mb-4">
+                  {prevSubmission?.score}%
+                </div>
+
+                {/* Footer Text: Balanced for better readability */}
+                <p className="text-sm md:text-base lg:text-lg text-gray-600 mb-4 md:mb-8 max-w-xs md:max-w-none mx-auto">
+                  You have already received credit for this quiz.
+                </p>
+
+              </div>
+            </div>
     );
   }
 
@@ -213,12 +231,9 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
     const isDone = submitted[currentIdx];
 
     return (
-      /* - Changed max-w-4xl to max-w-full to occupy whole space 
-         - Added pt-20 (Padding Top) to clear your fixed navbar 
-      */
-      <div className="w-full max-w-full pt-20 pb-8 px-6 min-h-screen mt-5">
+      <div className="w-full max-w-full px-6  my-3">
         {/* Navigation Dots Container - Now full width flex wrap */}
-        <div className="flex flex-wrap gap-2 mb-10 justify-center w-full">
+        <div className="flex flex-wrap gap-2 mb-3 justify-center w-full">
           {questions.map((question, i) => {
             const isCurrent = currentIdx === i;
             const isHasSubmitted = submitted[i];
@@ -252,9 +267,9 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
         </div>
 
         {/* Quiz Container - Occupies full width */}
-        <div className="bg-white border border-gray-100 rounded-3xl p-10 shadow-sm w-full transition-all">
-          <div className="mb-10">
-            <h3 className="text-3xl font-bold text-gray-900 leading-tight">
+        <div className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm w-full transition-all">
+          <div className="mb-5">
+            <h3 className="text-lg  text-gray-900 leading-tight">
                 {q.text}
             </h3>
           </div>
@@ -275,9 +290,9 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
                   key={opt.id}
                   disabled={isDone}
                   onClick={() => handleSelect(opt.id)}
-                  className={`w-full p-6 rounded-2xl border-2 text-left transition-all flex justify-between items-center group ${boxStyle}`}
+                  className={`w-full p-2 md:p-3 lg:p4 rounded-2xl border-2 text-left transition-all flex justify-between items-center group ${boxStyle}`}
                 >
-                  <span className="text-xl font-medium">{opt.text}</span>
+                  <span className="text-sm md:text-md lg:text-xl font-medium">{opt.text}</span>
                   {shouldShowCorrect && <CheckCircle2 className="text-green-600" size={28} />}
                   {shouldShowError && <XCircle className="text-red-600" size={28} />}
                 </button>
@@ -286,7 +301,7 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
           </div>
 
           {/* Footer Navigation */}
-          <div className="mt-12 flex items-center justify-between border-t border-gray-50 pt-8">
+          <div className=" flex items-center justify-between border-t border-gray-50 pt-8">
             <button 
               disabled={currentIdx === 0}
               onClick={() => setCurrentIdx(prev => prev - 1)}
@@ -299,7 +314,7 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
               <button 
                 disabled={!userChoiceId}
                 onClick={handleSubmitAnswer}
-                className="bg-gray-900 text-white px-12 py-4 rounded-2xl font-bold hover:scale-105 transition-transform disabled:opacity-30 shadow-xl"
+                className="w-full sm:w-auto px-6 sm:px-8 md:px-12 py-3 sm:py-4 bg-gray-900 text-white text-sm sm:text-base md:text-lg font-bold rounded-xl md:rounded-2xl hover:scale-105 transition-transform disabled:opacity-30 shadow-xl"
               >
                 Submit Answer
               </button>
@@ -328,7 +343,7 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
 
   // Intro View (Also updated for spacing)
 return (
-  <div className="w-full h-full flex items-center justify-center p-4">
+  <div className="w-full h-full flex items-center justify-center">
     <div className="bg-white border border-blue-100 rounded-2xl p-6 shadow-sm max-w-2xl w-full">
       <div className="flex items-center gap-4 mb-6">
         <div className="bg-blue-600 p-3 rounded-xl text-white shadow-lg shrink-0">

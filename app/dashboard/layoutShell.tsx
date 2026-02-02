@@ -6,12 +6,10 @@ import Header from "@/components/Header";
 
 export default function LayoutShell({ 
   children, 
-  user,
-  patternStyle 
+  user 
 }: { 
   children: React.ReactNode; 
   user: any;
-  patternStyle: any;
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -33,7 +31,6 @@ export default function LayoutShell({
         
         <main
           className="lg:ml-64 mt-16 min-h-[calc(100vh-64px)] p-4 md:p-8"
-          style={patternStyle}
         >
           {children}
         </main>

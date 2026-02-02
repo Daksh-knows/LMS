@@ -138,8 +138,8 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
       </nav>
 
           {/* Main Content Area */}
-          <div className="flex flex-1 overflow-hidden">
-            <main className="flex-1 overflow-y-auto bg-gray-50 relative">
+          <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+            <main className="flex-1 overflow-y-auto bg-gray-50 relative h-full">
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center h-full">
                   <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
@@ -219,10 +219,18 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
               <p className="text-gray-500 max-w-xs mt-2">Content hasn't been uploaded yet.</p>
             </div>
           )}
+
+          <div className=" md:hidden border-t border-gray-200">
+            <CourseSidebar
+              sections={course.modules || []}
+              currentLectureId={lectureId}
+              onSelectLecture={handleSelectLecture}
+            />
+          </div>
         </main>
          
          {/* Course Sidebar */}
-        <aside className="w-[350px] shrink-0 border-l border-gray-200 hidden md:block h-full">
+        <aside className="hidden md:block w-[350px] shrink-0 border-l border-gray-200 h-full">
           <CourseSidebar
             sections={course.modules || []}
             currentLectureId={lectureId}
