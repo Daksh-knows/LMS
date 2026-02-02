@@ -27,6 +27,7 @@ export async function GET(
           include: { options: true },
           orderBy: { position: 'asc' }
         },
+        resources: true,
       },
     });
 
