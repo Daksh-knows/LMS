@@ -189,12 +189,12 @@ const getStatusIndicator = (item: CourseItem, isActive: boolean) => {
   };
 
   return (
-      <div className="w-full h-full bg-gray-50 flex flex-col border-l border-gray-200 font-sans">
-        <div className="p-4 border-b bg-white shrink-0">
-          <h2 className="font-bold text-gray-900 text-lg">Course Content</h2>
+      <div className="w-full h-auto md:h-full bg-gray-50 flex flex-col border-l border-gray-200 font-sans">
+        <div className="p-3 md:p-4 border-b bg-white shrink-0">
+          <h2 className="font-bold text-gray-900 text-base md:text-lg">Course Content</h2>
         </div>
 
-        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
+        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           {sections.map((section) => {
             const isOpen = openSections.includes(section.id);
 
@@ -203,7 +203,7 @@ const getStatusIndicator = (item: CourseItem, isActive: boolean) => {
                 {/* --- Section Header --- */}
                 <button
                   onClick={() => toggleSection(section.id)}
-                  className={`w-full flex items-center gap-3 p-4 transition-colors text-left ${
+                  className={`w-full flex items-center gap-2 md:gap-3 p-3 md:p-4 transition-colors text-left ${
                     isOpen ? "bg-gray-100" : "bg-gray-50 hover:bg-gray-100"
                   }`}
                 >
@@ -231,7 +231,7 @@ const getStatusIndicator = (item: CourseItem, isActive: boolean) => {
                         <div
                           key={item.id}
                           onClick={() => !isLocked && onSelectLecture(item)}
-                          className={`group flex flex-col p-4 transition-all border-l-4 ${
+                          className={`group  flex flex-col p-3 md:p-4 transition-all border-l-4 ${
                             isActive
                               ? "border-purple-600 bg-purple-50"
                               : "border-transparent hover:bg-gray-50"

@@ -97,7 +97,7 @@ export const BookmarksTab: React.FC<BookmarksProps> = ({
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <BookmarkIcon className="text-purple-600" size={20} />
-          <h2 className="text-xl font-bold text-gray-800">Lecture Bookmarks</h2>
+          <h2 className="text-md lg:text-xl font-bold text-gray-800">Lecture Bookmarks</h2>
         </div>
         <p className="text-sm text-gray-500 font-medium">
           {bookmarks.length} saved moments
