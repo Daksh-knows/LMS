@@ -130,15 +130,18 @@ export default function CourseFilterList() {
         {filteredCourses.map((course) => (
           <div
             key={course.id}
-            className="bg-white rounded-2xl p-4 flex flex-col md:flex-row gap-4 md:gap-6 shadow-sm border border-gray-100 items-start md:items-center hover:shadow-md transition-shadow"
+            // 1. CLICKABLE WRAPPER
+            onClick={() => handleCourseSelect(course.id)}
+            // 2. CURSOR POINTER
+            className="bg-white rounded-2xl p-4 flex flex-col md:flex-row gap-4 md:gap-6 shadow-sm border border-gray-100 items-start md:items-center hover:shadow-md transition-shadow cursor-pointer group"
           >
-            {/* Thumbnail: Full width on mobile, fixed width on desktop */}
+            {/* Thumbnail */}
             <div className="w-full md:w-48 h-40 md:h-28 rounded-xl overflow-hidden shrink-0 bg-gray-100 relative">
               {course.image ? (
                 <img
                   src={course.image}
                   alt={course.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 font-bold">
@@ -149,7 +152,7 @@ export default function CourseFilterList() {
 
             {/* Info Section */}
             <div className="flex-1 w-full">
-              <h3 className="font-bold text-gray-800 text-base md:text-lg mb-1 leading-tight">
+              <h3 className="font-bold text-gray-800 text-base md:text-lg mb-1 leading-tight group-hover:text-blue-600 transition-colors">
                 {course.title}
               </h3>
               <p className="text-gray-500 text-sm mb-3 line-clamp-2">{course.subtitle}</p>
@@ -160,7 +163,7 @@ export default function CourseFilterList() {
 
             {/* Progress & Action Section */}
             <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-4 pt-4 md:pt-0 border-t md:border-t-0 border-gray-50">
-              {/* Progress Circle: Hidden or resized for mobile if space is tight */}
+              {/* Progress Circle */}
               <div className="relative w-10 h-10 shrink-0">
                 <svg className="w-full h-full" viewBox="0 0 36 36">
                   <path
@@ -185,25 +188,29 @@ export default function CourseFilterList() {
               <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-2 w-full sm:w-auto">
                 {course.progress === 100 && (
                   <button
-                    onClick={() => handleDownloadCertificate(course.title)}
-                    className="px-3 py-2 rounded-lg font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors text-xs shadow-sm whitespace-nowrap"
+                    onClick={(e) => {
+                      // 3. STOP PROPAGATION
+                      e.stopPropagation(); 
+                      handleDownloadCertificate(course.title);
+                    }}
+                    className="px-3 py-2 rounded-lg font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors text-xs shadow-sm whitespace-nowrap z-10"
                   >
                     Download Certificate
                   </button>
                 )}
 
-                <button
-                  onClick={() => handleCourseSelect(course.id)}
-                  className={`px-4 md:px-6 py-2 rounded-lg font-bold transition-colors whitespace-nowrap text-xs md:text-sm flex-1 justify-center ${
+                {/* This button essentially duplicates the card click, but is kept for visual clarity */}
+                <div
+                  className={`px-4 md:px-6 py-2 rounded-lg font-bold transition-colors whitespace-nowrap text-xs md:text-sm flex-1 text-center ${
                     course.status === "Completed"
-                      ? "bg-green-100 text-green-700 hover:bg-green-200"
-                      : "bg-orange-100 text-orange-600 hover:bg-orange-200"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-orange-100 text-orange-600"
                   }`}
                 >
                   {course.status === "Not Started" && "Start Course"}
                   {course.status === "In Progress" && "Continue"}
                   {course.status === "Completed" && "Review"}
-                </button>
+                </div>
               </div>
             </div>
           </div>

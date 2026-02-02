@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import ReactPlayer from 'react-player';
-import { BookmarkPlus, Save } from "lucide-react";
+import { BookmarkPlus, Info, Save } from "lucide-react";
 import { useParams, useRouter } from 'next/navigation';
 
 import {
@@ -34,6 +34,7 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
   const controllerRef = useRef<any>(null);
   const watchStartTime = useRef<number | null>(null);
   const totalSecondsWatched = useRef<number>(0);
+  const [showTooltip, setShowTooltip] = useState(false);
   
 
   const [isMarkingComplete, setIsMarkingComplete] = useState(false);
@@ -82,6 +83,19 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
   const [hasCompleted, setHasCompleted] = useState(false);
 
   useEffect(() => { setIsMounted(true); }, []);
+
+  useEffect(() => {
+    // 1. Show the tooltip immediately on mount
+    setShowTooltip(true);
+
+    // 2. Hide it after 5 seconds
+    const timer = setTimeout(() => {
+      setShowTooltip(false);
+    }, 5000);
+
+    // 3. Cleanup timer if component unmounts
+    return () => clearTimeout(timer);
+  }, [lectureId]);
 
   //function to track user activity
     const saveWatchActivity = async () => {
@@ -429,20 +443,44 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
         </button>
         <MediaSeekBackwardButton seekOffset={10} />
         <MediaSeekForwardButton seekOffset={10} />
-
-        <button
-          type="button"
-          onClick={handleOpenForm}
-          className="transition-transform hover:scale-110 active:scale-95"
-          title="Add Bookmark"
+        
+        {/* --- BOOKMARK BUTTON WITH TOOLTIP --- */}
+        <div 
+          className="relative group"
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
         >
-          <div
-            className="p-3 flex items-center justify-center transition-colors"
-            style={{ backgroundColor: 'var(--media-secondary-color, rgb(20 20 30 / .7))' }}
+          {/* Tooltip Box */}
+          {showTooltip && (
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-48 p-3 bg-gray-900/95 backdrop-blur-sm text-white rounded-xl shadow-2xl border border-white/10 animate-in fade-in slide-in-from-bottom-2 duration-200 z-50 pointer-events-none">
+              <div className="flex items-start gap-2">
+                <Info size={14} className="text-blue-400 mt-0.5 shrink-0" />
+                <div className="flex flex-col gap-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-blue-400 mb-1">Smart Bookmarks</span>
+                  <p className="text-[10px] leading-relaxed text-gray-200">
+                    Click to save this exact timestamp. You can add notes or mark segments as important.
+                  </p>
+                </div>
+              </div>
+              {/* Tooltip Arrow */}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-8 border-transparent border-t-gray-900/95" />
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={handleOpenForm}
+            className="transition-transform hover:scale-110 active:scale-95"
+            title="Add Bookmark"
           >
-            <BookmarkPlus size={20} className="text-white" />
-          </div>
-        </button>
+            <div
+              className="p-3 flex items-center justify-center transition-colors"
+              style={{ backgroundColor: 'var(--media-secondary-color, rgb(20 20 30 / .7))' }}
+            >
+              <BookmarkPlus size={20} className="text-white" />
+            </div>
+          </button>
+        </div>
 
         <MediaTimeRange />
         <MediaTimeDisplay showDuration />

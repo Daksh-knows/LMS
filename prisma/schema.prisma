@@ -275,6 +275,7 @@ model AssignmentSubmission {
   studentId String
   grade     Float?
   feedback  String?
+  status    AssignmentStatus @default(NOT_SUBMITTED)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   lecture   Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
