@@ -371,7 +371,7 @@ model UserActivity {
   duration  Int          @default(0)
   createdAt DateTime     @default(now())
 
-  @@index([userId, createdAt])
+  @@unique([userId, type, createdAt])
 }
 
 enum ItemType {
