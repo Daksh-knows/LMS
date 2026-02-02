@@ -1,10 +1,12 @@
 "use client";
-import React, { useEffect, useState } from "react";
+
+import React, { useMemo } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { OverviewTab } from "./tabs/OverviewTab";
 import QnaTab from "./tabs/QnaTab";
 import { BookmarksTab } from "./tabs/Bookmarks";
 import { ReviewsTab } from "./tabs/ReviewsTab";
-import { BookOpen, MessageSquare, Edit3, Star, BookmarkPlus, Book } from "lucide-react";
+import { BookOpen, MessageSquare, BookmarkPlus, Star } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 interface Props {
@@ -18,24 +20,48 @@ interface Props {
   setLoadingBookmarks?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const TabbedContent: React.FC<Props> = ({ lecture , courseId , adminId , onBookmarkClick , bookmarks, loadingBookmarks, setBookmarks, setLoadingBookmarks }) => {
-const [activeTab, setActiveTab] = useState<"overview" | "qa" | "Bookmarks" | "reviews">("overview");
-  
-  const { data: session, status } = useSession();
-  const userId = session?.user?.id; 
-  const isLoadingUser = status === "loading";
+// Define valid tab IDs for type safety
+type TabId = "overview" | "qa" | "bookmarks" | "reviews";
 
-  const tabs = [
+const TabbedContent: React.FC<Props> = ({ 
+  lecture, 
+  courseId, 
+  adminId, 
+  onBookmarkClick, 
+  bookmarks, 
+  loadingBookmarks, 
+  setBookmarks, 
+  setLoadingBookmarks 
+}) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
+
+  // 1. Determine active tab from URL (?tab=...) or default to 'overview'
+  const activeTab = (searchParams.get("tab") as TabId) || "overview";
+
+  const tabs = useMemo(() => [
     { id: "overview", label: "Overview", icon: BookOpen },
     { id: "qa", label: "FAQ", icon: MessageSquare },
-    { id: "Bookmarks", label: "Bookmarks", icon: BookmarkPlus },
+    { id: "bookmarks", label: "Bookmarks", icon: BookmarkPlus },
     { id: "reviews", label: "Reviews", icon: Star },
-  ] as const;
+  ], []);
 
+  // 2. Function to update URL without refreshing the page
+  const handleTabChange = (tabId: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tabId);
+    
+    // Uses router.replace to update the URL bar without adding a million items to browser history
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   return (
     <div className="mt-6 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-      {/* Modern Tab Navigation */}
+      {/* Tab Navigation */}
       <div className="flex items-center border-b border-gray-100 bg-gray-50/50 px-2 pt-2">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
@@ -44,7 +70,7 @@ const [activeTab, setActiveTab] = useState<"overview" | "qa" | "Bookmarks" | "re
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               className={`
                 relative flex items-center gap-2 px-6 py-3.5 text-sm font-semibold transition-all duration-200 rounded-t-lg
                 ${
@@ -60,7 +86,7 @@ const [activeTab, setActiveTab] = useState<"overview" | "qa" | "Bookmarks" | "re
               />
               {tab.label}
 
-              {/* Active Indicator Line (Optional visual flair) */}
+              {/* Active Indicator Line */}
               {isActive && (
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-purple-600 rounded-t-full" />
               )}
@@ -70,19 +96,30 @@ const [activeTab, setActiveTab] = useState<"overview" | "qa" | "Bookmarks" | "re
       </div>
 
       {/* Content Area */}
+      
       <div className="p-8 min-h-[400px]">
         {activeTab === "overview" && <OverviewTab lecture={lecture} />}
-        {activeTab === "qa" && <QnaTab lectureId={lecture.id} courseId={courseId} adminId={adminId} />}
-        {activeTab === "Bookmarks" && (
-          <BookmarksTab 
-             lecture={lecture} currentUserId={userId || ""} 
-             onBookmarkClick={onBookmarkClick}
-             bookmarks={bookmarks || []}
-             loadingBookmarks={loadingBookmarks}
-             setBookmarks={setBookmarks}
-             setLoadingBookmarks={setLoadingBookmarks}
-             />
+        
+        {activeTab === "qa" && (
+          <QnaTab 
+            lectureId={lecture.id} 
+            courseId={courseId} 
+            adminId={adminId} 
+          />
         )}
+        
+        {activeTab === "bookmarks" && (
+          <BookmarksTab 
+            lecture={lecture} 
+            currentUserId={userId || ""} 
+            onBookmarkClick={onBookmarkClick}
+            bookmarks={bookmarks || []}
+            loadingBookmarks={loadingBookmarks}
+            setBookmarks={setBookmarks}
+            setLoadingBookmarks={setLoadingBookmarks}
+          />
+        )}
+        
         {activeTab === "reviews" && (
           <ReviewsTab
             key={lecture.id}
