@@ -36,7 +36,6 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
     
-    // Get month and year from params, default to current date if missing
     const month = parseInt(searchParams.get("month") || new Date().getMonth().toString());
     const year = parseInt(searchParams.get("year") || new Date().getFullYear().toString());
 
@@ -44,17 +43,14 @@ export async function GET(req: Request) {
       return new NextResponse("User ID is required", { status: 400 });
     }
 
-    // 1. Define date boundaries for the requested month
     const targetDate = new Date(year, month);
     const monthStart = startOfMonth(targetDate);
     const monthEnd = endOfMonth(targetDate);
 
-    // 2. Define date boundaries for "Today" (for the circles)
     const now = new Date();
     const todayStart = startOfDay(now);
     const todayEnd = endOfDay(now);
 
-    // Fetch all activities within that month
     const monthActivities = await db.userActivity.findMany({
       where: {
         userId: userId,
@@ -65,23 +61,26 @@ export async function GET(req: Request) {
       },
     });
 
-    // 3. Calculate "Today's" stats from the fetched results
-    // This is more efficient than a second DB query
     const todayActivities = monthActivities.filter(a => 
       a.createdAt >= todayStart && a.createdAt <= todayEnd
     );
 
     const stats = {
-      // Circle Stats (Today only)
+      // Today's Stats
       videoWatchedMins: todayActivities
         .filter((a) => a.type === "VIDEO_WATCH")
         .reduce((sum, a) => sum + (a.duration || 0), 0),
+      
       quizzesCompleted: todayActivities
         .filter((a) => a.type === "QUIZ_ATTEMPT")
         .length,
+
+      // ADDED: Assignments submitted in the last 24h (today's window)
+      assignmentsSubmitted: todayActivities
+        .filter((a) => a.type === "ASSIGNMENT_SUBMISSION")
+        .length,
       
       // Heatmap Data (Full Month)
-      // Returns an array of unique date strings like ["2026-01-01", "2026-01-05"]
       activeDays: [...new Set(monthActivities.map(a => 
         a.createdAt.toISOString().split('T')[0]
       ))],
