@@ -43,34 +43,45 @@ const [activeTab, setActiveTab] = useState<"overview" | "qa" | "Bookmarks" | "re
 
           return (
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`
-                relative flex items-center gap-2 px-6 py-3.5 text-sm font-semibold transition-all duration-200 rounded-t-lg
-                ${
-                  isActive
-                    ? "text-purple-700 bg-white shadow-[0_-1px_2px_rgba(0,0,0,0.03)] border border-b-0 border-gray-200 z-10"
-                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-100/50"
-                }
-              `}
-            >
-              <Icon
-                size={16}
-                className={isActive ? "text-purple-600" : "text-gray-400"}
-              />
-              {tab.label}
+  key={tab.id}
+  onClick={() => setActiveTab(tab.id)}
+  className={`
+    relative flex items-center gap-2 
+    /* Responsive Padding: Small on mobile, large on desktop */
+    px-4 md:px-3 lg:px-6 py-3.5 
+    /* Responsive Text: Extra small on mobile, small on desktop */
+    text-xs lg:text-sm font-semibold 
+    transition-all duration-200 rounded-t-lg
+    /* Prevent text wrapping on mobile */
+    whitespace-nowrap flex-1 md:flex-none justify-center
+    ${
+      isActive
+        ? "text-purple-700 bg-white shadow-[0_-1px_2px_rgba(0,0,0,0.03)] border border-b-0 border-gray-200 z-10"
+        : "text-gray-500 hover:text-gray-700 hover:bg-gray-100/50"
+    }
+  `}
+>
+  {/* Icon hidden on mobile, shown on medium screens and up */}
+  <Icon
+    size={16}
+    className={`
+      hidden md:block shrink-0
+      ${isActive ? "text-purple-600" : "text-gray-400"}
+    `}
+  />
+  
+  <span>{tab.label}</span>
 
-              {/* Active Indicator Line (Optional visual flair) */}
-              {isActive && (
-                <div className="absolute top-0 left-0 w-full h-[2px] bg-purple-600 rounded-t-full" />
-              )}
-            </button>
+  {isActive && (
+    <div className="absolute top-0 left-0 w-full h-[2px] bg-purple-600 rounded-t-full" />
+  )}
+</button>
           );
         })}
       </div>
 
       {/* Content Area */}
-      <div className="p-8 min-h-[400px]">
+      <div className="p-4  md:p-8 min-h-[400px]">
         {activeTab === "overview" && <OverviewTab lecture={lecture} />}
         {activeTab === "qa" && <QnaTab lectureId={lecture.id} courseId={courseId} adminId={adminId} />}
         {activeTab === "Bookmarks" && (
