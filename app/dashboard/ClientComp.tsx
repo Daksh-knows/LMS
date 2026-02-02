@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { Info, ExternalLink, Loader2, FileQuestion, Video, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { Info, ExternalLink, Loader2, FileQuestion, Video, ChevronLeft, ChevronRight, CalendarDays, ArrowRight, CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -15,6 +15,7 @@ export default function OverviewClient({ data }: { data: any }) {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [loadingResumeId, setLoadingResumeId] = useState<string | null>(null);
   const { data: session } = useSession();
   const [stats, setStats] = useState({
     videoWatchedMins: 0,
@@ -125,6 +126,24 @@ export default function OverviewClient({ data }: { data: any }) {
         return err.message;
       },
     });
+  };
+
+  const handleResumeCourse = async (e: React.MouseEvent, courseId: string) => {
+    e.stopPropagation(); // Stop parent click
+    setLoadingResumeId(courseId);
+
+    try {
+        const response = await fetch(`/api/course/${courseId}/resume`);
+        const data = await response.json();
+        
+        if (data.url) {
+            router.push(data.url);
+        }
+    } catch (error) {
+        toast.error("Failed to load course");
+        setLoadingResumeId(null); // Reset on error
+    }
+    // Note: We don't reset loadingResumeId on success because the page is navigating away
   };
 
   return (
@@ -254,11 +273,24 @@ export default function OverviewClient({ data }: { data: any }) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredRecommended.map((course) => {
               const isProcessing = processingId === course.id;
-
+              // Check the flag from our new API
+              const isEnrolled = course.isEnrolled;
+              const isResuming = loadingResumeId === course.id;
               return (
                 <div 
                   key={course.id} 
-                  className="group relative bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
+                  // 1. If enrolled, the whole card is a link. If not, it's just a card.
+                  onClick={(e) => {
+                      if (isEnrolled) {
+                        handleResumeCourse(e, course.id);
+                      }
+                  }}
+                  className={`group relative bg-white rounded-3xl overflow-hidden border shadow-sm transition-all duration-300 hover:-translate-y-2
+                    ${isEnrolled 
+                      ? "border-green-200 cursor-pointer hover:shadow-green-100/50" // Green tint for enrolled
+                      : "border-gray-100 hover:shadow-xl"
+                    }
+                  `}
                 >
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <img 
@@ -267,6 +299,7 @@ export default function OverviewClient({ data }: { data: any }) {
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
                     />
                     
+                    {/* Tags */}
                     <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                       {Array.isArray(course.tags) && course.tags.map((tag: string) => (
                         <span 
@@ -278,18 +311,34 @@ export default function OverviewClient({ data }: { data: any }) {
                       ))}
                     </div>
 
+                    {/* OVERLAY BUTTON (Hover) */}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <button 
-                          onClick={(e) => handleQuickEnroll(e, course.id, course.title)}
-                          disabled={isProcessing}
-                          className="bg-blue-600 text-white px-6 py-3 rounded-full font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-xl hover:bg-blue-700 transition-all disabled:bg-gray-400"
-                        >
-                          {isProcessing ? (
-                            <>Enrolling... <Loader2 size={14} className="animate-spin" /></>
-                          ) : (
-                            <>Enroll Now <ExternalLink size={14} /></>
-                          )}
-                        </button>
+                      {isEnrolled ? (
+                          <button 
+                            onClick={(e) => handleResumeCourse(e, course.id)}
+                            disabled={isResuming}
+                            className="bg-green-500 text-white px-6 py-3 rounded-full font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-xl hover:bg-green-600 transition-all"
+                          >
+                            {isResuming ? (
+                              <>Loading... <Loader2 size={14} className="animate-spin"/></>
+                            ) : (
+                              <>Continue Learning <ArrowRight size={14} /></>
+                            )}
+                          </button>
+                      ): (
+                          // 3. ENROLL BUTTON (If Not Enrolled)
+                          <button 
+                            onClick={(e) => handleQuickEnroll(e, course.id, course.title)}
+                            disabled={isProcessing}
+                            className="bg-blue-600 text-white px-6 py-3 rounded-full font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-xl hover:bg-blue-700 transition-all disabled:bg-gray-400"
+                          >
+                            {isProcessing ? (
+                              <>Enrolling... <Loader2 size={14} className="animate-spin" /></>
+                            ) : (
+                              <>Enroll Now <ExternalLink size={14} /></>
+                            )}
+                          </button>
+                      )}
                     </div>
                   </div>
 
@@ -300,14 +349,26 @@ export default function OverviewClient({ data }: { data: any }) {
                     <p className="text-gray-400 text-sm mt-2 line-clamp-1">{course.subtitle}</p>
                     
                     <div className="mt-6 flex items-center justify-between">
-                        <button 
-                           onClick={(e) => handleQuickEnroll(e, course.id, course.title)}
-                           className="text-blue-600 font-bold text-sm hover:underline disabled:text-gray-400"
-                           disabled={isProcessing}
-                        >
-                          {isProcessing ? "Processing..." : "Enroll Now"}
-                        </button>
-                        <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                        {isEnrolled ? (
+                          // 4. TEXT LINK (If Enrolled)
+                          <span className="text-green-600 font-bold text-sm flex items-center gap-2">
+                              <CheckCircle2 size={16} /> Enrolled
+                          </span>
+                        ) : (
+                          // 5. TEXT BUTTON (If Not Enrolled)
+                          <button 
+                              onClick={(e) => handleQuickEnroll(e, course.id, course.title)}
+                              className="text-blue-600 font-bold text-sm hover:underline disabled:text-gray-400"
+                              disabled={isProcessing}
+                          >
+                              {isProcessing ? "Processing..." : "Enroll Now"}
+                          </button>
+                        )}
+
+                        {/* Arrow Icon */}
+                        <div className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
+                            isEnrolled ? "bg-green-100 text-green-600" : "bg-blue-50 text-blue-600"
+                        }`}>
                             →
                         </div>
                     </div>
@@ -317,29 +378,6 @@ export default function OverviewClient({ data }: { data: any }) {
             })}
           </div>
         )}
-      </div>
-    </div>
-  );
-}
-
-function ProgressCircle({ value, label, color }: { value: number; label: string; color: string }) {
-  return (
-    <div className="flex flex-col items-center">
-      <div className="relative w-32 h-32">
-        <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-          <circle cx="18" cy="18" r="16" fill="none" className="stroke-gray-100" strokeWidth="2" />
-          <circle
-            cx="18" cy="18" r="16" fill="none"
-            className={color}
-            strokeWidth="2"
-            strokeDasharray={`${(value / 100) * 100}, 100`}
-            strokeLinecap="round"
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-xl font-bold">{value}</span>
-          <span className="text-[8px] text-gray-400 font-bold uppercase leading-tight px-4">{label}</span>
-        </div>
       </div>
     </div>
   );
