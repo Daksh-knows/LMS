@@ -12,11 +12,12 @@ import {
   ClipboardList,
   Lock,
   SpellCheck,
-  TvMinimalPlay
+  TvMinimalPlay,
+  Link
 } from "lucide-react";
 
 // --- Types (You can move these to types.ts later) ---
-export type ItemType = "VIDEO" | "TEXT" | "QUIZ" | "ASSIGNMENT";
+export type ItemType = "VIDEO" | "TEXT" | "QUIZ" | "ASSIGNMENT" | "LIVE";
 
 export interface Resource {
   title: string;
@@ -129,6 +130,8 @@ const [openSections, setOpenSections] = useState<string[]>([]);
         return <SpellCheck size={size} className={className} />;
       case "ASSIGNMENT":
         return <ClipboardList size={size} className={className} />;
+      case "LIVE":
+        return <Link size={size} className={className} />;
       default:
         return <PlayCircle size={size} className={className} />;
     }
@@ -185,6 +188,7 @@ const getStatusIndicator = (item: CourseItem, isActive: boolean) => {
     if (item.type === "TEXT") return "Read";
     if (item.type === "QUIZ") return "Quiz";
     if (item.type === "ASSIGNMENT") return "Task";
+    if (item.type === "LIVE") return "Live"; 
     return "";
   };
 
