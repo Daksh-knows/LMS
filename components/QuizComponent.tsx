@@ -159,7 +159,7 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
   
   if (quizState === 'already-submitted') {
     return (
-          <div className="w-full max-w-full pt-4 md:pt-10 px-4 md:px-6 flex flex-col items-center">
+          <div className="w-full mb-6 max-w-full pt-4 md:pt-10 px-4 md:px-6 flex flex-col items-center">
               <div className="bg-white border-2 border-green-100 rounded-2xl md:rounded-3xl p-6 md:pt-10 text-center shadow-xl max-w-2xl w-full">
                 
                 {/* Icon: Slightly smaller on mobile */}
