@@ -29,7 +29,10 @@ export default function LayoutShell({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsSidebarOpen(false)}
+              onClick={() => {
+                console.log("Backdrop clicked");
+                return setIsSidebarOpen(false);
+              }}
               className="fixed inset-0 bg-black/40 backdrop-blur-md z-[90] lg:hidden"
             />
             
