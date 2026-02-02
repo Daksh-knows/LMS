@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import { FileText, Upload, ExternalLink, CheckCircle2, MessageSquare, Award, Clock, X } from "lucide-react";
+import { FileText, Upload, ExternalLink, CheckCircle2, MessageSquare, Award, Clock, X, Eye } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface Resource {
@@ -21,9 +21,10 @@ interface AssignmentProps {
 
 const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
   const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null); // State for preview
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null); // Ref for clearing input
+  const fileInputRef = useRef<HTMLInputElement>(null); 
   const [loading, setLoading] = useState(true);
   const [submissionData, setSubmissionData] = useState<any>(null);
   const [status, setStatus] = useState<"NOT_SUBMITTED" | "SUBMITTED" | "GRADED">("NOT_SUBMITTED");
@@ -34,7 +35,6 @@ const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
         setLoading(true);
         const res = await fetch(`/api/lecture/${lecture.id}/assignment-status`);
         const data = await res.json();
-        console.log("Fetched assignment component data:", data);
         if (data) {
           setStatus(data.status);
           setSubmissionData(data.submission);
@@ -56,13 +56,21 @@ const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
         toast.error("Please select a PDF file");
         return;
       }
+      
+      // Cleanup old preview URL if exists
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      
+      const url = URL.createObjectURL(selectedFile);
       setFile(selectedFile);
+      setPreviewUrl(url);
       toast.success(`${selectedFile.name} selected`);
     }
   };
   
   const handleCancelSelection = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setFile(null);
+    setPreviewUrl(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = ""; 
     }
@@ -72,7 +80,6 @@ const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
   const handleSubmit = async () => {
     if (!file) return;
 
-    // Start loading toast
     const loadingToast = toast.loading("Uploading assignment...");
     setIsUploading(true);
 
@@ -87,9 +94,10 @@ const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
       });
 
       if (response.ok) {
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
         setIsSubmitted(true);
         setFile(null);
-        // Update toast to success
+        setPreviewUrl(null);
         setStatus("SUBMITTED");
         toast.success("Assignment submitted successfully!", { id: loadingToast });
       } else {
@@ -97,7 +105,6 @@ const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
       }
     } catch (error) {
       console.error("Submission error:", error);
-      // Update toast to error
       toast.error("Submission failed. Please try again.", { id: loadingToast });
     } finally {
       setIsUploading(false);
@@ -105,7 +112,7 @@ const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
   };
 
   if (loading) return <div className="p-10 text-center animate-pulse">Checking submission status...</div>;
-  // console.log("Assignment status:", status, submissionData);
+
   return (
     <div className="max-w-4xl mx-auto p-6 md:p-10 space-y-8">
       {/* Header */}
@@ -147,7 +154,6 @@ const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
                 </div>
                 
                 <div className="flex flex-col items-end gap-3 w-full md:w-auto">
-                  {/* The File Upload / Selected File Box */}
                   <div className="relative w-full md:w-64">
                     <label className="cursor-pointer bg-white border-2 border-dashed border-blue-300 rounded-xl px-6 py-4 hover:bg-blue-100 transition-all flex flex-col items-center justify-center text-center">
                       <input 
@@ -163,8 +169,19 @@ const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
                     </label>
 
                     {file && (
-                        <div className="flex items-center justify-end gap-3 mt-4 w-full animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex flex-wrap items-center justify-end gap-3 mt-4 w-full animate-in fade-in slide-in-from-top-2 duration-300">
                           
+                          {/* --- PREVIEW BUTTON --- */}
+                          <a
+                            href={previewUrl!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-blue-600 bg-white border border-blue-200 rounded-xl hover:bg-blue-50 transition-all"
+                          >
+                            <Eye size={16} />
+                            Preview
+                          </a>
+
                           {/* --- CANCEL BUTTON --- */}
                           <button
                             onClick={handleCancelSelection}
@@ -190,7 +207,7 @@ const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
                             ) : (
                               <>
                                 <Upload size={16} />
-                                Submit Assignment
+                                Submit
                               </>
                             )}
                           </button>
@@ -239,7 +256,7 @@ const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
                 <div className="flex items-center gap-2 mb-2 text-green-800 font-bold text-sm">
                   <MessageSquare size={16} /> Instructor Feedback
                 </div>
-                <p className="text-gray-700 text-sm italic italic leading-relaxed">
+                <p className="text-gray-700 text-sm italic leading-relaxed">
                   "{submissionData.feedback}"
                 </p>
               </div>
@@ -256,4 +273,4 @@ const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
   );
 };
 
-export default AssignmentComponent;
+export default AssignmentComponent; 
