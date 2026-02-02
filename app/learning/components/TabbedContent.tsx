@@ -46,7 +46,7 @@ const TabbedContent: React.FC<Props> = ({
   const tabs = useMemo(() => [
     { id: "overview", label: "Overview", icon: BookOpen },
     { id: "qa", label: "FAQ", icon: MessageSquare },
-    { id: "bookmarks", label: "Bookmarks", icon: BookmarkPlus },
+    ...(lecture.type === "VIDEO" || lecture.type === "LIVE" ? [{ id: "bookmarks", label: "Bookmarks", icon: BookmarkPlus }] : []),
     { id: "reviews", label: "Reviews", icon: Star },
   ], []);
 
