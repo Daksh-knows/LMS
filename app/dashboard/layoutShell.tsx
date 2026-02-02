@@ -19,7 +19,7 @@ export default function LayoutShell({
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-white">
+    <div className="flex h-screen overflow-hidden bg-transparent">
       {/* 1. MOBILE ORCHESTRATION */}
       {/* We use AnimatePresence only for the mobile-specific elements (Backdrop & Mobile Drawer) */}
       <AnimatePresence>

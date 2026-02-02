@@ -156,7 +156,7 @@ export default function OverviewClient({ data }: { data: any }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4 px-3 rounded-2xl">
           
           {/* Today's Progress - Simplified Display */}
-  <div className="lg:col-span-1 bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm">
+  <div className="lg:col-span-1 bg-transparent rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm">
     <h3 className="text-gray-700 font-bold mb-4 sm:mb-6 flex items-center gap-2">
       Today's Progress 
       <div className="relative group">
