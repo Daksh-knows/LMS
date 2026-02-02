@@ -416,4 +416,5 @@ enum TicketPriority {
 enum ActivityType {
   VIDEO_WATCH
   QUIZ_ATTEMPT
+  ASSIGNMENT_SUBMISSION
 }
