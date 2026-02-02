@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function LayoutShell({ 
   children, 
@@ -13,26 +14,60 @@ export default function LayoutShell({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // Helper to toggle sidebar state
+  const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Pass state and close function to Sidebar */}
+    <div className="flex h-screen overflow-hidden bg-white">
+      {/* 1. MOBILE ORCHESTRATION */}
+      {/* We use AnimatePresence only for the mobile-specific elements (Backdrop & Mobile Drawer) */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <>
+            {/* Soft Backdrop - Mobile Only */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSidebarOpen(false)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-md z-[90] lg:hidden"
+            />
+            
+            {/* Mobile Sidebar Instance 
+               This instance only exists when isOpen is true on mobile.
+            */}
+            <Sidebar 
+              user={user} 
+              isOpen={true} 
+              onClose={() => setIsSidebarOpen(false)} 
+            />
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* 2. DESKTOP SIDEBAR INSTANCE */}
+      {/* This is always in the DOM but hidden on mobile via CSS inside the Sidebar component */}
       <Sidebar 
         user={user} 
-        isOpen={isSidebarOpen} 
-        onClose={() => setIsSidebarOpen(false)} 
+        isOpen={false} 
+        onClose={() => {}} 
       />
 
-      <div className="flex-1 flex flex-col relative overflow-y-auto">
-        {/* Pass toggle function to Header */}
+      {/* 3. MAIN VIEWPORT */}
+      <div className="flex-1 flex flex-col relative min-w-0">
         <Header 
           user={user} 
-          onMenuClick={() => setIsSidebarOpen(true)} 
+          onMenuClick={toggleSidebar} 
+          isSidebarOpen={isSidebarOpen}
         />
         
-        <main
-          className="lg:ml-64 mt-16 min-h-[calc(100vh-64px)] p-4 md:p-8"
-        >
-          {children}
+        {/* Scrollable area for content. 
+           Added 'isolate' to create a new stacking context for children.
+        */}
+        <main className="flex-1 overflow-y-auto lg:pl-64 mt-16 isolate">
+          <div className="max-w-[1600px] mx-auto p-4 md:p-8 min-h-[calc(100vh-64px)]">
+            {children}
+          </div>
         </main>
       </div>
     </div>
