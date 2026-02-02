@@ -79,9 +79,7 @@ export const OverviewTab: React.FC<{ lecture: Lecture }> = ({ lecture }) => {
       {/* 3. Database Metadata */}
       <div className="flex flex-wrap gap-8 pt-6 border-t border-gray-100">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-gray-100 rounded-full text-gray-500">
-            <Clock size={16} />
-          </div>
+          
 
           <div>
             {/* <span className="font-bold text-gray-900 text-sm block">

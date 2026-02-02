@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { motion, AnimatePresence } from "framer-motion";
+import Footer from "@/components/Footer";
 
 export default function LayoutShell({ 
   children, 
@@ -68,8 +69,11 @@ export default function LayoutShell({
            Added 'isolate' to create a new stacking context for children.
         */}
         <main className="flex-1 overflow-y-auto lg:pl-64 mt-16 isolate">
-          <div className="max-w-[1600px] mx-auto p-4 md:p-8 min-h-[calc(100vh-64px)]">
-            {children}
+          <div className="max-w-[1600px] mx-auto  min-h-[calc(100vh-64px)]">
+            <div className="p-4 md:p-6">
+                {children}
+            </div>
+            <Footer />
           </div>
         </main>
       </div>
