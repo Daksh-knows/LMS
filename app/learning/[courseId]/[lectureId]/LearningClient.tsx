@@ -12,6 +12,7 @@ import TabbedContent from "../../components/TabbedContent";
 import QuizComponent from "@/components/QuizComponent";
 import AssignmentComponent from "@/components/AssignmentComponent";
 import ArticleComponent from "../../components/ArticleComponent";
+import LiveSessionComponent from "../../components/LiveSessionComponent";
 
 interface LearningClientProps {
   course: any;
@@ -160,6 +161,16 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
                              seekTo={seekTo} 
                              onSeekComplete={handleSeekComplete}
                              onBookmarkAdded={handleAddBookmark}
+                          />
+                        </div>
+                      )}
+
+                      {/* --- LIVE UI --- */}
+                      {currentLecture.type === 'LIVE' && currentLecture.description && (
+                        <div className="h-full w-full">
+                          <LiveSessionComponent
+                            data={currentLecture.description} 
+                            lectureTitle={currentLecture.title} 
                           />
                         </div>
                       )}
