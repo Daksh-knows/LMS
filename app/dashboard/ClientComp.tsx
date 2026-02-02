@@ -173,7 +173,7 @@ export default function OverviewClient({ data }: { data: any }) {
         <span className="text-[10px] sm:text-xs font-semibold text-blue-800 uppercase tracking-wider">Video</span>
       </div>
       <p className="flex items-baseline gap-1 text-2xl sm:text-3xl md:text-4xl font-black text-blue-900">
-        {Math.round(stats.videoWatchedMins || 0)}
+        {Math.round(stats.videoWatchedMins /60|| 0)}
         <span className="text-xs sm:text-sm font-normal">mins</span>
       </p>
     </div>

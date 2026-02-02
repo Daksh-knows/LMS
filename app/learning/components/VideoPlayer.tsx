@@ -100,9 +100,11 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
   //function to track user activity
     const saveWatchActivity = async () => {
       if (totalSecondsWatched.current <= 0) return;
-
-      const minutesToSave = totalSecondsWatched.current / 60;
-      
+      console.log('----------------------------------------');
+      console.log("Attempting to save watch activity...");
+      const minutesToSave = totalSecondsWatched.current ;
+      console.log("Saving watch activity:", minutesToSave, "minutes");
+      console.log('----------------------------------------');
       const success = await fetch(`/api/user/activity?userId=${userId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
