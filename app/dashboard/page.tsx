@@ -44,7 +44,7 @@ export default async function OverviewPage() {
 
   // 5. Pass everything to the client component
   return (
-    <div className="min-h-screen bg-[#fcfcfc]">
+    <div className="min-h-screen bg-transparent">
     <OverviewClient
       data={{
         // Use JSON.parse(JSON.stringify()) to strip non-serializable Dates/Decimals

@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+
+
+
 /* 1. Add the Typography Plugin */
 @plugin "@tailwindcss/typography";
 
@@ -41,4 +44,30 @@
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
   }
+}
+
+/* globals.css */
+@keyframes slide {
+  from { background-position: 0 0; }
+  to { background-position: 40px 40px; }
+}
+
+.moving-grid {
+  /* Changed #e5e7eb to #000000 (Black) just to test visibility */
+  background-image: radial-gradient(#000000 1.5px, transparent 1.5px);
+  background-size: 30px 30px; /* Slightly larger grid */
+  animation: slide 3s linear infinite;
+  opacity: 0.1; /* Control intensity here instead */
+}
+
+
+@keyframes float {
+  0% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(10vw, 10vh) scale(1.1); }
+  66% { transform: translate(-5vw, 15vh) scale(0.9); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+.animate-blob {
+  animation: float 10s ease-in-out infinite;
 }
