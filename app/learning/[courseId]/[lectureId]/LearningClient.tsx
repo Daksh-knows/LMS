@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronLeft, VideoOff, Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // Components
 import VideoPlayer from "../../components/VideoPlayer";
@@ -32,6 +32,7 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
   const [seekTo, setSeekTo] = useState<string | null>(null);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [loadingBookmarks, setLoadingBookmarks] = useState(false);
+  const searchParams = useSearchParams();
 // Create a handler to clear the seek value after the player reacts
   const handleSeekComplete = () => setSeekTo(null);
   const router = useRouter();
@@ -100,7 +101,8 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
   }, [lectureId]);
 
   const handleSelectLecture = (selectedLecture: any) => {
-    router.push(`/learning/${course.id}/${selectedLecture.id}`);
+    const currentTab = searchParams.get("tab") || "overview";
+    router.push(`/learning/${course.id}/${selectedLecture.id}?tab=${currentTab}`);
   };
 
   // --- Helper to parse Quiz Metadata ---
