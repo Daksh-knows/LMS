@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { Info, ExternalLink, Loader2, FileQuestion, Video, ChevronLeft, ChevronRight, CalendarDays, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Info, ExternalLink, Loader2, FileQuestion, Video, ChevronLeft, ChevronRight, CalendarDays, ArrowRight, CheckCircle2, CheckCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths } from "date-fns";
+import { assign } from "nodemailer/lib/shared";
 
 export default function OverviewClient({ data }: { data: any }) {
   const [courseType, setCourseType] = useState("All");
@@ -20,7 +21,8 @@ export default function OverviewClient({ data }: { data: any }) {
   const [stats, setStats] = useState({
     videoWatchedMins: 0,
     quizzesCompleted: 0,
-    activeDays: [] as string[] // Array of dates like ["2024-05-20", "2024-05-21"]
+    activeDays: [] as string[] ,
+    assignmentsSubmitted: 0
   });
 
 
@@ -152,32 +154,56 @@ export default function OverviewClient({ data }: { data: any }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4 px-3 rounded-2xl">
         
         {/* Today's Progress - Simplified Display */}
-        <div className="lg:col-span-1 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-          <h3 className="text-gray-700 font-bold mb-6 flex items-center gap-2">
-            Today's Progress <Info size={14} className="text-gray-400" />
-          </h3>
-          <div className="flex flex-col gap-5 justify-around">
-            <div className="bg-blue-50/50 px-6 py-6 rounded-2xl border border-blue-100 flex justify-between">
-              <div className="flex items-center gap-3 mb-2">
-                <Video className="text-blue-600" size={20} />
-                <span className="text-sm font-medium text-blue-800 uppercase tracking-wider">Video Time</span>
-              </div>
-              <p className="text-4xl font-black text-blue-900 ">
-                {Math.round(stats.videoWatchedMins || 0)} <span className="text-lg font-normal">mins</span>
-              </p>
-            </div>
+<div className="lg:col-span-1 bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm">
+  <h3 className="text-gray-700 font-bold mb-4 sm:mb-6 flex items-center gap-2">
+    Today's Progress 
+    <div className="relative group">
+      <Info size={14} className="text-gray-400 cursor-help" />
+      {/* Your Tooltip Component Here */}
+    </div>
+  </h3>
 
-            <div className="bg-green-100 p-6 rounded-2xl border border-green-100 flex justify-between">
-              <div className="flex items-center gap-3 mb-2">
-                <FileQuestion className="text-green-600" size={20} />
-                <span className="text-sm font-medium text-green-800 uppercase tracking-wider">Quizzes</span>
-              </div>
-              <p className="text-4xl font-black text-green-900">
-                {stats.quizzesCompleted || 0} <span className="text-lg font-normal">completed</span>
-              </p>
-            </div>
-          </div>
-        </div>
+  {/* Changed to a grid that is 1 col on mobile, 2 on tablet, and 1 on large (since it's a sidebar) */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-5">
+    
+    {/* Video Card */}
+    <div className="bg-blue-50/50 p-4 sm:p-6 rounded-2xl border border-blue-100 flex justify-between items-center sm:items-start lg:items-center">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <Video className="text-blue-600 shrink-0" size={18} />
+        <span className="text-[10px] sm:text-xs font-semibold text-blue-800 uppercase tracking-wider">Video</span>
+      </div>
+      <p className="flex items-baseline gap-1 text-2xl sm:text-3xl md:text-4xl font-black text-blue-900">
+        {Math.round(stats.videoWatchedMins || 0)}
+        <span className="text-xs sm:text-sm font-normal">mins</span>
+      </p>
+    </div>
+
+    {/* Quizzes Card */}
+    <div className="bg-yellow-50 p-4 sm:p-6 rounded-2xl border border-yellow-100 flex justify-between items-center sm:items-start lg:items-center">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <FileQuestion className="text-yellow-600 shrink-0" size={18} />
+        <span className="text-[10px] sm:text-xs font-semibold text-yellow-800 uppercase tracking-wider">Quizzes</span>
+      </div>
+      <p className="flex items-baseline gap-1 text-2xl sm:text-3xl md:text-4xl font-black text-yellow-900">
+          {stats.quizzesCompleted || 0}
+        <span className="text-xs sm:text-sm font-normal">done</span>
+      </p>
+    </div>
+
+    {/* Assignments Card - Spans 2 cols on tablet for a balanced look */}
+    <div className="bg-green-50 p-4 sm:p-6 rounded-2xl border border-green-100 flex justify-between items-center sm:items-start lg:items-center sm:col-span-2 lg:col-span-1">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <CheckCircle className="text-green-600 shrink-0" size={18} />
+        <span className="text-[10px] sm:text-xs font-semibold text-green-800 uppercase tracking-wider">Assignments</span>
+      </div>
+      <p className="flex items-baseline gap-1 text-2xl sm:text-3xl md:text-4xl font-black text-green-900">
+        {stats.assignmentsSubmitted || 0}
+        <span className="text-xs sm:text-sm font-normal">sent</span>
+      </p>
+    </div>
+
+  </div>
+</div>
 
         {/* Monthly Activity Heatmap */}
           <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">

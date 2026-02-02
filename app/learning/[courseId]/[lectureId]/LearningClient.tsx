@@ -149,7 +149,6 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
               ) : currentLecture ? (
                 <>
                   {/* --- THE STAGE (Video/Quiz Parent) --- */}
-                  {/* Added bg-black to keep the stage distinct and max-h to reduce size */}
                   <div className="w-full bg-black flex justify-center items-center h-[50vh] md:h-[60vh] lg:h-[65vh] overflow-hidden shadow-inner">
                     <div className="w-full h-full max-w-5xl mx-auto">
                       {/* --- lecture UI --- */}
@@ -222,7 +221,7 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
             </div>
           )}
 
-          <div className=" md:hidden border-t border-gray-200">
+          <div className="md:hidden border-t border-gray-200">
             <CourseSidebar
               sections={course.modules || []}
               currentLectureId={lectureId}
@@ -232,7 +231,7 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
         </main>
          
          {/* Course Sidebar */}
-        <aside className="hidden md:block w-[350px] shrink-0 border-l border-gray-200 h-full">
+        <aside className="hidden md:block w-[220px] md:w-[260px] xl:w-[350px] shrink-0 border-l border-gray-200 h-full">
           <CourseSidebar
             sections={course.modules || []}
             currentLectureId={lectureId}

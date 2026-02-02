@@ -72,9 +72,30 @@ export default function Header({ user, onMenuClick, isSidebarOpen }: { user: any
           </div>
         </div>
 
-        <button className="text-gray-400 hover:text-gray-600 transition-colors">
-          <Info size={18} />
-        </button>
+          <div className="relative group flex items-center">
+            {/* The Info Button */}
+            <button className="text-gray-400 hover:text-gray-600 transition-colors p-1 focus:outline-none">
+              <Info size={18} />
+            </button>
+
+            {/* The Tooltip Card */}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-64 p-3 
+                            bg-gray-900 text-white text-xs rounded-xl shadow-xl z-[70] 
+                            pointer-events-none 
+                            /* Slower Animation Styles */
+                            opacity-0 invisible group-hover:opacity-100 group-hover:visible 
+                            translate-y-[-12px] group-hover:translate-y-0
+                            transition-all duration-500 ease-in-out">
+              <div className="relative">
+                {/* Tooltip Arrow */}
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 border-8 border-transparent border-b-gray-900" />
+                
+                <p className="leading-relaxed text-center">
+                  Watch videos, attempt quizzes, and submit assignments to keep your streak going! 🔥
+                </p>
+              </div>
+            </div>
+          </div>
       </div>
 
       <div className="flex items-center gap-4">

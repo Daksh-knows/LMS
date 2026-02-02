@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth-utils";
 import { useSession } from "next-auth/react";
 import { Loader2 } from "lucide-react";
+import { motion } from "framer-motion"; // Import motion
 import { generateCertificate } from "@/lib/certificate-generator";
 
 export interface EnrolledCourse {
@@ -22,10 +22,12 @@ export default function CourseFilterList() {
   const [filter, setFilter] = useState("All");
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [initialCourses, setInitialCourses] = useState<EnrolledCourse[]>([]);
-  const [loading, setLoading] = useState(true); // Loading state for the initial fetch
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { data: session } = useSession();
   const userId = session?.user?.id;
+  
+  const tabs = ["All", "Completed", "In Progress"];
   
   useEffect(() => {
     const fetchCourses = async () => {
@@ -94,27 +96,34 @@ export default function CourseFilterList() {
       };
   
   if(loading) {
-    return (
-    <div className="w-full h-screen flex items-center justify-center">
-      <Loader2 className="animate-spin text-blue-600" size={40} />
-    </div>
-    );
-  }
+      return (
+        <div className="w-full h-screen flex items-center justify-center">
+          <Loader2 className="animate-spin text-blue-600" size={40} />
+        </div>
+      );
+    }
   return (
       <div className="space-y-6">
       {/* Filters: Allow horizontal scrolling on very small screens */}
-      <div className="flex gap-2 md:gap-4 overflow-x-auto pb-2 no-scrollbar">
-        {["All", "Completed", "In Progress"].map((tab) => (
+      <div className="flex p-1 bg-gray-100/50 rounded-full w-fit border border-gray-200 gap-1">
+        {tabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setFilter(tab)}
-            className={`px-4 md:px-6 py-2 rounded-full text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
-              filter === tab
-                ? "bg-gray-800 text-white"
-                : "bg-white text-gray-500 border border-gray-200"
+            className={`relative px-5 md:px-8 py-2 rounded-full text-xs md:text-sm font-semibold transition-colors duration-300 whitespace-nowrap focus-visible:outline-none ${
+              filter === tab ? "text-white" : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            {tab}
+            {/* The Sliding Pill */}
+            {filter === tab && (
+              <motion.div
+                layoutId="activeTabPill"
+                className="absolute inset-0 bg-gray-900 rounded-full"
+                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+              />
+            )}
+            {/* Text Label - Needs z-index to stay above the pill */}
+            <span className="relative z-10">{tab}</span>
           </button>
         ))}
       </div>
