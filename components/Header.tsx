@@ -1,20 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Info, LogOut, Loader2, Menu } from "lucide-react";
+import { Info, LogOut, Loader2, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
+import {motion } from "framer-motion";
 
-interface HeaderProps {
-  user?: {
-    id?: string; // Ensure ID is included in your props
-    name?: string | null;
-    email?: string | null;
-    image?: string | null;
-  } | null;
-}
-
-export default function Header({ user, onMenuClick }: { user: any, onMenuClick: () => void }) {
+export default function Header({ user, onMenuClick, isSidebarOpen }: { user: any, onMenuClick: () => void, isSidebarOpen: boolean }) {
   const [streak, setStreak] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -49,10 +41,19 @@ export default function Header({ user, onMenuClick }: { user: any, onMenuClick: 
     <header className="fixed top-0 right-0 left-0  lg:left-64 h-16 bg-amber-50 backdrop-blur-md border-b border-gray-100 z-40 px-8 flex items-center justify-between">
 
       <button 
-        onClick={() => { onMenuClick();}}
-        className="lg:hidden p-2 -ml-2 hover:bg-amber-100 rounded-xl transition-colors"
+        onClick={onMenuClick}
+        className="lg:hidden p-2 -ml-2 hover:bg-amber-100 rounded-xl transition-colors relative z-50"
       >
-        <Menu size={24} className="text-gray-600" />
+        <motion.div
+          animate={{ rotate: isSidebarOpen ? 90 : 0 }}
+          transition={{ type: "spring", stiffness: 260, damping: 20 }}
+        >
+          {isSidebarOpen ? (
+             <X size={24} className="text-gray-900" /> 
+          ) : (
+             <Menu size={24} className="text-gray-600" />
+          )}
+        </motion.div>
       </button>
 
       <div className="flex items-center gap-6">
