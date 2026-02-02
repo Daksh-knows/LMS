@@ -45,13 +45,14 @@ export default async function OverviewPage() {
   // 5. Pass everything to the client component
   return (
     <div className="min-h-screen bg-[#fcfcfc]">
-      <OverviewClient
-        data={{
-          stats: stats || { videoWatchedMins: 0, questionsSolved: 0 },
-          user: user,
-          courses: formattedCourses, // New real data
-        }}
-      />
-    </div>
+    <OverviewClient
+      data={{
+        // Use JSON.parse(JSON.stringify()) to strip non-serializable Dates/Decimals
+        stats: JSON.parse(JSON.stringify(stats)) || { videoWatchedMins: 0, questionsSolved: 0 },
+        user: JSON.parse(JSON.stringify(user)),
+        courses: formattedCourses,
+      }}
+    />
+  </div>
   );
 }

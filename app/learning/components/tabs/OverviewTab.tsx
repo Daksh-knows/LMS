@@ -10,11 +10,11 @@ export const OverviewTab: React.FC<{ lecture: Lecture }> = ({ lecture }) => {
   });
   // console.log("Lecture in OverviewTab:", lecture);
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-8">
+    <div className=" animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-8">
       {/* 1. Description Section */}
       <div>
-          <h3 className="text-xl font-bold text-gray-900 mb-4">
-            About this {lecture.type === "VIDEO" ? "Lecture" : "Quiz"}
+          <h3 className="text-md  md:text-lg lg:text-xl  font-bold text-gray-900 mb-4">
+            About this Course
           </h3>
           <div className="prose prose-purple max-w-none text-gray-700 leading-relaxed">
             {lecture.type === "QUIZ" ? (
@@ -82,17 +82,18 @@ export const OverviewTab: React.FC<{ lecture: Lecture }> = ({ lecture }) => {
           <div className="p-2 bg-gray-100 rounded-full text-gray-500">
             <Clock size={16} />
           </div>
+
           <div>
-            <span className="font-bold text-gray-900 text-sm block">
+            {/* <span className="font-bold text-gray-900 text-sm block">
               Duration
             </span>
             <span className="text-xs text-gray-500">
               {lecture.duration} Minutes
-            </span>
+            </span> */}
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* <div className="flex items-center gap-3">
           <div className="p-2 bg-gray-100 rounded-full text-gray-500">
             <Globe size={16} />
           </div>
@@ -116,7 +117,7 @@ export const OverviewTab: React.FC<{ lecture: Lecture }> = ({ lecture }) => {
               {lecture.isFree ? "Free Preview" : "Premium Content"}
             </span>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
