@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { startOfMonth, endOfMonth, startOfDay, endOfDay } from "date-fns";
+import { startOfMonth, endOfMonth, startOfDay, endOfDay , format } from "date-fns";
 
 export async function POST(req: Request) {
   try {
@@ -12,9 +12,6 @@ export async function POST(req: Request) {
 
     const { type, duration } = await req.json();
     
-    console.log('----------------------------------------');
-    console.log("Received activity upsert request for userId:", userId, duration);
-    console.log('----------------------------------------');
 
     // 1. Normalize the date to midnight
     // This ensures all activity for "Today" hits the same row
@@ -56,6 +53,10 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
     
+    // 1. Handle Timezone Offset from Client
+    // The client should send: /api/user/activity?userId=...&timezone=Asia/Kolkata
+    const userTimezone = searchParams.get("timezone") || "UTC";
+
     const month = parseInt(searchParams.get("month") || new Date().getMonth().toString());
     const year = parseInt(searchParams.get("year") || new Date().getFullYear().toString());
 
@@ -63,13 +64,15 @@ export async function GET(req: Request) {
       return new NextResponse("User ID is required", { status: 400 });
     }
 
+    // Target Month Range
     const targetDate = new Date(year, month);
     const monthStart = startOfMonth(targetDate);
     const monthEnd = endOfMonth(targetDate);
 
+    // 2. Fix "Today" calculation
+    // We use the current system time but ensure we compare dates correctly
     const now = new Date();
-    const todayStart = startOfDay(now);
-    const todayEnd = endOfDay(now);
+    const todayStr = format(now, 'yyyy-MM-dd'); // "2026-02-03"
 
     const monthActivities = await db.userActivity.findMany({
       where: {
@@ -79,14 +82,17 @@ export async function GET(req: Request) {
           lte: monthEnd,
         },
       },
+      orderBy: {
+        createdAt: 'asc'
+      }
     });
 
+    // 3. Filter "Today" using string comparison to avoid UTC hour shifts
     const todayActivities = monthActivities.filter(a => 
-      a.createdAt >= todayStart && a.createdAt <= todayEnd
+      format(a.createdAt, 'yyyy-MM-dd') === todayStr
     );
 
     const stats = {
-      // Today's Stats
       videoWatchedMins: todayActivities
         .filter((a) => a.type === "VIDEO_WATCH")
         .reduce((sum, a) => sum + (a.duration || 0), 0),
@@ -95,14 +101,13 @@ export async function GET(req: Request) {
         .filter((a) => a.type === "QUIZ_ATTEMPT")
         .length,
 
-      // ADDED: Assignments submitted in the last 24h (today's window)
       assignmentsSubmitted: todayActivities
         .filter((a) => a.type === "ASSIGNMENT_SUBMISSION")
         .length,
       
-      // Heatmap Data (Full Month)
+      // Heatmap Data (ISO strings for the frontend heatmap library)
       activeDays: [...new Set(monthActivities.map(a => 
-        a.createdAt.toISOString().split('T')[0]
+        format(a.createdAt, 'yyyy-MM-dd')
       ))],
       
       lastActive: monthActivities.length > 0 
