@@ -6,8 +6,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths } from "date-fns";
-import { assign } from "nodemailer/lib/shared";
-import Footer from "@/components/Footer";
+
 
 export default function OverviewClient({ data }: { data: any }) {
   const [courseType, setCourseType] = useState("All");
