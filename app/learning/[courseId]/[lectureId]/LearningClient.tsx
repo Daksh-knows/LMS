@@ -12,6 +12,7 @@ import TabbedContent from "../../components/TabbedContent";
 import QuizComponent from "@/components/QuizComponent";
 import AssignmentComponent from "@/components/AssignmentComponent";
 import ArticleComponent from "../../components/ArticleComponent";
+import LiveSessionComponent from "../../components/LiveSessionComponent";
 import Footer from "@/components/Footer";
 
 interface LearningClientProps {
@@ -141,30 +142,40 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
           </div>
         </nav>
 
-            {/* Main Content Area */}
-            <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
-              <main className="flex-1 overflow-y-auto bg-gray-50 relative h-full">
-                {isLoading ? (
-                  <div className="flex flex-col items-center justify-center h-full">
-                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-                  </div>
-                ) : currentLecture ? (
-                  <>
-                    {/* --- THE STAGE (Video/Quiz Parent) --- */}
-                    <div className=" w-full  flex justify-center items-center min-h-[50vh] overflow-hidden shadow-inner">
-                      <div className="w-full h-full max-w-5xl mx-auto ">
-                        {/* --- lecture UI --- */}
-                        {currentLecture.type === 'VIDEO' && (
-                          <div className="flex justify-center aspect-video w-full h-full">
-                            <VideoPlayer  
-                              videoUrl={currentLecture.videoUrl} 
-                              lectureId={currentLecture.id} 
-                              seekTo={seekTo} 
-                              onSeekComplete={handleSeekComplete}
-                              onBookmarkAdded={handleAddBookmark}
-                            />
-                          </div>
-                        )}
+          {/* Main Content Area */}
+          <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+            <main className="flex-1 overflow-y-auto bg-gray-50 relative h-full">
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center h-full">
+                  <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                </div>
+              ) : currentLecture ? (
+                <>
+                  {/* --- THE STAGE (Video/Quiz Parent) --- */}
+                  <div className="w-full bg-black flex justify-center items-center h-[50vh] md:h-[60vh] lg:h-[65vh] overflow-hidden shadow-inner">
+                    <div className="w-full h-full max-w-5xl mx-auto">
+                      {/* --- lecture UI --- */}
+                      {currentLecture.type === 'VIDEO' && (
+                        <div className="flex justify-center aspect-video w-full h-full">
+                          <VideoPlayer  
+                             videoUrl={currentLecture.videoUrl} 
+                             lectureId={currentLecture.id} 
+                             seekTo={seekTo} 
+                             onSeekComplete={handleSeekComplete}
+                             onBookmarkAdded={handleAddBookmark}
+                          />
+                        </div>
+                      )}
+
+                      {/* --- LIVE UI --- */}
+                      {currentLecture.type === 'LIVE' && currentLecture.description && (
+                        <div className="h-full w-full">
+                          <LiveSessionComponent
+                            data={currentLecture.description} 
+                            lectureTitle={currentLecture.title} 
+                          />
+                        </div>
+                      )}
 
                         {/* --- QUIZ UI --- */}
                         {currentLecture.type === 'QUIZ' && quizData && (
