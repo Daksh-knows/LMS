@@ -10,6 +10,7 @@ import { BookOpen, MessageSquare, BookmarkPlus, Star } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 interface Props {
+  course: any;
   lecture: any;   
   courseId: string; 
   adminId?: string;
@@ -24,6 +25,7 @@ interface Props {
 type TabId = "overview" | "qa" | "bookmarks" | "reviews";
 
 const TabbedContent: React.FC<Props> = ({ 
+  course,
   lecture, 
   courseId, 
   adminId, 
@@ -108,7 +110,7 @@ const TabbedContent: React.FC<Props> = ({
 
       {/* Content Area */}
       <div className="p-4  md:p-8 min-h-[400px]">
-        {activeTab === "overview" && <OverviewTab lecture={lecture} />}
+        {activeTab === "overview" && <OverviewTab course={course} />}
         
         {activeTab === "qa" && (
           <QnaTab 
