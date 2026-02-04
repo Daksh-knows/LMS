@@ -60,12 +60,10 @@ export default function OverviewClient({ data }: { data: any }) {
     <div className="">
       <div className="max-w-6xl ml-5 mt-5 space-y-10 pb-20">
         
+        {/* Component 1: Course Grid */}
+        <CourseList courses={courses} loading={loadingCourses} />
         {/* Component 1: Stats & Heatmap */}
         <ProgressSection stats={stats} />
-
-        {/* Component 2: Course Grid */}
-        <CourseList courses={courses} loading={loadingCourses} />
-
       </div>
     </div>
   );

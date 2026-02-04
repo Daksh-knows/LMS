@@ -53,16 +53,9 @@ export default function RootLayout({
           }} 
           />
 
-          <div 
-            className="fixed inset-0 -z-10 pointer-events-none" 
-            style={{
-              backgroundImage: 'radial-gradient(#000 1px, transparent 1px)',
-              backgroundSize: '20px 20px',
-              animation: 'slide 2s linear infinite'
-            }} 
-          />
 
-          {/* <AnimatedBackground /> */}
+
+          <AnimatedBackground />
 
           <div className="relative z-0">
             {children}
