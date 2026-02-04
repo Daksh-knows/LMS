@@ -5,6 +5,7 @@ import { Info, LogOut, Loader2, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import {motion } from "framer-motion";
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 export default function Header({ user, onMenuClick, isSidebarOpen }: { user: any, onMenuClick: () => void, isSidebarOpen: boolean }) {
   const [streak, setStreak] = useState<number | null>(null);
@@ -58,19 +59,29 @@ export default function Header({ user, onMenuClick, isSidebarOpen }: { user: any
 
       <div className="flex items-center gap-6">
         {/* Dynamic Streak Display */}
-        <div className="flex items-center gap-2 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-100 transition-all hover:scale-105">
-          <span className="text-xl">🔥</span>
-          <div className="flex flex-col leading-none">
-            {loading ? (
-              <Loader2 className="h-3 w-3 animate-spin text-orange-600" />
-            ) : (
-              <span className="text-sm font-bold text-gray-800">
-                {streak ?? 0}
-              </span>
-            )}
-            <span className="text-[10px] text-gray-500 font-medium">Days Streak</span>
+          <div className="flex items-center gap-2 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-100 transition-all hover:scale-105">
+            {/* Wrap Lottie in a small, constrained container */}
+            <div className="w-10 h-10 flex items-center justify-center shrink-0 overflow-hidden">
+              <DotLottieReact
+                src="/icons/FlameAnimation.lottie"
+                loop
+                autoplay
+                // style ensures it doesn't try to expand past the 24px container
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
+
+            <div className="flex flex-col leading-none">
+              {loading ? (
+                <Loader2 className="h-3 w-3 animate-spin text-orange-600" />
+              ) : (
+                <span className="text-sm font-bold text-gray-800">
+                  {streak ?? 0}
+                </span>
+              )}
+              <span className="text-[10px] text-gray-500 font-medium">Days Streak</span>
+            </div>
           </div>
-        </div>
 
           <div className="relative group flex items-center">
             {/* The Info Button */}
