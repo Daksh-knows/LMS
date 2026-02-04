@@ -104,7 +104,7 @@ export default function AdminAssignmentsOverview() {
         />
         
         {/* NEW REFUND CARD */}
-        <Link href="/dashboard/admin/refunds" className="block">
+        <Link href="/dashboard/admin/refunds" className="block h-full">
           <StatCard 
             title="Refund Requests" 
             value={refundCount} 
@@ -191,7 +191,7 @@ function StatCard({ title, value, icon, showBadge, badgeText, badgeColor = "ambe
     : "bg-amber-50 text-amber-700 border-amber-100";
 
   return (
-    <div className={`bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden group transition-all ${isInteractive ? 'hover:border-blue-300 hover:shadow-md cursor-pointer' : 'hover:border-indigo-100'}`}>
+    <div className={`h-full bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden group transition-all ${isInteractive ? 'hover:border-blue-300 hover:shadow-md cursor-pointer' : 'hover:border-indigo-100'}`}>
       <div className="flex items-center justify-between mb-8">
         <div className={`p-3 rounded-2xl ${badgeColor === 'red' ? 'bg-red-50 text-red-600' : 'bg-indigo-50 text-indigo-600'}`}>{icon}</div>
         {showBadge && (
