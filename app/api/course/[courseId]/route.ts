@@ -20,8 +20,18 @@ export async function GET(
       select: {
         id: true,
         title: true,
+        subtitle: true,
         description: true,
+        language: true,
+        estimatedDuration: true,
         adminId: true, 
+        admin: {
+          select: {
+            name: true,
+            image: true,
+            bio: true,
+          }
+        },
         modules: {
           orderBy: { position: "asc" },
           select: {

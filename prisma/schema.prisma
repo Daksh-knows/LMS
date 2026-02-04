@@ -31,6 +31,7 @@ model User {
   password             String                 @default("helloworld")
   name                 String?
   image                String?
+  bio                  String?                @db.Text
   emailVerified        DateTime?
   otp                  String?                @default("123456")
   otpExpires           DateTime?
