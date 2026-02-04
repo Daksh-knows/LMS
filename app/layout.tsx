@@ -1,9 +1,13 @@
 "use client"
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import AuthProvider from '@/components/SessionProvider';
-import { Toaster } from 'sonner'; 
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { Toaster } from 'react-hot-toast'; 
+import { motion } from 'framer-motion';
+import AnimatedBackground from '@/components/AnimatedBackground';
+import { Toaster as SonnerToaster } from 'sonner'; 
+
 
 const inter = Inter({
   subsets: ['latin'],
@@ -24,11 +28,31 @@ export default function RootLayout({
         <AuthProvider>
           
           <Toaster 
+            position="top-center"
+            toastOptions={{
+              style: {
+                borderRadius: '16px',
+                background: '#333',
+                color: '#fff',
+                fontSize: '14px',
+                fontWeight: '600',
+              },
+              success: {
+                iconTheme: {
+                  primary: '#16a34a', 
+                  secondary: '#fff',
+                },
+              },
+            }}
+          />
+
+                    <SonnerToaster 
           position="bottom-right" 
           toastOptions={{
             style: { background: 'transparent', border: 'none', boxShadow: 'none' },
           }} 
-        />
+          />
+
           <div 
             className="fixed inset-0 -z-10 pointer-events-none" 
             style={{
@@ -55,3 +79,6 @@ export default function RootLayout({
     </html>
   );
 }
+
+
+

@@ -1,17 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
-import { LogOut, Camera, Loader2, AlertCircle, X, ShieldCheck } from "lucide-react";
-import { signOut } from "next-auth/react";
+import React, { useRef, useState } from "react";
+import { LogOut, Camera, Loader2, X, ShieldCheck } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
+import { showToast } from "@/utils/Toast";
+import Loader from "@/utils/Loader";
 
 // Add hasPendingRefund prop
 export default function ProfileClient({ initialData, hasPendingRefund }: { initialData: any, hasPendingRefund: boolean }) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { data: session, update } = useSession();
+
+  // States for Image Handling
+  const [avatarPreview, setAvatarPreview] = useState(initialData.image || null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
   // Refund Modal State
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
   const [refundReason, setRefundReason] = useState("");
@@ -23,38 +30,64 @@ export default function ProfileClient({ initialData, hasPendingRefund }: { initi
     collegeName: initialData.collegeName,
     collegeDegree: initialData.collegeDegree,
     collegeYear: initialData.collegeYear,
+    image: initialData.image,
   });
 
-  // ... (handleSave function remains the same) ...
-  const handleSave = async () => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB Limit
+        return showToast.error("Image size must be less than 2MB");
+      }
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+const handleSave = async () => {
     setLoading(true);
-    const updatePromise = async () => {
+    try {
+      // Prepare Payload
+      const payload = { 
+        ...formData, 
+        image: avatarPreview // Sending the base64 string/URL
+      };
+
       const response = await fetch("/api/user/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
+
       const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error || "Failed");
-      return result;
-    };
-    toast.promise(updatePromise(), {
-      loading: "Saving...",
-      success: () => {
-        setIsEditing(false);
-        setLoading(false);
-        router.refresh();
-        return "Updated! ✅";
-      },
-      error: (err) => {
-        setLoading(false);
-        return `Error: ${err.message}`;
-      },
-    });
+      if (!response.ok || !result.success) throw new Error(result.error || "Update failed");
+      
+      await update({
+          ...session,
+          user: {
+            ...session?.user,
+            name: formData.fullName,
+            image: result.imageUrl, 
+          }
+      });
+
+
+      showToast.success("Profile updated successfully!");
+      setIsEditing(false);
+      router.refresh();
+    } catch (err: any) {
+      showToast.error(err.message || "Could not save profile");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRefundSubmit = async () => {
-    if(!refundReason.trim()) return toast.error("Please enter a reason");
+    if(!refundReason.trim()) return showToast.error("Please enter a reason");
     
     setIsSubmittingRefund(true);
     try {
@@ -67,11 +100,11 @@ export default function ProfileClient({ initialData, hasPendingRefund }: { initi
       const data = await res.json();
       if(!data.success) throw new Error(data.error);
       
-      toast.success("Refund request initiated successfully");
+      showToast.success("Refund request initiated successfully");
       setIsRefundModalOpen(false);
-      router.refresh(); // This will update the parent and show the pending banner
+      router.refresh(); 
     } catch (error: any) {
-      toast.error(error.message || "Failed to submit request");
+      showToast.error(error.message || "Failed to submit request");
     } finally {
       setIsSubmittingRefund(false);
     }
@@ -80,15 +113,41 @@ export default function ProfileClient({ initialData, hasPendingRefund }: { initi
   return (
     <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       
+      {loading && (
+        <div className="absolute inset-0 z-[100] bg-white/60 backdrop-blur-sm flex items-center justify-center">
+          <Loader message="Syncing Profile..." size="lg" />
+        </div>
+      )}
+
+
       {/* Banner & Avatar (Same as before) */}
       <div className="h-32 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-gray-100 relative">
         <div className="absolute -bottom-10 left-10">
-          <div className="w-20 h-20 rounded-full bg-red-700 flex items-center justify-center text-white text-2xl font-bold border-4 border-white shadow-md">
-            {initialData.initials}
+          <div className="relative group">
+            <div className="w-24 h-24 rounded-full bg-red-700 flex items-center justify-center text-white text-3xl font-bold border-4 border-white shadow-xl overflow-hidden">
+              {avatarPreview ? (
+                <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                initialData.initials
+              )}
+            </div>
+            
+            {/* Hidden File Input */}
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              hidden 
+              accept="image/*" 
+              onChange={handleImageChange} 
+            />
+
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute bottom-0 right-0 p-2 bg-gray-900 text-white rounded-full shadow-md border-2 border-white hover:scale-110 transition-transform"
+            >
+              <Camera size={16} />
+            </button>
           </div>
-          <button className="absolute bottom-0 right-0 p-1.5 bg-white rounded-full shadow-md border border-gray-100">
-            <Camera size={14} className="text-gray-600" />
-          </button>
         </div>
       </div>
 
