@@ -139,7 +139,7 @@ export default function CourseList({ courses: initialCourses, loading }: CourseL
                         <div className="flex-1 p-8 md:p-12 flex flex-col justify-center">
                           <span className="text-indigo-600 font-bold text-xs uppercase tracking-[0.2em] mb-4 block">Recommended for you</span>
                           <h2 className="text-2xl md:text-4xl font-black text-gray-900 leading-tight">{course.title}</h2>
-                          <p className="text-gray-500 text-lg mt-4 font-medium leading-relaxed line-clamp-2">{course.subtitle}</p>
+                          <p className="text-gray-500 text-lg mt-4 font-medium leading-relaxed line-clamp-2">{course.description}</p>
                           
                           <div className="mt-8 flex flex-wrap items-center gap-4">
                             {isEnrolled ? (

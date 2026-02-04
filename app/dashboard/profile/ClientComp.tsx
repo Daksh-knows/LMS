@@ -139,6 +139,7 @@ const handleSave = async () => {
               hidden 
               accept="image/*" 
               onChange={handleImageChange} 
+              disabled={!isEditing}
             />
 
             <button 

@@ -29,6 +29,7 @@ export default async function ProfilePage() {
     collegeDegree: user.profile?.collegeDegree || "",
     collegeYear: user.profile?.collegeYear || 1,
     initials: (user.profile?.fullName || user.name || "U").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2),
+    image: user.image || "",
   };
 
   // Check if there is ANY pending request
