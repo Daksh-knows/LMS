@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
+    "@floating-ui/core": "^1.7.4",
+    "@floating-ui/dom": "^1.7.5",
     "@google-cloud/storage": "^7.18.0",
     "@google/generative-ai": "^0.24.1",
     "@neondatabase/serverless": "^1.0.2",
