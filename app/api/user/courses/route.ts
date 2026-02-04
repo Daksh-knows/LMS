@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
           ? "Course Completed 🎉"
           : nextLecture
           ? `Up Next: ${nextLecture.title}`
-          : course.description || "No description";
+          : course.subtitle || "No description";
 
       return {
         id: course.id,
