@@ -1,17 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { 
-  ArrowLeft, PlusCircle, Layout, Plus, Trash2, Edit, 
-  Video, FileText, SpellCheck, ClipboardList, Clock, 
-  TvMinimalIcon, ArrowUp, ArrowDown, Save 
-} from "lucide-react"; 
+import { ArrowLeft, PlusCircle, Layout, Save, X } from "lucide-react"; 
 import Link from "next/link";
 import AddModuleForm from "@/components/admin/AddModuleForm"; 
 import AddLectureForm from "@/components/admin/AddLectureForm"; 
 import { toast } from "react-hot-toast";
 import { getSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { LectureItem } from "@/components/admin/add-module/LectureItem"; // Import created component
+import { SectionItem } from "@/components/admin/add-module/SectionItem"; // Import created component
 
 export default function AddModulePage({ params }: { params: Promise<{ id: string }> }) {
   const [id, setId] = useState<string>("");
@@ -19,7 +16,8 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
   const [isLoading, setIsLoading] = useState(true);
   const [courseTitle, setCourseTitle] = useState("");
   
-  // Reordering State
+  // UI State
+  const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const [selectedLectureId, setSelectedLectureId] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
@@ -28,12 +26,26 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [editingLecture, setEditingLecture] = useState<any>(null);
 
+  // --- 1. Initialization ---
   useEffect(() => {
     params.then(async (resolvedParams) => {
       setId(resolvedParams.id);
       loadContent(resolvedParams.id);
     });
   }, [params]);
+
+  // --- 2. Expand/Collapse Logic ---
+  // When sections are loaded (or a new one added), open the last one by default
+  useEffect(() => {
+    if (sections.length > 0) {
+      // Only set if we haven't manually interacted yet, or just force it on load
+      // For this requirement: "initially everything closed other than last"
+      // We check if expandedSections is empty to avoid overriding user interaction during reorders
+      if (expandedSections.length === 0) {
+        setExpandedSections([sections[sections.length - 1].id]);
+      }
+    }
+  }, [sections.length]); // Dependency on length detects new modules
 
   const loadContent = async (courseId: string) => {
     try {
@@ -53,29 +65,31 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
       }
     } catch (error) {
       console.error("Error loading curriculum:", error);
-      toast.error("Failed to load course content");
+      toast.error("Failed to load content");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // --- Reordering Logic ---
+  // --- 3. Actions ---
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections(prev => 
+      prev.includes(sectionId) ? prev.filter(id => id !== sectionId) : [...prev, sectionId]
+    );
+  };
 
   const moveLecture = (sectionIndex: number, lectureIndex: number, direction: 'up' | 'down') => {
     const newSections = [...sections];
     const section = newSections[sectionIndex];
     const lectures = [...section.lectures];
-
     const targetIndex = direction === 'up' ? lectureIndex - 1 : lectureIndex + 1;
 
-    // Boundary checks
     if (targetIndex < 0 || targetIndex >= lectures.length) return;
 
-    // Swap elements
     [lectures[lectureIndex], lectures[targetIndex]] = [lectures[targetIndex], lectures[lectureIndex]];
-    
-    // Update state
     newSections[sectionIndex] = { ...section, lectures };
+    
     setSections(newSections);
     setHasUnsavedChanges(true);
   };
@@ -86,10 +100,6 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
       const user: any = await getSession();
       const adminId = user?.user?.id;
 
-      // We need to save the order for ALL sections that might have changed.
-      // We will send the entire structure or just iterate and save.
-      // Ideally, create a batch update endpoint. For now, we loop through sections.
-      
       const promises = sections.map(section => {
         const orderedLectureIds = section.lectures.map((l: any) => l.id);
         return fetch(`${baseUrl}/api/lecture/reorder`, {
@@ -100,21 +110,16 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
       });
 
       await Promise.all(promises);
-
-      toast.success("Curriculum order saved!");
+      toast.success("Order saved successfully");
       setHasUnsavedChanges(false);
       setSelectedLectureId(null);
     } catch (error) {
-      console.error("Save order error:", error);
       toast.error("Failed to save order");
     }
   };
 
-  // --- Existing Handlers ---
-
   const handleDeleteSection = async (moduleId: string, title: string) => {
     if (!confirm(`Delete module "${title}"?`)) return;
-
     const user: any = await getSession();
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
 
@@ -125,25 +130,19 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
           if (!data.success) throw new Error(data.error);
           loadContent(id);
         }),
-      {
-        loading: "Deleting section...",
-        success: "Section deleted",
-        error: (err) => err.message,
-      }
+      { loading: "Deleting...", success: "Module deleted", error: (err) => err.message }
     );
   };
 
   const handleDeleteLecture = async (lectureId: string, title: string) => {
     if (!confirm(`Delete "${title}"?`)) return;
-    
     try {
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
       const response = await fetch(`${baseUrl}/api/lecture/${lectureId}`, { method: "DELETE" });
       const data = await response.json();
-      
       if (data.success) {
-        toast.success("Deleted successfully");
-        loadContent(id); // Reload to get fresh state
+        toast.success("Deleted");
+        loadContent(id);
       } else {
         toast.error(data.error);
       }
@@ -152,200 +151,132 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
     }
   };
 
-  // --- Modal Helpers ---
-  const openAddModal = (sectionId: string) => {
-    setActiveSectionId(sectionId);
-    setEditingLecture(null);
-    setIsModalOpen(true);
-  };
+  // --- Render ---
 
-  const openEditModal = (sectionId: string, lecture: any) => {
-    setActiveSectionId(sectionId);
-    setEditingLecture(lecture);
-    setIsModalOpen(true);
-  };
-
-  const getTypeStyles = (lecture: any) => {
-    switch (lecture.type) {
-      case "VIDEO": return { icon: <TvMinimalIcon size={18} />, color: "text-blue-600 bg-blue-50", label: "Video" };
-      case "TEXT": return { icon: <FileText size={18} />, color: "text-orange-600 bg-orange-50", label: "Article" };
-      case "QUIZ": return { icon: <SpellCheck size={18} />, color: "text-emerald-600 bg-emerald-50", label: "Quiz" };
-      case "ASSIGNMENT": return { icon: <ClipboardList size={18} />, color: "text-purple-600 bg-purple-50", label: "Assignment" };
-      case "LIVE": return { icon: <Video size={18} />, color: "text-red-600 bg-red-50", label: "Live" };
-      default: return { icon: <Layout size={18} />, color: "text-gray-600 bg-gray-50", label: "Unknown" };
-    }
-  };
-
-  if (isLoading) return <div className="p-12 text-center font-bold text-gray-400 animate-pulse">Loading Curriculum...</div>;
+  if (isLoading) return <div className="p-12 text-center text-gray-400 animate-pulse">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-6 md:p-12 pb-24">
-      <div className="max-w-4xl mx-auto">
-        
-        {/* Header Navigation */}
-        <Link href="/dashboard/admin" className="inline-flex items-center gap-2 text-gray-500 hover:text-black mb-8 transition-all group">
-          <div className="p-2 bg-white rounded-full shadow-sm group-hover:bg-gray-100 border border-gray-100">
-            <ArrowLeft size={18} />
-          </div>
-          <span className="font-semibold">Back to Dashboard</span>
-        </Link>
-
-        {/* Main Content Card */}
-        <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden">
-          <div className="bg-white p-8 md:p-12 border-b border-gray-100">
-            <div className="flex items-center gap-3 mb-4">
-               <div className="p-2 bg-blue-50 rounded-lg">
-                 <Layout size={20} className="text-blue-600" />
+    <div className="min-h-screen bg-gray-50 pb-32">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
+        <div className="max-w-5xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/dashboard/admin" className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors">
+              <ArrowLeft size={20} />
+            </Link>
+            <div className="flex items-center gap-2">
+               <div className="p-1.5 bg-blue-50 rounded-md hidden sm:block">
+                 <Layout size={16} className="text-blue-600" />
                </div>
-               <span className="text-xs font-bold uppercase tracking-widest text-blue-600">Curriculum Manager</span>
+               <div>
+                 <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 block leading-none mb-0.5">Curriculum Manager</span>
+                 <h1 className="text-lg md:text-xl font-bold text-gray-900 leading-none truncate max-w-[200px] md:max-w-md">{courseTitle}</h1>
+               </div>
             </div>
-            <h1 className="text-4xl font-black text-gray-900 tracking-tight">{courseTitle}</h1>
           </div>
-
-          <div className="p-8 md:p-12 space-y-12">
-            
-            {/* Add Module Form */}
-            <section className="space-y-6">
-              <div className="flex items-center gap-2">
-                <PlusCircle size={22} className="text-green-600" />
-                <h2 className="text-xl font-bold text-gray-800">Add New Module</h2>
-              </div>
-              <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
-                <AddModuleForm courseId={id} refreshData={() => loadContent(id)} />
-              </div>
-            </section>
-
-            {/* Curriculum List */}
-            <section className="space-y-6">
-              <div className="flex justify-between items-center px-2">
-                <h2 className="text-xl font-bold text-gray-800">Current Curriculum</h2>
-                {hasUnsavedChanges && (
-                  <span className="text-xs font-bold text-orange-500 animate-pulse">
-                    Unsaved changes...
-                  </span>
-                )}
-              </div>
-
-              <div className="space-y-6">
-                {sections.map((section: any, sectionIndex: number) => (
-                  <div key={section.id} className="border border-gray-100 rounded-3xl p-2 bg-white shadow-sm">
-                    
-                    {/* Section Header */}
-                    <div className="p-4 bg-gray-50/50 rounded-2xl mb-2 flex justify-between items-center">
-                       <h3 className="font-bold text-blue-600 uppercase text-xs tracking-widest">
-                         {sectionIndex + 1}. {section.title}
-                       </h3>
-                       <div className="flex items-center gap-2">
-                         <button onClick={() => openAddModal(section.id)} className="flex items-center gap-2 text-[10px] font-black bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition-all shadow-md active:scale-95">
-                           <Plus size={14} /> ADD
-                         </button>
-                         <button onClick={() => handleDeleteSection(section.id, section.title)} className="p-2 bg-white text-gray-400 hover:text-red-600 border border-gray-100 rounded-full hover:bg-red-50 transition-all">
-                          <Trash2 size={16} />
-                        </button>
-                       </div>
-                    </div>
-
-                    {/* Lectures List */}
-                    <div className="space-y-1">
-                      {section.lectures.map((lecture: any, lectureIndex: number) => {
-                        const style = getTypeStyles(lecture);
-                        const isSelected = selectedLectureId === lecture.id;
-
-                        return (
-                          <div 
-                            key={lecture.id}
-                            onClick={() => setSelectedLectureId(isSelected ? null : lecture.id)}
-                            className={`
-                              relative flex justify-between items-center p-4 rounded-2xl transition-all cursor-pointer border 
-                              ${isSelected ? "bg-blue-50/50 border-blue-200 ring-1 ring-blue-200" : "bg-white hover:bg-gray-50 border-transparent hover:border-gray-100"}
-                            `}
-                          >
-                            <div className="flex items-start gap-4">
-                                <div className={`p-2 rounded-xl ${style.color} shrink-0`}>
-                                   {style.icon}
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="font-bold text-gray-800 text-sm leading-tight">
-                                      {lectureIndex + 1}. {lecture.title}
-                                    </span>
-                                    <div className="flex items-center gap-3 mt-1.5">
-                                      <span className="text-[10px] font-bold bg-gray-200 text-gray-600 px-2 py-0.5 rounded-md uppercase tracking-wider">
-                                        {style.label}
-                                      </span>
-                                      {lecture.isFree && <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">Free</span>}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              {/* Reorder Controls (Only visible when selected) */}
-                              {isSelected && (
-                                <div className="flex items-center gap-1 mr-2 bg-white rounded-lg border border-blue-100 p-1 shadow-sm">
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); moveLecture(sectionIndex, lectureIndex, 'up'); }}
-                                    disabled={lectureIndex === 0}
-                                    className="p-1.5 hover:bg-blue-100 text-blue-600 rounded-md disabled:opacity-30 disabled:cursor-not-allowed"
-                                  >
-                                    <ArrowUp size={16} />
-                                  </button>
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); moveLecture(sectionIndex, lectureIndex, 'down'); }}
-                                    disabled={lectureIndex === section.lectures.length - 1}
-                                    className="p-1.5 hover:bg-blue-100 text-blue-600 rounded-md disabled:opacity-30 disabled:cursor-not-allowed"
-                                  >
-                                    <ArrowDown size={16} />
-                                  </button>
-                                </div>
-                              )}
-
-                              <button onClick={(e) => { e.stopPropagation(); openEditModal(section.id, lecture); }} className="p-2 bg-gray-100 text-gray-400 hover:text-blue-600 rounded-xl hover:bg-blue-50">
-                                <Edit size={16} />
-                              </button>
-                              <button onClick={(e) => { e.stopPropagation(); handleDeleteLecture(lecture.id, lecture.title); }} className="p-2 bg-gray-100 text-gray-400 hover:text-red-600 rounded-xl hover:bg-red-50">
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {section.lectures.length === 0 && (
-                        <div className="text-center p-6 border-2 border-dashed border-gray-100 rounded-2xl m-2">
-                          <p className="text-xs text-gray-400">This module is empty.</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </div>
+          {hasUnsavedChanges && (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 text-orange-700 rounded-full border border-orange-100 animate-pulse">
+              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+              <span className="text-xs font-bold whitespace-nowrap">Unsaved Changes</span>
+            </div>
+          )}
         </div>
-      </div>
+      </header>
+
+      <main className="max-w-5xl mx-auto px-4 md:px-6 py-8 space-y-8">
+        
+        {/* Quick Add Module */}
+        <section className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
+            <PlusCircle size={18} className="text-gray-500" />
+            <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">Quick Add Module</h2>
+          </div>
+          <div className="p-6">
+            <AddModuleForm courseId={id} refreshData={() => loadContent(id)} />
+          </div>
+        </section>
+
+        {/* Curriculum Map */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-xl font-bold text-gray-900">Curriculum Map</h2>
+            <div className="flex gap-2">
+               <button 
+                 onClick={() => setExpandedSections([])} 
+                 className="text-[10px] font-bold text-gray-500 hover:text-gray-900 uppercase tracking-wider bg-gray-100 px-2 py-1 rounded"
+               >
+                 Collapse All
+               </button>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {sections.map((section: any, sectionIndex: number) => (
+              <SectionItem
+                key={section.id}
+                section={section}
+                index={sectionIndex}
+                isExpanded={expandedSections.includes(section.id)}
+                onToggle={() => toggleSection(section.id)}
+                onAddContent={() => { setActiveSectionId(section.id); setEditingLecture(null); setIsModalOpen(true); }}
+                onDelete={() => handleDeleteSection(section.id, section.title)}
+              >
+                {section.lectures.length === 0 ? (
+                   <div className="py-8 text-center bg-gray-50/30">
+                     <p className="text-xs text-gray-400 italic">No content in this module.</p>
+                   </div>
+                ) : (
+                  section.lectures.map((lecture: any, lectureIndex: number) => (
+                    <LectureItem
+                      key={lecture.id}
+                      lecture={lecture}
+                      index={lectureIndex}
+                      isSelected={selectedLectureId === lecture.id}
+                      isFirst={lectureIndex === 0}
+                      isLast={lectureIndex === section.lectures.length - 1}
+                      onSelect={() => setSelectedLectureId(selectedLectureId === lecture.id ? null : lecture.id)}
+                      onMove={(dir) => moveLecture(sectionIndex, lectureIndex, dir)}
+                      onEdit={() => { setActiveSectionId(section.id); setEditingLecture(lecture); setIsModalOpen(true); }}
+                      onDelete={() => handleDeleteLecture(lecture.id, lecture.title)}
+                    />
+                  ))
+                )}
+              </SectionItem>
+            ))}
+          </div>
+        </section>
+      </main>
 
       {/* Floating Save Button */}
-      {hasUnsavedChanges && (
-        <div className="fixed bottom-8 right-8 animate-in slide-in-from-bottom-4 fade-in duration-300 z-40">
-          <button 
-            onClick={saveOrder}
-            className="flex items-center gap-2 bg-black text-white px-8 py-4 rounded-full shadow-2xl hover:scale-105 transition-transform font-bold"
-          >
-            <Save size={20} />
-            Save New Order
-          </button>
-        </div>
-      )}
+      <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-40 transition-all duration-500 ${hasUnsavedChanges ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"}`}>
+        <button 
+          onClick={saveOrder}
+          className="flex items-center gap-3 bg-gray-900 text-white pl-6 pr-8 py-3.5 rounded-full shadow-2xl hover:bg-black hover:scale-105 active:scale-95 transition-all font-bold border border-gray-700"
+        >
+          <div className="bg-white/20 p-1 rounded-full"><Save size={18} /></div>
+          <span>Save Changes</span>
+        </button>
+      </div>
 
-      {/* Modal */}
+      {/* Add/Edit Modal */}
       {isModalOpen && activeSectionId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setIsModalOpen(false)}>
-          <div className="bg-white w-full max-w-2xl rounded-[2rem] shadow-2xl p-8 relative max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <AddLectureForm 
-              courseId={id} 
-              sectionId={activeSectionId} 
-              initialData={editingLecture} 
-              onSuccess={() => { setIsModalOpen(false); loadContent(id); }}
-              onCancel={() => setIsModalOpen(false)}
-            />
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-gray-900/60 backdrop-blur-sm p-0 sm:p-4 transition-opacity" onClick={() => setIsModalOpen(false)}>
+          <div className="bg-white w-full sm:max-w-xl rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-4 duration-300" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 className="font-bold text-lg text-gray-900">{editingLecture ? "Edit Content" : "Add New Content"}</h3>
+                <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-gray-200 rounded-full text-gray-500 transition-colors">
+                  <X size={20} />
+                </button>
+            </div>
+            <div className="p-6 max-h-[80vh] overflow-y-auto">
+              <AddLectureForm 
+                courseId={id} 
+                sectionId={activeSectionId} 
+                initialData={editingLecture} 
+                onSuccess={() => { setIsModalOpen(false); loadContent(id); }}
+                onCancel={() => setIsModalOpen(false)}
+              />
+            </div>
           </div>
         </div>
       )}
