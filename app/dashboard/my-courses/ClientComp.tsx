@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion"; // Import motion
 import { generateCertificate } from "@/lib/certificate-generator";
+import Loader from "@/utils/Loader";
 
 export interface EnrolledCourse {
   id: string;
@@ -95,13 +96,18 @@ export default function CourseFilterList() {
         });
       };
   
-  if(loading) {
-      return (
-        <div className="w-full h-screen flex items-center justify-center">
-          <Loader2 className="animate-spin text-blue-600" size={40} />
-        </div>
-      );
-    }
+    if (loading) {
+        return (
+          <div className="w-full h-[60vh] flex flex-col items-center justify-center">
+            <Loader 
+              message="Fetching your enrolled courses..." 
+              size="lg" 
+              center={true} 
+            />
+          </div>
+        );
+      }
+
   return (
       <div className="space-y-6">
       {/* Filters: Allow horizontal scrolling on very small screens */}

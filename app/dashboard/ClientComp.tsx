@@ -366,7 +366,7 @@ export default function OverviewClient({ data }: { data: any }) {
                             <button 
                               onClick={(e) => handleResumeCourse(e, course.id)}
                               disabled={isResuming}
-                              className="bg-green-500 text-white px-6 py-3 rounded-full font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-xl hover:bg-green-600 transition-all"
+                              className="bg-green-500 text-white px-2  py-3 rounded-full font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-xl hover:bg-green-600 transition-all"
                             >
                               {isResuming ? (
                                 <>Loading... <Loader2 size={14} className="animate-spin"/></>
