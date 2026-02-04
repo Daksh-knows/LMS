@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactPlayer from 'react-player';
 import { BookmarkPlus, Info, Save } from "lucide-react";
 import { useParams, useRouter } from 'next/navigation';
+import { showToast } from "@/utils/Toast";
 
 import {
   MediaController,
@@ -35,9 +36,10 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
   const watchStartTime = useRef<number | null>(null);
   const totalSecondsWatched = useRef<number>(0);
   const [showTooltip, setShowTooltip] = useState(false);
-  
+  const [isVideoLoading, setIsVideoLoading] = useState(true);
 
   const [isMarkingComplete, setIsMarkingComplete] = useState(false);
+
   const markAsComplete = async () => {
     if (hasCompleted) return;
     setIsMarkingComplete(true);
@@ -52,11 +54,13 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
 
       if (response.ok) {
         setHasCompleted(true);
-        console.log("Lecture marked as completed!");
+        showToast.success("Progress saved! Great job on finishing this lecture.");
         router.refresh();
       }
+      else showToast.error("Couldn't save progress. Please check your connection.");
     } catch (error) {
       console.error("Manual completion error:", error);
+      showToast.error("Something went wrong. Please try again later.");
     } finally {
       setIsMarkingComplete(false);
     }
@@ -244,6 +248,8 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
       const data = await response.json();
       onBookmarkAdded(data);
 
+      showToast.success(`Bookmark saved at ${Math.floor(bookmark.time)}s`);
+
       setShowForm(false);
       setBookmark({ label: '', type: 'BOOKMARK', time: 0 });
 
@@ -254,6 +260,7 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
       }
     } catch (error) {
       console.error("Save error:", error);
+      showToast.error("Could not save bookmark. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -341,7 +348,25 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
         height="100%"
         playing={isPlaying}
         playsInline
+        onReady={() => setIsVideoLoading(false)}
+        onWaiting={() => setIsVideoLoading(true)}
+        onPlaying={() => setIsVideoLoading(false)}
       />
+
+      {/* --- LOADER OVERLAY --- */}
+        {isVideoLoading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] z-20 transition-all">
+            {/* You can use a Lucide Loader or a Lottie here */}
+            <div className="relative">
+              <div className="w-12 h-12 border-4 border-[#FFCC59]/20 border-t-[#FFCC59] rounded-full animate-spin"></div>
+              {/* Small pulse effect for extra polish */}
+              <div className="absolute inset-0 w-12 h-12 border-4 border-[#FFCC59] rounded-full animate-ping opacity-20"></div>
+            </div>
+            <p className="mt-4 text-white font-bold text-sm tracking-widest uppercase animate-pulse">
+              Preparing Lecture...
+            </p>
+          </div>
+        )}
 
       <div
         className="absolute z-10 cursor-default"
