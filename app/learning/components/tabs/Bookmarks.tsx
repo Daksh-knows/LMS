@@ -1,5 +1,5 @@
 "use client";
-
+import { showToast } from "@/utils/Toast";
 import React from "react";
 import { Lecture } from "../../types";
 import {
@@ -81,15 +81,14 @@ export const BookmarksTab: React.FC<BookmarksProps> = ({
           throw new Error("Failed to delete bookmark");
         }
 
-        toast.success("Bookmark removed");
-        
+        showToast.delete("Bookmark has been removed from your list.");
+
       } catch (error) {
         console.error("Error deleting bookmark:", error);
         
         setBookmarks(previousBookmarks);
         
-        toast.error("Could not delete bookmark");
-      }
+        showToast.error("Failed to delete. Restoring your bookmark...");      }
     };
 
   return (
