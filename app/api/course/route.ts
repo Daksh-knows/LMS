@@ -41,46 +41,44 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-
-
     const data = await req.json();
-    // 1. Authorization Check (via Param)
+
+    // 1. Authorization Check
     if (!data.adminId) {
       return new NextResponse("Unauthorized: Admin ID required", { status: 401 });
     }
 
+    // 2. Prepare the payload based on the new schema
+    const payload: any = {
+      title: data.title,
+      subtitle: data.subtitle,          // The catchy one-liner
+      description: data.description,    // The rich-text HTML from TipTap
+      imageUrl: data.imageUrl,          // Cloudinary URL from the frontend upload
+      language: data.language || "English",
+      estimatedDuration: data.estimatedDuration,
+      adminId: data.adminId,
+      isPublished: false,
+    };
 
-    // 2. Handle Category (Upsert based on first tag)
-    let categoryId = null;
-    if (data.tags && data.tags.length > 0) {
-      const categoryName = data.tags[0];
-      const category = await db.category.upsert({
-        where: { name: categoryName },
-        update: {},
-        create: { name: categoryName },
-      });
-      categoryId = category.id;
-    }
-
-    // 3. Create Course
+    // 4. Create Course in Database
     const newCourse = await db.course.create({
-      data: {
-        title: data.title,
-        description: data.subtitle, // Mapping 'subtitle' to 'description'
-        imageUrl: data.image,
-        adminId: data.adminId,
-        categoryId: categoryId,
-        isPublished: false,
-      },
+      data: payload,
     });
 
-    return NextResponse.json({ success: true, id: newCourse.id });
+    return NextResponse.json({ 
+      success: true, 
+      id: newCourse.id 
+    });
+
   } catch (error: any) {
-    console.error("[COURSE_CREATE]", error);
+    console.error("[COURSE_CREATE_POST]", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to create course" },
+      { 
+        success: false, 
+        error: error.message || "Failed to create course" 
+      },
       { status: 500 }
     );
   }
