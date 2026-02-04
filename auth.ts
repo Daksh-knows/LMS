@@ -93,6 +93,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (session.hasRegistered !== undefined) {
            token.hasRegistered = session.hasRegistered;
         }
+
+        if (session.image) {
+          token.picture = session.image;
+        }
+        if (session.name) {
+          token.name = session.name;
+        }
       }
       
       return token;
@@ -104,23 +111,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.role = token.role as string;
         session.user.hasPremium = token.hasPremium as boolean;
         session.user.hasRegistered = (token as any).hasRegistered as boolean;
+        session.user.image = token.picture as string;
+        session.user.name = token.name as string;
       }
       return session;
     },
-    // 3. Sign In Callback: Auto-verify OAuth users
-    // async signIn({ user, account }) {
-    //   if (account?.provider !== "credentials") {
-    //     // If logging in via Google/GitHub, mark them as verified automatically.
-    //     // We removed 'emailVerified' because your Prisma Client threw an error for it.
-    //     if (user.id) {
-    //         await db.user.update({
-    //             where: { id: user.id },
-    //             data: { isVerified: true } 
-    //         });
-    //     }
-    //   }
-    //   return true;
-    // }
   },
   // ADD THIS: Events handle side-effects like "verify email" safely
   events: {
@@ -136,5 +131,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       });
     },
   },
-  // --- FIX ENDS HERE ---
 });
