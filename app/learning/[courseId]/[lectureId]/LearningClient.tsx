@@ -221,6 +221,7 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
                           loadingBookmarks={loadingBookmarks}
                           setBookmarks={setBookmarks}
                           setLoadingBookmarks={setLoadingBookmarks}
+                          course={course}
                         />
                       </div>
                     </div>

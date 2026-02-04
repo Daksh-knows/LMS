@@ -51,9 +51,9 @@ const LiveSessionComponent: React.FC<LiveSessionProps> = ({
   }, [parsedData]);
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-6 text-white bg-gradient-to-b from-gray-900 to-black">
+    <div className="w-full h-full flex flex-col items-center justify-center pt-8 text-white bg-gradient-to-b from-gray-900 to-black ">
       {/* ---- Status Badge ---- */}
-      <div className="mb-8">
+      <div className="mb-2">
         {isLive ? (
           <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-500/10 border border-red-500/50 animate-pulse">
             <Circle size={10} className="fill-red-500 text-red-500" />
@@ -110,13 +110,13 @@ const LiveSessionComponent: React.FC<LiveSessionProps> = ({
       </div>
 
       {/* ---- Action Buttons ---- */}
-      <div className="mt-8 flex flex-col sm:flex-row gap-4 w-full max-w-sm">
+      <div className="mt-4 flex flex-col sm:flex-row gap-2 w-50 max-w-sm">
         {isLive && parsedData.link ? (
           <a
             href={parsedData.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-2 px-8 py-4 bg-white text-black rounded-2xl font-bold hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white text-black rounded-2xl font-bold hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
           >
             <Video size={20} />
             Join Meeting
@@ -124,7 +124,7 @@ const LiveSessionComponent: React.FC<LiveSessionProps> = ({
         ) : (
           <button
             disabled
-            className="flex-1 flex items-center justify-center gap-2 px-8 py-4 bg-gray-800 text-gray-400 rounded-2xl font-bold cursor-not-allowed border border-white/5"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-800 text-gray-400 rounded-2xl font-bold cursor-not-allowed border border-white/5"
           >
             <Clock size={20} />
             Waiting for Host
