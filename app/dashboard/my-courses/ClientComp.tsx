@@ -111,7 +111,7 @@ export default function CourseFilterList() {
   return (
       <div className="space-y-6">
       {/* Filters: Allow horizontal scrolling on very small screens */}
-      <div className="flex p-1 bg-gray-100/50 rounded-full w-fit border border-gray-200 gap-1">
+      <div className="flex p-1  bg-transparent rounded-full w-fit border  border-white/20 gap-1">
         {tabs.map((tab) => (
           <button
             key={tab}
