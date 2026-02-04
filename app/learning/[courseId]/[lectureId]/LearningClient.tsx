@@ -43,6 +43,9 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
     setBookmarks((prev) => [newBookmark, ...prev]);
   };
   
+  const oneCourse = process.env.NEXT_PUBLIC_ONE_COURSE === "true";
+
+
   useEffect(() => {
     const updateProgress = async () => {
       try {
@@ -128,7 +131,7 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
         <nav className="h-14 bg-gray-900 text-white flex items-center justify-between px-4 shadow-md z-10 shrink-0">
           <div className="flex items-center gap-4 min-w-0">
             <Link
-              href="/dashboard/my-courses"
+              href={ oneCourse ? "/dashboard" : "/dashboard/my-courses"}
               className="flex items-center gap-1 text-gray-300 hover:text-white transition-colors group shrink-0"
             >
               <div className="p-1 rounded-full group-hover:bg-gray-800">
