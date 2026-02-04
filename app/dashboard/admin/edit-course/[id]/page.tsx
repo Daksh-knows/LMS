@@ -53,11 +53,12 @@ export default async function EditPage({
   const formattedCourse = {
     id: course.id,
     title: course.title,
-    subtitle: course.description || "", 
+    subtitle: course.subtitle || "", 
+    description: course.description || "",
     image: course.imageUrl || "",
-    // If a category exists, put it in the tags array, otherwise empty
     tags: course.category ? [course.category.name] : [],
-    totalModules: course._count.modules
+    totalModules: course._count.modules,
+    estimatedDuration: course.estimatedDuration || "",
   };
 
   return (

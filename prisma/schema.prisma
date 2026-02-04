@@ -79,21 +79,26 @@ model UserStats {
 }
 
 model Course {
-  id           String         @id @default(cuid())
-  title        String         @db.VarChar(255)
-  description  String?
-  imageUrl     String?
-  price        Float?
-  isPublished  Boolean        @default(false)
-  adminId      String
-  categoryId   String?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  admin        User           @relation("CourseAuthor", fields: [adminId], references: [id])
-  category     Category?      @relation(fields: [categoryId], references: [id])
-  students     Enrollment[]
-  modules      Module[]
-  userProgress UserProgress[]
+  id                String         @id @default(cuid())
+  title             String         @db.VarChar(255)
+  subtitle          String?        @db.Text    // Added for the one-line summary
+  description       String?        @db.Text    // Use @db.Text for Tiptap HTML content
+  imageUrl          String?        @db.Text    // Cloudinary URLs can be long
+  language          String?        @default("English") // Added for language selection
+  estimatedDuration String?                    // Added for course length display
+  price             Float?
+  isPublished       Boolean        @default(false)
+  adminId           String
+  categoryId        String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+  // Relations
+  admin             User           @relation("CourseAuthor", fields: [adminId], references: [id])
+  category          Category?      @relation(fields: [categoryId], references: [id])
+  students          Enrollment[]
+  modules           Module[]
+  userProgress      UserProgress[]
 
   @@index([title])
 }

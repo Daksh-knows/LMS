@@ -2,7 +2,6 @@ import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary"; 
 
-
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ courseId: string }> }
@@ -133,41 +132,41 @@ export async function PATCH(
       return new NextResponse("Unauthorized: Admin ID required", { status: 401 });
     }
 
+    // 1. Get the payload from the EditCourseForm submission
     const updatedData = await req.json();
 
-    // 1. Ownership Check
-    const course = await db.course.findUnique({ where: { id: courseId } });
+    // 2. Ownership & Existence Check
+    const course = await db.course.findUnique({ 
+      where: { id: courseId } 
+    });
+
     if (!course || course.adminId !== adminId) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return new NextResponse("Unauthorized or Course not found", { status: 401 });
     }
 
-    // 2. Prepare Update Data
+    // 3. Prepare Precise Update Data
+    // We now separate subtitle from description to support the rich-text editor
     const dataToUpdate: any = {
       title: updatedData.title,
-      description: updatedData.description || updatedData.subtitle,
-      imageUrl: updatedData.image || updatedData.imageUrl,
+      subtitle: updatedData.subtitle,          // Matches the new subtitle field
+      description: updatedData.description,    // Stores the TipTap HTML string
+      imageUrl: updatedData.image,             // Correctly mapping the Cloudinary URL
+      language: updatedData.language,          // New metadata field
+      estimatedDuration: updatedData.estimatedDuration, // New metadata field
     };
 
-    // 3. Handle Category Update (if tags provided)
-    if (updatedData.tags && updatedData.tags.length > 0) {
-      const categoryName = updatedData.tags[0];
-      const category = await db.category.upsert({
-        where: { name: categoryName },
-        update: {},
-        create: { name: categoryName },
-      });
-      dataToUpdate.categoryId = category.id;
-    }
-
     // 4. Update Database
-    await db.course.update({
+    const updatedCourse = await db.course.update({
       where: { id: courseId },
       data: dataToUpdate,
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true, 
+      course: updatedCourse 
+    });
   } catch (error: any) {
-    console.error("[COURSE_UPDATE]", error);
+    console.error("[COURSE_UPDATE_PATCH]", error);
     return NextResponse.json(
       { success: false, error: error.message || "Failed to update course" },
       { status: 500 }
