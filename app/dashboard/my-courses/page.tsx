@@ -13,7 +13,7 @@ export default async function MyCoursesPage() {
   }
 
   return (
-    <div className="flex-1 p-5 bg-gray-100 min-h-screen rounded-xl">
+    <div className="flex-1 p-5  backdrop-blur-xl border border-white/20 min-h-screen rounded-xl">
       <div className="max-w-5xl mx-auto">
         <div className="flex-1">
           <div className="mb-8">
