@@ -8,6 +8,8 @@ import {
 import toast from "react-hot-toast";
 import { getSession } from "next-auth/react";
 import axios from "axios"; // Ensure you have axios installed for upload progress
+import { uploadToGCS } from "@/lib/google/video";
+import { set } from "date-fns";
 
 interface FileAttachment {
   title: string;
@@ -102,6 +104,30 @@ export default function AddVideoForm({ courseId, sectionId, initialData, onSucce
       toast.error("Video upload failed. Please try again.");
       setVideoFileName(""); // Reset on failure
     } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleVideoSelect = async (e : React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if(!file) return;
+    try{
+      setIsUploading(true);
+      const publicUrl = await uploadToGCS( file, (progress) =>{
+        console.log(`Upload Progress: ${progress}%`);
+        setUploadProgress(progress);
+      });
+      if(publicUrl){
+        setVideoUrl(publicUrl);
+        toast.success("Video uploaded successfully!");
+      }
+    }
+    catch(error){
+      console.error("Upload error:", error);
+      toast.error("Video upload failed. Please try again.");
+      setVideoFileName(""); 
+    }
+    finally{
       setIsUploading(false);
     }
   };
@@ -370,7 +396,7 @@ export default function AddVideoForm({ courseId, sectionId, initialData, onSucce
                   {!isUploading && (
                     <input 
                       type="file" 
-                      accept="video/*" 
+                      accept="all" 
                       className="hidden" 
                       onChange={handleFileSelect} 
                     />
