@@ -5,6 +5,7 @@ import { Loader2, ArrowRight, ExternalLink, CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import Loader from "@/utils/Loader";
 
 interface CourseListProps {
   courses: any[];
@@ -103,7 +104,7 @@ export default function CourseList({ courses: initialCourses, loading }: CourseL
 
       {loading ? (
         <div className="flex justify-center py-20">
-          <Loader2 className="animate-spin text-blue-600" size={40} />
+          <Loader message="Loading course ..." />
         </div>
       ) : (
         <>
