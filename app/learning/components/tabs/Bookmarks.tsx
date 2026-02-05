@@ -91,6 +91,17 @@ export const BookmarksTab: React.FC<BookmarksProps> = ({
         showToast.error("Failed to delete. Restoring your bookmark...");      }
     };
 
+  const handleJumpToTime = (timeInSeconds: number) => {
+    // 1. Trigger the video seek logic
+    onBookmarkClick(formatTime(timeInSeconds));
+    console.log("Scfroll up");
+    // 2. Scroll to top
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth", // Use 'smooth' for a polished feel or 'auto' for instant jump
+    });
+  };
+
   return (
     <div className="max-w-4xl mx-auto animate-in fade-in duration-500">
       <div className="flex items-center justify-between mb-6">
@@ -138,7 +149,7 @@ export const BookmarksTab: React.FC<BookmarksProps> = ({
                 <div className="flex items-center gap-3 shrink-0">
                   {/* Blue Timestamp Pill */}
                   <button 
-                    onClick={() =>{ console.log("T"); onBookmarkClick(formatTime(bm.time))}}
+                    onClick={() => handleJumpToTime(bm.time)}
                     className="flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-full hover:bg-blue-700 hover:scale-105 transition-all active:scale-95 shadow-sm"
                   >
                     <PlayCircle size={14} />
