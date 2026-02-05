@@ -2,14 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import { ItemType } from "@/app/generated/prisma/enums"; // Ensure this import works after 'npx prisma generate'
+import { ItemType } from "@/app/generated/prisma/enums"; 
 
 // Import sub-forms
-// Make sure you have created AddVideoForm and AddTextForm as well!
-import AddVideoForm from "./AddVideoForm";
-import AddTextForm from "./AddTextForm";
-import AddAssignmentForm from "./AddAssignmentForm";
-import AddQuizForm from "./AddQuizForm";
+import AddVideoForm from "./modal/AddVideoForm";
+import AddTextForm from "./modal/AddTextForm";
+import AddAssignmentForm from "./modal/AddAssignmentForm";
+import AddQuizForm from "./modal/AddQuizForm";
 
 interface Props {
   courseId: string;
@@ -23,7 +22,7 @@ export default function AddLectureForm({ courseId, sectionId, initialData, onSuc
   // Default to VIDEO, or use the type from initialData
   // console.log(initialData);
   const [type, setType] = useState<ItemType>(initialData?.type || "VIDEO");
-  // Keep type in sync if initialData changes (e.g. switching between edit modes)
+  
   useEffect(() => {
     if (initialData?.type) {
       setType(initialData.type);

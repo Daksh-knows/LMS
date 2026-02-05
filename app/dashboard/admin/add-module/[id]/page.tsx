@@ -4,11 +4,11 @@ import React, { useState, useEffect } from "react";
 import { ArrowLeft, PlusCircle, Layout, Save, X } from "lucide-react"; 
 import Link from "next/link";
 import AddModuleForm from "@/components/admin/AddModuleForm"; 
-import AddLectureForm from "@/components/admin/AddLectureForm"; 
+import AddLectureForm from "@/components/admin/add-lecture/AddLectureForm"; 
 import { toast } from "react-hot-toast";
 import { getSession } from "next-auth/react";
-import { LectureItem } from "@/components/admin/add-module/LectureItem"; // Import created component
-import { SectionItem } from "@/components/admin/add-module/SectionItem"; // Import created component
+import { LectureItem } from "@/components/admin/add-module/LectureItem"; 
+import { SectionItem } from "@/components/admin/add-module/SectionItem"; 
 
 export default function AddModulePage({ params }: { params: Promise<{ id: string }> }) {
   const [id, setId] = useState<string>("");
@@ -35,10 +35,8 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
   }, [params]);
 
   // --- 2. Expand/Collapse Logic ---
-  // When sections are loaded (or a new one added), open the last one by default
   useEffect(() => {
     if (sections.length > 0) {
-      // Only set if we haven't manually interacted yet, or just force it on load
       // For this requirement: "initially everything closed other than last"
       // We check if expandedSections is empty to avoid overriding user interaction during reorders
       if (expandedSections.length === 0) {
@@ -170,7 +168,7 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
                </div>
                <div>
                  <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 block leading-none mb-0.5">Curriculum Manager</span>
-                 <h1 className="text-lg md:text-xl font-bold text-gray-900 leading-none truncate max-w-[200px] md:max-w-md">{courseTitle}</h1>
+                 <h1 className="text-lg md:text-xl font-bold text-gray-900 leading-none truncate max-w-50 md:max-w-md">{courseTitle}</h1>
                </div>
             </div>
           </div>

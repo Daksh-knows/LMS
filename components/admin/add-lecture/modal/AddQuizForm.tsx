@@ -189,7 +189,7 @@ export default function AddQuizForm({
         <button
           type="submit"
           disabled={submitting}
-          className="flex-[2] bg-blue-600 text-white p-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
+          className="flex-2 bg-blue-600 text-white p-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
         >
           {submitting ? (
             <>
