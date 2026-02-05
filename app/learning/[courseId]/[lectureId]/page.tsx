@@ -15,12 +15,12 @@ async function Page({ params }: PageProps) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const user = await getCurrentUser();
   let course = null;
-  console.log("User in Page component:", user);
+  // console.log("User in Page component:", user);
   try {
     const response = await fetch(`${baseUrl}/api/course/${courseId}?userId=${user?.id}`, {
       cache: 'no-store', 
     });
-    console.log("Fetch response status:", response);
+    // console.log("Fetch response status:", response);
     if (!response.ok) {
       if (response.status === 404) return notFound();
       throw new Error("Failed to fetch course");
