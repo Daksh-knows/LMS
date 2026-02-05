@@ -122,7 +122,7 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
   };
 
   const quizData = getQuizData();
-  console.log("Course Data:", course);
+  // console.log("Course Data:", course);
 
   return (
     <div className="">
