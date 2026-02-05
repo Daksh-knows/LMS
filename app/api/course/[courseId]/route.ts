@@ -62,7 +62,7 @@ export async function GET(
         }
       }
     });
-    console.log("Course fetched:", course);
+    // console.log("Course fetched:", course);
     if (!course) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
