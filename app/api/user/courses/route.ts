@@ -79,6 +79,7 @@ export async function GET(req: NextRequest) {
       return {
         id: course.id,
         title: course.title,
+        courseCompleted: course.isCompleted,
         subtitle,
         image: course.imageUrl || "",
         modulesCompleted: completedCount,

@@ -16,6 +16,7 @@ export interface EnrolledCourse {
   modulesCompleted: number; 
   totalModules: number; 
   progress: number; 
+  courseCompleted: boolean;
   status: "Not Started" | "In Progress" | "Completed";
 }
 
@@ -30,6 +31,7 @@ export default function CourseFilterList() {
   
   const tabs = ["All", "Completed", "In Progress"];
   
+  console.log("Initial Courses:", initialCourses);
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -201,7 +203,7 @@ export default function CourseFilterList() {
               </div>
 
               <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-2 w-full sm:w-auto">
-                {course.progress === 100 && (
+                {course.courseCompleted &&  course.progress === 100 && (
                   <button
                     onClick={(e) => {
                       // 3. STOP PROPAGATION
@@ -224,7 +226,7 @@ export default function CourseFilterList() {
                 >
                   {course.status === "Not Started" && "Start Course"}
                   {course.status === "In Progress" && "Continue"}
-                  {course.status === "Completed" && "Review"}
+                  {course.status === "Completed" && "Revisit"}
                 </div>
               </div>
             </div>

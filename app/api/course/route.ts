@@ -30,6 +30,7 @@ export async function GET(req: NextRequest) {
       tags: course.category ? [course.category.name] : ["General"],
       imageUrl: course.imageUrl,
       isPublished: course.isPublished,
+      isCompleted: course.isCompleted,
       moduleCount: course._count.modules,
       studentCount: course._count.students
     }));
@@ -60,6 +61,7 @@ export async function POST(req: NextRequest) {
       estimatedDuration: data.estimatedDuration,
       adminId: data.adminId,
       isPublished: false,
+      isCompleted: false,
     };
 
     // 4. Create Course in Database
