@@ -113,7 +113,7 @@ const CourseSidebar: React.FC<Props> = ({
         <h2 className="font-black text-gray-900 text-lg tracking-tight flex items-center justify-between">
           Course Content
           <span className="text-[10px] bg-gray-800 text-white px-2 py-1 rounded-md uppercase tracking-widest font-bold">
-            {sections.length} Modules
+            {sections.length} Module{sections.length > 1 ? "s" : ""}
           </span>
         </h2>
       </div>
@@ -143,9 +143,9 @@ const CourseSidebar: React.FC<Props> = ({
                   </h3>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-[11px] font-bold text-gray-500 uppercase tracking-tighter bg-gray-200/60 px-1.5 py-0.5 rounded">
-                       {section.lectures.length} Lessons
+                       {section.lectures.length} Lesson{section.lectures.length > 1 ? "s" : ""}
                     </span>
-                    <span className="text-[11px] font-bold text-indigo-600/70">
+                    <span className="text-[11px]  text-indigo-600/70">
                       {section.lectures.reduce((acc, curr) => acc + (curr.duration || 0), 0)} mins
                     </span>
                   </div>
@@ -190,7 +190,7 @@ const CourseSidebar: React.FC<Props> = ({
                                 {item.title}
                               </p>
                               <div className="flex items-center gap-3 mt-1.5">
-                                <div className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider ${isActive ? "text-indigo-600" : "text-gray-500"}`}>
+                                <div className={`flex items-center gap-1.5 text-[10px] font-black  tracking-wider ${isActive ? "text-indigo-600" : "text-gray-500"}`}>
                                   {getTypeIcon(item.type, isActive)}
                                   <span>{item.type}</span>
                                   {item.duration && (
