@@ -4,7 +4,6 @@ import ReactPlayer from 'react-player';
 import { BookmarkPlus, Info, Save } from "lucide-react";
 import { useParams, useRouter } from 'next/navigation';
 import { showToast } from "@/utils/Toast";
-
 import {
   MediaController,
   MediaControlBar,
@@ -18,7 +17,10 @@ import {
   MediaMuteButton,
   MediaFullscreenButton,
 } from "media-chrome/react";
+
 import { useSession } from 'next-auth/react';
+import YoutubeVideoPlayer from '@/components/lecture/YoutubeVideoPlayer';
+import BookmarkForm from '@/components/lecture/BookmarkForm';
 
 interface Props {
   videoUrl: string;
@@ -52,78 +54,131 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
   const storageKey = `watch-progress-${userId}-${lectureId}`;
   
   
-  const markAsComplete = async () => {
-    if (hasCompleted) return;
-    setIsMarkingComplete(true);
-    
-    const courseId = params.courseId as string;
-    try {
-      const response = await fetch("/api/lecture/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lectureId, courseId }),
-      });
-
-      if (response.ok) {
-        setHasCompleted(true);
-        showToast.success("Progress saved! Great job on finishing this lecture.");
-        router.refresh();
+    //fetched stored watch time from localstorage
+    useEffect(() => {
+      const savedTime = localStorage.getItem(storageKey);
+      if (savedTime) {
+        totalSecondsWatched.current = parseFloat(savedTime);
       }
-      else showToast.error("Couldn't save progress. Please check your connection.");
-    } catch (error) {
-      console.error("Manual completion error:", error);
-      showToast.error("Something went wrong. Please try again later.");
-    } finally {
-      setIsMarkingComplete(false);
-    }
-  };
+    }, [lectureId, userId]);
   
-  useEffect(() => {
-    const savedTime = localStorage.getItem(storageKey);
-    if (savedTime) {
-      totalSecondsWatched.current = parseFloat(savedTime);
-    }
-  }, [lectureId, userId]);
-
-  useEffect(() => {
-    const fetchCompletionStatus = async () => {
-      if (!userId || !lectureId) return;
-      
-      setIsLoadingStatus(true);
-      try {
-        const response = await fetch(`/api/lecture/status?lectureId=${lectureId}`);
-        if (response.ok) {
-          const data = await response.json();
-          setHasCompleted(data.isCompleted);
+    //fetches course completion status
+    useEffect(() => {
+      const fetchCompletionStatus = async () => {
+        if (!userId || !lectureId) return;
+        
+        setIsLoadingStatus(true);
+        try {
+          const response = await fetch(`/api/lecture/status?lectureId=${lectureId}`);
+          if (response.ok) {
+            const data = await response.json();
+            setHasCompleted(data.isCompleted);
+          }
+        } catch (error) {
+          console.error("Error fetching progress:", error);
+        } finally {
+          setIsLoadingStatus(false);
         }
+      };
+      
+      fetchCompletionStatus();
+    }, [lectureId, userId]);
+  
+  
+    //updates mounted
+    useEffect(() => { setIsMounted(true); }, []);
+    
+    //display tooltip on load
+    useEffect(() => {
+      setShowTooltip(true);
+      
+      const timer = setTimeout(() => {
+        setShowTooltip(false);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }, [lectureId]);
+
+    //track watch time periodically
+    useEffect(() => {
+      let timer: NodeJS.Timeout;
+      if (isPlaying) {
+        timer = setInterval(() => {
+          totalSecondsWatched.current += 1;
+          localStorage.setItem(storageKey, totalSecondsWatched.current.toString());
+        }, 1000);
+      }
+      return () => clearInterval(timer);
+    }, [isPlaying, storageKey]);
+
+    //heartbeat to save watch activity every 30 seconds
+    useEffect(() => {
+        const heartbeat = setInterval(() => {
+          if (isPlaying) {
+            saveWatchActivity();
+          }
+        }, 30000); 
+        return () => {
+          clearInterval(heartbeat);
+          saveWatchActivity(); 
+        };
+    }, [isPlaying, lectureId]);
+    
+    //seek to specific time if provided
+    useEffect(() => {
+      if (seekTo !== null && controllerRef.current) {
+        let timeToSeek: number = 0;
+
+        if (typeof seekTo === 'string' && seekTo.includes(':')) {
+          const parts = seekTo.split(':').map(Number);
+          if (parts.length === 2) {
+            timeToSeek = parts[0] * 60 + parts[1];
+          } else if (parts.length === 3) {
+            timeToSeek = parts[0] * 3600 + parts[1] * 60 + parts[2];
+          }
+        } else {
+          timeToSeek = typeof seekTo === 'string' ? parseFloat(seekTo) : seekTo;
+        }
+
+        if (!isNaN(timeToSeek)) {
+          // Media-chrome allows setting time via the controller
+          controllerRef.current.media.currentTime = timeToSeek;
+          setIsPlaying(true);
+          controllerRef.current.paused = false;
+        }
+
+        onSeekComplete();
+      }
+    }, [seekTo, onSeekComplete]);
+
+
+    const markAsComplete = async () => {
+      if (hasCompleted) return;
+      setIsMarkingComplete(true);
+      
+      const courseId = params.courseId as string;
+      try {
+        const response = await fetch("/api/lecture/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lectureId, courseId }),
+        });
+
+        if (response.ok) {
+          setHasCompleted(true);
+          showToast.success("Progress saved! Great job on finishing this lecture.");
+          router.refresh();
+        }
+        else showToast.error("Couldn't save progress. Please check your connection.");
       } catch (error) {
-        console.error("Error fetching progress:", error);
+        console.error("Manual completion error:", error);
+        showToast.error("Something went wrong. Please try again later.");
       } finally {
-        setIsLoadingStatus(false);
+        setIsMarkingComplete(false);
       }
     };
 
-    fetchCompletionStatus();
-  }, [lectureId, userId]);
-
-
-
-  useEffect(() => { setIsMounted(true); }, []);
-
-  useEffect(() => {
-    // 1. Show the tooltip immediately on mount
-    setShowTooltip(true);
-
-    // 2. Hide it after 5 seconds
-    const timer = setTimeout(() => {
-      setShowTooltip(false);
-    }, 5000);
-
-    // 3. Cleanup timer if component unmounts
-    return () => clearTimeout(timer);
-  }, [lectureId]);
-
-  //function to track user activity
+   //function to track user activity
     const saveWatchActivity = async () => {
       if (totalSecondsWatched.current <= 0) return;
       console.log('----------------------------------------');
@@ -146,132 +201,97 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
       }
     };
 
-    useEffect(() => {
-      let timer: NodeJS.Timeout;
-      if (isPlaying) {
-        timer = setInterval(() => {
-          totalSecondsWatched.current += 1;
-          localStorage.setItem(storageKey, totalSecondsWatched.current.toString());
-        }, 1000);
-      }
-      return () => clearInterval(timer);
-    }, [isPlaying, storageKey]);
+    //handler for time updates to auto-complete lecture
+    const handleTimeUpdate = async (e: any) => {
+      const video = e.target;
+      if (!video || !video.duration || hasCompleted) return;
 
-    useEffect(() => {
-        const heartbeat = setInterval(() => {
-          if (isPlaying) {
-            saveWatchActivity();
+      const playedFraction = video.currentTime / video.duration;
+
+      if (playedFraction >= 0.95) {
+        setHasCompleted(true);
+        const courseId = params.courseId as string;
+
+        try {
+          const response = await fetch("/api/lecture/complete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              lectureId,
+              courseId,
+            }),
+          });
+
+          if (response.ok) {
+            console.log("Lecture marked as completed automatically!");
+            router.refresh();
           }
-        }, 30000); 
-        return () => {
-          clearInterval(heartbeat);
-          saveWatchActivity(); 
-        };
-    }, [isPlaying, lectureId]);
+        } catch (error) {
+          console.error("Auto-complete error:", error);
+        }
+      }
+    };
+    
+    //handlers for bookmark form
+    const handleOpenForm = () => {
+      if (controllerRef.current) {
+        const wasPaused = !isPlaying;
+        setOriginalControl(wasPaused);
 
+        const mediaElement = controllerRef.current.media;
+        const rawTime = mediaElement ? mediaElement.currentTime : 0;
+        const safeTime = isNaN(rawTime) ? 0 : rawTime;
 
+        controllerRef.current.paused = true;
+        setIsPlaying(false);
 
-
-
-  // --- NEW PROGRESS LOGIC ---
-  // Using the native timeupdate event which MediaController passes through
-  const handleTimeUpdate = async (e: any) => {
-    const video = e.target;
-    if (!video || !video.duration || hasCompleted) return;
-
-    const playedFraction = video.currentTime / video.duration;
-
-    if (playedFraction >= 0.95) {
-      setHasCompleted(true);
-      const courseId = params.courseId as string;
+        setBookmark(prev => ({ ...prev, time: safeTime }));
+        setShowForm(true);
+      }
+    };
+    
+    //handler to save bookmark
+    const handleSave = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setIsSubmitting(true);
 
       try {
-        const response = await fetch("/api/lecture/complete", {
+        const response = await fetch("/api/lecture/bookmark", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             lectureId,
-            courseId,
+            time: bookmark.time,
+            label: bookmark.label,
+            type: bookmark.type,
           }),
         });
 
-        if (response.ok) {
-          console.log("Lecture marked as completed automatically!");
-          router.refresh();
+        if (!response.ok) throw new Error("Failed to save");
+
+        const data = await response.json();
+        onBookmarkAdded(data);
+
+        showToast.success(`Bookmark saved at ${Math.floor(bookmark.time)}s`);
+
+        setShowForm(false);
+        setBookmark({ label: '', type: 'BOOKMARK', time: 0 });
+
+        if (controllerRef.current) {
+          const shouldResume = originalControl === false;
+          controllerRef.current.paused = !shouldResume;
+          setIsPlaying(shouldResume);
         }
       } catch (error) {
-        console.error("Auto-complete error:", error);
+        console.error("Save error:", error);
+        showToast.error("Could not save bookmark. Please try again.");
+      } finally {
+        setIsSubmitting(false);
       }
-    }
-  };
-
-  // --- SEEKING LOGIC ---
-  useEffect(() => {
-    if (seekTo !== null && controllerRef.current) {
-      let timeToSeek: number = 0;
-
-      if (typeof seekTo === 'string' && seekTo.includes(':')) {
-        const parts = seekTo.split(':').map(Number);
-        if (parts.length === 2) {
-          timeToSeek = parts[0] * 60 + parts[1];
-        } else if (parts.length === 3) {
-          timeToSeek = parts[0] * 3600 + parts[1] * 60 + parts[2];
-        }
-      } else {
-        timeToSeek = typeof seekTo === 'string' ? parseFloat(seekTo) : seekTo;
-      }
-
-      if (!isNaN(timeToSeek)) {
-        // Media-chrome allows setting time via the controller
-        controllerRef.current.media.currentTime = timeToSeek;
-        setIsPlaying(true);
-        controllerRef.current.paused = false;
-      }
-
-      onSeekComplete();
-    }
-  }, [seekTo, onSeekComplete]);
-
-  const handleOpenForm = () => {
-    if (controllerRef.current) {
-      const wasPaused = !isPlaying;
-      setOriginalControl(wasPaused);
-
-      const mediaElement = controllerRef.current.media;
-      const rawTime = mediaElement ? mediaElement.currentTime : 0;
-      const safeTime = isNaN(rawTime) ? 0 : rawTime;
-
-      controllerRef.current.paused = true;
-      setIsPlaying(false);
-
-      setBookmark(prev => ({ ...prev, time: safeTime }));
-      setShowForm(true);
-    }
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const response = await fetch("/api/lecture/bookmark", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lectureId,
-          time: bookmark.time,
-          label: bookmark.label,
-          type: bookmark.type,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to save");
-
-      const data = await response.json();
-      onBookmarkAdded(data);
-
-      showToast.success(`Bookmark saved at ${Math.floor(bookmark.time)}s`);
-
+    };
+    
+    //handler to cancel bookmark
+    const handleCancel = () => {
       setShowForm(false);
       setBookmark({ label: '', type: 'BOOKMARK', time: 0 });
 
@@ -280,35 +300,25 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
         controllerRef.current.paused = !shouldResume;
         setIsPlaying(shouldResume);
       }
-    } catch (error) {
-      console.error("Save error:", error);
-      showToast.error("Could not save bookmark. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    };
+    
+    //handler to toggle play/pause
+    const togglePlay = (e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      const newPlayingState = !isPlaying;
+      setIsPlaying(newPlayingState);
+      if (controllerRef.current) {
+        controllerRef.current.paused = !newPlayingState;
+      }
+    };
 
-  const handleCancel = () => {
-    setShowForm(false);
-    setBookmark({ label: '', type: 'BOOKMARK', time: 0 });
 
-    if (controllerRef.current) {
-      const shouldResume = originalControl === false;
-      controllerRef.current.paused = !shouldResume;
-      setIsPlaying(shouldResume);
-    }
-  };
 
-  const togglePlay = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    const newPlayingState = !isPlaying;
-    setIsPlaying(newPlayingState);
-    if (controllerRef.current) {
-      controllerRef.current.paused = !newPlayingState;
-    }
-  };
 
   if (!isMounted) return null;
+
+
+
   
   if(!videoUrl || videoUrl.trim() === "") { 
     return (
@@ -317,39 +327,10 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
       </div>
     );
   }
+
   const isYouTube = videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be");
   if (isYouTube) {
-    return (
-      <div className="w-full aspect-video bg-black">
-        <iframe
-          width="100%" height="100%"
-          src={videoUrl}
-          title="Course Video"
-          frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          className="w-full h-full"
-        ></iframe>
-
-      <div className="absolute top-4 right-4 z-20">
-          <button
-            onClick={markAsComplete}
-            disabled={hasCompleted || isMarkingComplete}
-            className={`px-4 py-2 rounded-lg font-bold transition-all shadow-lg flex items-center gap-2 ${
-              hasCompleted 
-                ? "bg-green-500 text-white cursor-default" 
-                : "bg-white/90 hover:bg-white text-black active:scale-95"
-            }`}
-          >
-            {hasCompleted ? (
-              <>Completed ✓</>
-            ) : (
-              <>{isMarkingComplete ? "Processing..." : "Mark as Completed"}</>
-            )}
-          </button>
-        </div>
-      </div>
-    );
+    return <YoutubeVideoPlayer videoUrl={videoUrl} markAsComplete={markAsComplete} hasCompleted={hasCompleted} isMarkingComplete={isMarkingComplete} />;
   }
 
   return (
@@ -406,70 +387,15 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
       />
 
       {/* --- BOOKMARK OVERLAY FORM --- */}
-      {showForm && (
-        <div
-          className="absolute inset-0 flex items-center justify-center bg-black/60 z-50 animate-in fade-in duration-200"
-          onKeyDown={(e) => e.stopPropagation()}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <form
-            onSubmit={handleSave}
-            className="bg-white p-6 rounded-xl shadow-2xl w-[90%] max-w-sm flex flex-col gap-4 text-black"
-          >
-            <div className="flex justify-between items-center">
-              <h3 className="font-bold text-lg">Add Bookmark</h3>
-              <span className="text-sm font-mono bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                at {Number.isFinite(bookmark.time)
-                  ? new Date(bookmark.time * 1000).toISOString().substr(14, 5)
-                  : "00:00"}
-              </span>
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-gray-500 uppercase">Label</label>
-              <input
-                autoFocus
-                required
-                className="w-full p-2 border-b-2 border-gray-200 focus:border-blue-600 outline-none transition-colors"
-                placeholder="What's happening here?"
-                value={bookmark.label}
-                onChange={(e) => setBookmark({ ...bookmark, label: e.target.value })}
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-gray-500 uppercase">Type</label>
-              <select
-                className="w-full p-2 mt-1 bg-gray-50 border rounded outline-none"
-                value={bookmark.type}
-                onChange={(e) => setBookmark(prev => ({ ...prev, type: e.target.value }))}
-              >
-                <option value="BOOKMARK">General Bookmark</option>
-                <option value="IMPORTANT">🔥 Important Segment</option>
-                <option value="QUESTION">❓ Question/Doubt</option>
-              </select>
-            </div>
-
-            <div className="flex gap-2 mt-2">
-              <button
-                disabled={isSubmitting}
-                type="button"
-                onClick={handleCancel}
-                className="flex-1 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium transition disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                disabled={isSubmitting}
-                type="submit"
-                className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition disabled:opacity-50"
-              >
-                {isSubmitting ? "Saving..." : <><Save size={18} /> Save</>}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      {showForm && 
+        <BookmarkForm
+          handleSave={handleSave}
+          handleCancel={handleCancel}
+          bookmark={bookmark}
+          setBookmark={setBookmark}
+          isSubmitting={isSubmitting}
+        />
+      }
 
       {/* --- CONTROLS --- */}
       <MediaControlBar>
