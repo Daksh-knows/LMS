@@ -70,3 +70,51 @@ export async function sendRefundStatusEmail(
     html: status === 'APPROVED' ? approvedHtml : rejectedHtml,
   });
 }
+
+export const sendLectureNotification = async (
+  email: string,
+  courseName: string,
+  lectureTitle: string,
+  type: string
+) => {
+  const typeLabels: Record<string, string> = {
+    VIDEO: "Video Lecture",
+    ASSIGNMENT: "New Assignment",
+    QUIZ: "New Quiz",
+    TEXT: "Reading Material",
+    LIVE: "Live Session"
+  };
+
+  const label = typeLabels[type] || "New Content";
+
+  const htmlContent = `
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+      <div style="background-color: #4f46e5; padding: 24px; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 20px;">New Content Added!</h1>
+      </div>
+      <div style="padding: 32px; background-color: #ffffff;">
+        <p style="color: #475569; font-size: 16px; line-height: 1.6;">Hello,</p>
+        <p style="color: #475569; font-size: 16px; line-height: 1.6;">Exciting news! A new <strong>${label}</strong> has been added to your course: <strong>${courseName}</strong>.</p>
+        
+        <div style="margin: 24px 0; padding: 16px; background-color: #f8fafc; border-left: 4px solid #4f46e5; border-radius: 4px;">
+          <p style="margin: 0; font-weight: bold; color: #1e293b;">${lectureTitle}</p>
+          <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Type: ${label}</p>
+        </div>
+
+        <div style="text-align: center; margin-top: 32px;">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/courses" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Start Learning</a>
+        </div>
+      </div>
+      <div style="background-color: #f1f5f9; padding: 16px; text-align: center; font-size: 12px; color: #94a3b8;">
+        © ${new Date().getFullYear()} Your Academy. All rights reserved.
+      </div>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: `"Academy Support" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: `New Content: ${lectureTitle} | ${courseName}`,
+    html: htmlContent,
+  });
+};
