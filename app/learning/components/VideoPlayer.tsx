@@ -37,9 +37,21 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
   const totalSecondsWatched = useRef<number>(0);
   const [showTooltip, setShowTooltip] = useState(false);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
-
   const [isMarkingComplete, setIsMarkingComplete] = useState(false);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(true);
+  const router = useRouter();
+  const params = useParams();
+  const [isMounted, setIsMounted] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [bookmark, setBookmark] = useState({ label: '', type: 'BOOKMARK', time: 0 });
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [originalControl, setOriginalControl] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasCompleted, setHasCompleted] = useState(false);
 
+  const storageKey = `watch-progress-${userId}-${lectureId}`;
+  
+  
   const markAsComplete = async () => {
     if (hasCompleted) return;
     setIsMarkingComplete(true);
@@ -65,9 +77,7 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
       setIsMarkingComplete(false);
     }
   };
-
-  const storageKey = `watch-progress-${userId}-${lectureId}`;
-
+  
   useEffect(() => {
     const savedTime = localStorage.getItem(storageKey);
     if (savedTime) {
@@ -75,16 +85,28 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
     }
   }, [lectureId, userId]);
 
+  useEffect(() => {
+    const fetchCompletionStatus = async () => {
+      if (!userId || !lectureId) return;
+      
+      setIsLoadingStatus(true);
+      try {
+        const response = await fetch(`/api/lecture/status?lectureId=${lectureId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setHasCompleted(data.isCompleted);
+        }
+      } catch (error) {
+        console.error("Error fetching progress:", error);
+      } finally {
+        setIsLoadingStatus(false);
+      }
+    };
 
-  const router = useRouter();
-  const params = useParams();
-  const [isMounted, setIsMounted] = useState(false);
-  const [showForm, setShowForm] = useState(false);
-  const [bookmark, setBookmark] = useState({ label: '', type: 'BOOKMARK', time: 0 });
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [originalControl, setOriginalControl] = useState<any>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasCompleted, setHasCompleted] = useState(false);
+    fetchCompletionStatus();
+  }, [lectureId, userId]);
+
+
 
   useEffect(() => { setIsMounted(true); }, []);
 
