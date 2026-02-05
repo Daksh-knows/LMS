@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { sendLectureNotification } from "@/lib/mail";
 
-// POST: Add Course Item
+
 export async function POST(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -95,9 +96,47 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Create in Database
-    await db.lecture.create({ data: createData });
-    return NextResponse.json({ success: true });
+    const lecture = await db.lecture.create({
+      data: createData,
+      include: {
+        module: {
+          include: {
+            course: {
+              include: {
+                students: {
+                  include: {
+                    user: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
 
+    const course = lecture.module.course;
+    const enrollments = course.students;
+
+    if (enrollments.length > 0) {
+      // Use Promise.allSettled so one failed email doesn't crash the API response
+      const emailPromises = enrollments.map((en) => {
+        if (en.user.email) {
+          return sendLectureNotification(
+            en.user.email,
+            course.title,
+            lecture.title,
+            lecture.type
+          );
+        }
+      });
+
+      // Execute emails in the background
+      Promise.allSettled(emailPromises).catch((err) => 
+        console.error("Background Email Error:", err)
+      );
+    }
+    return NextResponse.json({ success: true, lectureId: lecture.id });
   } catch (error: any) {
     console.error("[LECTURE_CREATE_ERROR]", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
