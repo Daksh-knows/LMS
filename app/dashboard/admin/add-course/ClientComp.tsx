@@ -228,7 +228,7 @@ export default function AddCoursePageClient({ user }: Props) {
             <button 
               type="submit" 
               disabled={isSubmitting}
-              className="w-full md:w-auto min-w-[200px] bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all active:scale-95 disabled:bg-gray-300 shadow-xl shadow-blue-100"
+              className="w-full md:w-auto min-w-50 bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all active:scale-95 disabled:bg-gray-300 shadow-xl shadow-blue-100"
             >
               {isSubmitting ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

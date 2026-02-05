@@ -2,12 +2,14 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Trash2, Edit, Plus, Loader2 } from "lucide-react";
+import { Trash2, Edit, Plus, Loader2, Award } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 interface Course {
   id: string;
   title: string;
+  isCompleted: boolean;
   tags: string[];
 }
 
@@ -16,20 +18,63 @@ interface Props {
   adminId: string;
 }
 
-export default function AdminCourseList({ initialCourses, adminId }: Props) {
-  // 1. Initialize local state with props
+export default function AdminCourseList({ initialCourses }: Props) {
   const [courses, setCourses] = useState<Course[]>(initialCourses);
+  const [isPending, setIsPending] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
+  const router = useRouter();
+
+  /* ---------------- TOGGLE COMPLETED ---------------- */
+  const handleToggleContent = async (
+    courseId: string,
+    currentStatus: boolean
+  ) => {
+    if (isPending) return;
+
+    setIsPending(courseId);
+
+    try {
+      const response = await fetch(`/api/course/${courseId}/toggle`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          toggleContent: !currentStatus,
+        }),
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || "Failed to toggle status");
+      }
+
+      // ✅ UPDATE LOCAL STATE (this was missing)
+      setCourses((prev) =>
+        prev.map((course) =>
+          course.id === courseId
+            ? { ...course, isCompleted: !currentStatus }
+            : course
+        )
+      );
+
+      toast.success("Course status updated");
+      router.refresh(); // optional but safe
+
+    } catch (error: any) {
+      toast.error(error.message || "Something went wrong");
+    } finally {
+      setIsPending(null);
+    }
+  };
+
+  /* ---------------- DELETE COURSE ---------------- */
   const handleDelete = async (courseId: string) => {
     if (!confirm("Are you sure you want to delete this course?")) return;
 
     setIsDeleting(courseId);
 
     const deletePromise = async () => {
-      const baseurl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-      // Ensure the endpoint matches your API structure (api/course or api/courses)
-      const response = await fetch(`${baseurl}/api/course/${courseId}`, {
+      const response = await fetch(`/api/course/${courseId}`, {
         method: "DELETE",
       });
 
@@ -38,16 +83,15 @@ export default function AdminCourseList({ initialCourses, adminId }: Props) {
         throw new Error(errorData.error || "Failed to delete course");
       }
 
-      return await response.json();
+      return response.json();
     };
 
     toast.promise(deletePromise(), {
-      loading: 'Deleting course and associated files...',
+      loading: "Deleting course and associated files...",
       success: () => {
-        // 2. Update local state to remove the course immediately
-        setCourses((prev) => prev.filter((course) => course.id !== courseId));
+        setCourses((prev) => prev.filter((c) => c.id !== courseId));
         setIsDeleting(null);
-        return 'Course deleted successfully!';
+        return "Course deleted successfully!";
       },
       error: (err) => {
         setIsDeleting(null);
@@ -56,9 +100,10 @@ export default function AdminCourseList({ initialCourses, adminId }: Props) {
     });
   };
 
+  /* ---------------- UI ---------------- */
   return (
     <div className="space-y-4">
-      {/* Header - Use local state 'courses' for length */}
+      {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest">
           Your Courses ({courses.length})
@@ -72,7 +117,7 @@ export default function AdminCourseList({ initialCourses, adminId }: Props) {
         </Link>
       </div>
 
-      {/* Empty state - Use local state 'courses' */}
+      {/* Empty state */}
       {courses.length === 0 ? (
         <div className="p-10 border-2 border-dashed rounded-3xl text-center text-gray-400 bg-gray-50/50">
           You haven&apos;t created any courses yet.
@@ -83,7 +128,7 @@ export default function AdminCourseList({ initialCourses, adminId }: Props) {
             key={course.id}
             className="flex items-center justify-between p-5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all"
           >
-            {/* Clickable course info */}
+            {/* Course Info */}
             <Link
               href={`/dashboard/admin/add-module/${course.id}`}
               className="flex-1 cursor-pointer group"
@@ -108,6 +153,34 @@ export default function AdminCourseList({ initialCourses, adminId }: Props) {
 
             {/* Actions */}
             <div className="flex gap-3 ml-4 shrink-0">
+              {/* Toggle Completed */}
+              <button
+                onClick={() =>
+                  handleToggleContent(course.id, course.isCompleted)
+                }
+                disabled={isPending === course.id}
+                title={
+                  course.isCompleted
+                    ? "Disable Certificates"
+                    : "Enable Certificates"
+                }
+                className={`p-2 rounded-xl transition-all ${
+                  course.isCompleted
+                    ? "text-amber-600 bg-amber-50 hover:bg-amber-100"
+                    : "text-gray-400 hover:text-amber-600 hover:bg-amber-50"
+                }`}
+              >
+                {isPending === course.id ? (
+                  <Loader2 size={20} className="animate-spin" />
+                ) : (
+                  <Award
+                    size={20}
+                    className={course.isCompleted ? "fill-amber-600" : ""}
+                  />
+                )}
+              </button>
+
+              {/* Edit */}
               <Link href={`/dashboard/admin/edit-course/${course.id}`}>
                 <button
                   title="Edit Course"
@@ -117,6 +190,7 @@ export default function AdminCourseList({ initialCourses, adminId }: Props) {
                 </button>
               </Link>
 
+              {/* Delete */}
               <button
                 onClick={() => handleDelete(course.id)}
                 disabled={isDeleting === course.id}
