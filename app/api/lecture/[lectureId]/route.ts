@@ -23,6 +23,7 @@ export async function GET(
         position: true,
         moduleId: true,
         textContent: true,
+        duration: true,
         quizQuestions: {
           include: { options: true },
           orderBy: { position: 'asc' }
