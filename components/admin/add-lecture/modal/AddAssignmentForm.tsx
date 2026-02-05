@@ -218,7 +218,7 @@ export default function AddAssignmentForm({
               <div key={index} className="flex flex-col md:flex-row gap-3 p-3 bg-white border border-gray-200 rounded-xl shadow-sm animate-in slide-in-from-top-2">
                  
                  {/* File Input Area */}
-                 <div className="flex-[2] flex items-center gap-3">
+                 <div className="flex-2 flex items-center gap-3">
                     <div className="p-3 bg-gray-100 rounded-lg text-gray-500 shrink-0">
                        {att.file ? <UploadCloud size={20} className="text-blue-500" /> : <Paperclip size={20} />}
                     </div>
@@ -252,7 +252,7 @@ export default function AddAssignmentForm({
                  </div>
 
                  {/* Title Input */}
-                 <div className="flex-[3] flex gap-2">
+                 <div className="flex-3 flex gap-2">
                     <input 
                       placeholder="Display Title (e.g. Problem Statement)"
                       value={att.title}
@@ -285,7 +285,7 @@ export default function AddAssignmentForm({
          <button 
            type="submit" 
            disabled={loading} 
-           className="flex-[2] bg-black text-white p-3 rounded-xl font-bold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+           className="flex-2 bg-black text-white p-3 rounded-xl font-bold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
          >
            {loading ? <Loader2 className="animate-spin" size={20} /> : <FileText size={20} />}
            {loading ? "Saving..." : "Save Assignment"}

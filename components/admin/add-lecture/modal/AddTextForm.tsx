@@ -5,7 +5,7 @@ import StarterKit from '@tiptap/starter-kit';
 import { Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getSession } from "next-auth/react";
-import { EditorToolbar } from "./EditorToolbar"; // Import the toolbar we made above
+import { EditorToolbar } from "@/components/admin/EditorToolbar"; // Import the toolbar we made above
 
 export default function AddTextForm({ courseId, sectionId, initialData, onSuccess, onCancel }: any) {
   const [loading, setLoading] = useState(false);
@@ -81,7 +81,7 @@ export default function AddTextForm({ courseId, sectionId, initialData, onSucces
         <label className="text-xs font-bold text-gray-400 uppercase">Content</label>
         <div className="border rounded-xl overflow-hidden focus-within:border-blue-500 transition-all">
           <EditorToolbar editor={editor} />
-          <div className="bg-white scrollbar-hide overflow-y-auto max-h-[500px]">
+          <div className="bg-white scrollbar-hide overflow-y-auto max-h-125">
             <EditorContent editor={editor} />
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function AddTextForm({ courseId, sectionId, initialData, onSucces
         <button type="button" onClick={onCancel} className="flex-1 p-3 border rounded-xl font-bold text-gray-600 hover:bg-gray-50 transition">
           Cancel
         </button>
-        <button type="submit" disabled={loading} className="flex-[2] bg-blue-600 text-white p-3 rounded-xl font-bold hover:bg-blue-700 transition flex items-center justify-center">
+        <button type="submit" disabled={loading} className="flex-2 bg-blue-600 text-white p-3 rounded-xl font-bold hover:bg-blue-700 transition flex items-center justify-center">
           {loading ? <Loader2 className="animate-spin" /> : "Save Article"}
         </button>
       </div>
