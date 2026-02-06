@@ -17,7 +17,7 @@ interface OverviewProps {
 }
 
 export const OverviewTab: React.FC<OverviewProps> = ({ course }) => {
-  console.log("Rendering OverviewTab with course:", course);
+  // console.log("Rendering OverviewTab with course:", course);
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-10 pb-10">
       
