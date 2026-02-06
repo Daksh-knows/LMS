@@ -4,7 +4,6 @@ import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, RefreshCw, Upload, X, Image as ImageIcon, Clock, Globe } from "lucide-react";
 import Link from "next/link";
-import toast from "react-hot-toast";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { EditorToolbar } from "./EditorToolbar"; // Adjust path as needed

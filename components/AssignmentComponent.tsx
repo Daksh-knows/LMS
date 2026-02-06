@@ -50,6 +50,7 @@ const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
           // Auto-expand if already submitted so they see the status immediately
           if (data.status !== "NOT_SUBMITTED") setIsExpanded(true);
         }
+        console.log("Status " , data) ;
       } catch (err) {
         console.error("Error fetching assignment status", err);
       } finally {
