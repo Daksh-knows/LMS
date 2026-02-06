@@ -62,3 +62,56 @@ export const uploadToGCS = async (
     throw error;
   }
 };
+
+export const uploadToCloudinary = async (
+  file: File,
+  onProgress?: (progress: number) => void
+): Promise<string> => {
+  try {
+    // 1. Prepare form data
+    // Cloudinary requires specific fields for unsigned uploads
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
+    formData.append("cloud_name", process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!);
+    formData.append("resource_type", "video");
+
+    const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload`;
+
+    // 2. Perform the upload using XMLHttpRequest to track progress
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", cloudinaryUrl, true);
+
+      // Track Upload Progress
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable && onProgress) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100);
+          onProgress(percentComplete);
+        }
+      };
+
+      xhr.onload = () => {
+        const response = JSON.parse(xhr.responseText);
+        if (xhr.status === 200) {
+          console.log('---------------------------------------------------');
+          console.log("Cloudinary Upload Successful:", response.secure_url);
+          console.log('---------------------------------------------------');
+          resolve(response.secure_url); // Return the permanent video URL
+        } else {
+          console.error("Cloudinary Error:", response.error?.message);
+          reject(new Error(response.error?.message || "Upload failed"));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error("Network error during Cloudinary upload"));
+
+      xhr.send(formData);
+    });
+
+  } catch (error) {
+    console.error("Cloudinary Upload Error:", error);
+    showToast.error("Video upload to Cloudinary failed");
+    throw error;
+  }
+};

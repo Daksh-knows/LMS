@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import { uploadToGCS } from "@/lib/google/video"; // Your existing utility
+import { uploadToCloudinary, uploadToGCS } from "@/lib/google/video"; // Your existing utility
 import { showToast } from "@/utils/Toast";
 import { getSession } from "next-auth/react";
 
@@ -30,7 +30,13 @@ export const BackgroundUploadProvider = ({ children }: { children: ReactNode }) 
 
     try {
       // 2. Perform the heavy upload
-      const publicUrl = await uploadToGCS(file, (percent) => {
+      // const publicUrl = await uploadToGCS(file, (percent) => {
+      //   setUploads((prev) => ({
+      //     ...prev,
+      //     [lectureId]: { progress: percent, status: "UPLOADING" },
+      //   }));
+      // });
+      const publicUrl = await uploadToCloudinary(file, (percent) => {
         setUploads((prev) => ({
           ...prev,
           [lectureId]: { progress: percent, status: "UPLOADING" },
