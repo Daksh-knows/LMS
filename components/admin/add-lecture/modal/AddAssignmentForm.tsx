@@ -7,6 +7,7 @@ import {
   FileText, Loader2, Plus, Trash2, UploadCloud, 
   Paperclip, X, File as FileIcon 
 } from "lucide-react";
+import { showToast } from "@/utils/Toast";
 
 // Unified interface for both existing and new files
 interface FileAttachment {
@@ -149,19 +150,18 @@ export default function AddAssignmentForm({
 
       return result;
     };
-
-    // --- STEP 4: Toast Feedback ---
-    toast.promise(savePromise(), {
-      loading: "Uploading files and saving assignment...",
-      success: () => {
-        onSuccess();
-        return "Assignment saved successfully! 📝";
-      },
-      error: (err) => {
-        setLoading(false);
-        return `Error: ${err.message}`;
-      },
-    });
+    try{
+      toast.loading("Uploading files and saving assignment...");
+      await savePromise();
+      toast.dismiss();
+      setLoading(false);
+      showToast.success("Assignment saved successfully! 📝");
+      onSuccess();
+    }catch(err: any){
+      toast.dismiss();
+      setLoading(false);
+      showToast.error(err.message || "Failed to save assignment.");
+    }
   };
 
   return (
