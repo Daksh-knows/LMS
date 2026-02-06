@@ -6,6 +6,7 @@ import { Rocket, Check, Sparkles, AlertCircle, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {  useRouter } from 'next/navigation';
 import { getSession, useSession } from 'next-auth/react';
+import { showToast } from '@/utils/Toast';
 
 export default function EnrollmentPage() {
     const router = useRouter();
@@ -114,17 +115,17 @@ export default function EnrollmentPage() {
 
             // 4. Success Handling
             if (action === "REGISTER_COHORT") {
-              toast.success("Discount unlocked!");
+              showToast.success("Discount unlocked!");
               setIsRegistered(true);
               await update({ hasRegistered: true });
             } else {
-              toast.success("Welcome to Premium!");
+              showToast.success("Welcome to Premium!");
               await update({ hasPremium: true });
               router.push("/dashboard?payment=success");
             }
           } catch (err) {
             console.error(err);
-            toast.error("Payment verification failed.");
+            showToast.error("Payment verification failed.");
           } finally {
             setIsProcessing(false);
           }
@@ -145,7 +146,7 @@ export default function EnrollmentPage() {
       rzp.open();
     } catch (error: any) {
       console.error("Payment error:", error);
-      toast.error(error.message || "Something went wrong.");
+      showToast.error(error.message || "Something went wrong.");
       setIsProcessing(false);
     }
   };

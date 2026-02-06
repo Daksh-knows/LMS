@@ -11,6 +11,7 @@ import axios from "axios";
 import { LiveVideoSection } from "./sections/LiveVideoSection";
 import { RecordedVideoSection } from "./sections/RecordedVideoSection";
 import { AttachmentsSection, FileAttachment } from "./sections/AttachmentsSection";
+import { showToast } from "@/utils/Toast";
 
 interface Props {
   courseId: string;
@@ -116,11 +117,11 @@ export default function AddVideoForm({
 
       if (publicUrl) {
         setVideoUrl(publicUrl);
-        toast.success("Video uploaded successfully!");
+        showToast.success("Video uploaded successfully!");
       }
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Video upload failed. Please try again.");
+      showToast.error("Video upload failed. Please try again.");
       setVideoFileName("");
     } finally {
       setIsUploading(false);
@@ -150,11 +151,11 @@ export default function AddVideoForm({
 
       if (res.data.url) {
         setVideoUrl(res.data.url);
-        toast.success("Video uploaded successfully!");
+        showToast.success("Video uploaded successfully!");
       }
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Video upload failed. Please try again.");
+      showToast.error("Video upload failed. Please try again.");
       setVideoFileName(""); // Reset on failure
     } finally {
       setIsUploading(false);
@@ -260,17 +261,15 @@ export default function AddVideoForm({
       return result;
     };
 
-    toast.promise(savePromise(), {
-      loading: "Saving lecture...",
-      success: () => {
-        onSuccess();
-        return "Saved successfully! 🎉";
-      },
-      error: (err) => {
-        setLoading(false);
-        return err.message;
-      },
-    });
+    try{
+      await savePromise();
+      onSuccess();
+      showToast.success("Saved successfully! 🎉");
+    }catch(err:any){
+      showToast.error(err.message);
+    }finally{
+      setLoading(false);
+    }
   };
 
   return (

@@ -6,6 +6,7 @@ import { Loader2, ShieldCheck, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getSession, useSession } from "next-auth/react";
 import toast from "react-hot-toast";
+import { showToast } from "@/utils/Toast";
 
 export default function PaymentPage() {
   const [loading, setLoading] = useState(false);
@@ -62,22 +63,36 @@ export default function PaymentPage() {
           };
 
           // --- TOAST PROMISE HANDLING ---
-          toast.promise(verifyPayment(), {
-            loading: "Finalizing your upgrade...",
-            success: () => {
-              // 2. Clear loading before navigating
-              setLoading(false); 
-              console.log("Payment and upgrade successful!");
-              // 3. Redirect to dashboard
-              router.push("/dashboard?payment=success");
-              router.refresh(); 
-              return "Welcome to Premium! 🏆";
-            },
-            error: (err) => {
-              setLoading(false);
-              return `Error: ${err.message}`;
-            },
-          });
+          // toast.promise(verifyPayment(), {
+          //   loading: "Finalizing your upgrade...",
+          //   success: () => {
+          //     // 2. Clear loading before navigating
+          //     setLoading(false); 
+          //     console.log("Payment and upgrade successful!");
+          //     // 3. Redirect to dashboard
+          //     router.push("/dashboard?payment=success");
+          //     router.refresh(); 
+          //     return "Welcome to Premium! 🏆";
+          //   },
+          //   error: (err) => {
+          //     setLoading(false);
+          //     return `Error: ${err.message}`;
+          //   },
+          // });
+          try{
+            toast.loading("Finalizing your upgrade...");
+            await verifyPayment();
+            toast.dismiss();
+            setLoading(false); 
+            console.log("Payment and upgrade successful!");
+            router.push("/dashboard?payment=success");
+            router.refresh(); 
+            showToast.success("Welcome to Premium! 🏆");
+          }catch(err: any){
+            toast.dismiss();
+            setLoading(false);
+            showToast.error(err.message || "Verification failed.");
+          }
         },
         modal: {
           ondismiss: () => setLoading(false),

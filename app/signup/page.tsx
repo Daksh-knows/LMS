@@ -17,6 +17,7 @@ import {
   Eye
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { showToast } from "@/utils/Toast";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -68,18 +69,30 @@ export default function SignupPage() {
     };
 
     // 2. Execute with Toast
-    toast.promise(signupPromise(), {
-      loading: "Creating account & sending OTP...",
-      success: () => {
-        setStep(2); // Move to OTP input screen
-        setLoading(false);
-        return "Account created! Check your inbox. 📧";
-      },
-      error: (err) => {
-        setLoading(false);
-        return err.message;
-      },
-    });
+    // toast.promise(signupPromise(), {
+    //   loading: "Creating account & sending OTP...",
+    //   success: () => {
+    //     setStep(2); // Move to OTP input screen
+    //     setLoading(false);
+    //     return "Account created! Check your inbox. 📧";
+    //   },
+    //   error: (err) => {
+    //     setLoading(false);
+    //     return err.message;
+    //   },
+    // });
+    try{
+      toast.loading("Creating account & sending OTP...");
+      await signupPromise();
+      toast.dismiss();
+      setStep(2); // Move to OTP input screen
+      setLoading(false);
+      showToast.success("Account created! Check your inbox. 📧");
+    }catch(err: any){
+      toast.dismiss();
+      setLoading(false);
+      showToast.error(err.message || "Signup failed.");
+    }
   };
 
   const handleVerify = async (e: React.FormEvent) => {
@@ -105,18 +118,30 @@ export default function SignupPage() {
     };
 
     // 2. Execute with Toast
-    toast.promise(verifyPromise(), {
-      loading: "Verifying code...",
-      success: () => {
-        setStep(3); // Move to "Success/Login" screen
-        setLoading(false);
-        return "Email verified successfully! ✅";
-      },
-      error: (err) => {
-        setLoading(false);
-        return err.message; // e.g., "OTP Expired" or "Invalid OTP"
-      },
-    });
+    // toast.promise(verifyPromise(), {
+    //   loading: "Verifying code...",
+    //   success: () => {
+    //     setStep(3); // Move to "Success/Login" screen
+    //     setLoading(false);
+    //     return "Email verified successfully! ✅";
+    //   },
+    //   error: (err) => {
+    //     setLoading(false);
+    //     return err.message; // e.g., "OTP Expired" or "Invalid OTP"
+    //   },
+    // });
+    try{
+      toast.loading("Verifying code...");
+      await verifyPromise();
+      toast.dismiss();
+      setStep(3); // Move to "Success/Login" screen
+      setLoading(false);
+      showToast.success("Email verified successfully! ✅");
+    }catch(err: any){
+      toast.dismiss();
+      setLoading(false);
+      showToast.error(err.message || "Failed to verify OTP.");
+    }
   };
 
   const handleAutoLogin = async () => {
