@@ -3,8 +3,9 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Trash2, Edit, Plus, Loader2, Award } from "lucide-react";
-import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { showToast } from "@/utils/Toast";
+import { useConfirm } from "@/context/ConfirmContext";
 
 interface Course {
   id: string;
@@ -22,7 +23,7 @@ export default function AdminCourseList({ initialCourses }: Props) {
   const [courses, setCourses] = useState<Course[]>(initialCourses);
   const [isPending, setIsPending] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
-
+  const {confirm} = useConfirm();
   const router = useRouter();
 
   /* ---------------- TOGGLE COMPLETED ---------------- */
@@ -57,11 +58,11 @@ export default function AdminCourseList({ initialCourses }: Props) {
         )
       );
 
-      toast.success("Course status updated");
+      showToast.success("Course status updated");
       router.refresh(); // optional but safe
 
     } catch (error: any) {
-      toast.error(error.message || "Something went wrong");
+      showToast.error(error.message || "Something went wrong");
     } finally {
       setIsPending(null);
     }
@@ -69,35 +70,26 @@ export default function AdminCourseList({ initialCourses }: Props) {
 
   /* ---------------- DELETE COURSE ---------------- */
   const handleDelete = async (courseId: string) => {
-    if (!confirm("Are you sure you want to delete this course?")) return;
+    confirm("Delete Course" ,
+      "Are you sure you want to delete this course? This will also remove all associated modules and lectures." ,
+      async () => {
+        setIsDeleting(courseId);
+        try{
+          const response = await fetch(`/api/course/${courseId}`, {
+            method: "DELETE",
+          });
 
-    setIsDeleting(courseId);
-
-    const deletePromise = async () => {
-      const response = await fetch(`/api/course/${courseId}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to delete course");
+          setCourses((prev) => prev.filter((c) => c.id !== courseId));
+          setIsDeleting(null);
+          showToast.delete("Course deleted successfully!");
+        }
+        catch(error){
+          showToast.error("Failed to delete course. Please try again.");
+          setIsDeleting(null);
+          throw error ;
+        }
       }
-
-      return response.json();
-    };
-
-    toast.promise(deletePromise(), {
-      loading: "Deleting course and associated files...",
-      success: () => {
-        setCourses((prev) => prev.filter((c) => c.id !== courseId));
-        setIsDeleting(null);
-        return "Course deleted successfully!";
-      },
-      error: (err) => {
-        setIsDeleting(null);
-        return `Error: ${err.message}`;
-      },
-    });
+    )
   };
 
   /* ---------------- UI ---------------- */

@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { EditorToolbar } from "@/components/admin/EditorToolbar"; 
+import { showToast } from "@/utils/Toast";
 
 interface Props {
   user: any;
@@ -58,7 +59,6 @@ export default function AddCoursePageClient({ user }: Props) {
     const title = formData.get("title") as string;
     
     setIsSubmitting(true);
-    const loadingToast = toast.loading("Creating your course...");
 
     try {
       let finalImageUrl = "";
@@ -99,7 +99,7 @@ export default function AddCoursePageClient({ user }: Props) {
       const result = await response.json();
 
       if (response.ok && result.success) {
-        toast.success("Course created successfully!", { id: loadingToast });
+        showToast.success("Course created successfully!");
         router.push("/dashboard/admin");
         router.refresh();
       } else {
@@ -107,7 +107,7 @@ export default function AddCoursePageClient({ user }: Props) {
       }
     } catch (error: any) {
       console.error("Submission error:", error);
-      toast.error(error.message || "An error occurred", { id: loadingToast });
+      showToast.error(error.message || "An error occurred");
       setIsSubmitting(false);
     }
   }
