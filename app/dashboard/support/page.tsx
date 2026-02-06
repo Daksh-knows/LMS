@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useSession } from "next-auth/react";
+import { showToast } from "@/utils/Toast";
 
 export default function StudentSupportPage() {
   const { data: session } = useSession();
@@ -40,7 +41,6 @@ export default function StudentSupportPage() {
 
   const createTicket = async () => {
     if (!subject || !message) return toast.error("Please fill all fields");
-    const toastId = toast.loading("Creating ticket...");
 
     try {
       const res = await fetch("/api/support", {
@@ -48,13 +48,13 @@ export default function StudentSupportPage() {
         body: JSON.stringify({ subject, message, priority }),
       });
       if (res.ok) {
-        toast.success("Ticket created!", { id: toastId });
+        showToast.success("Ticket created!");
         setSubject(""); setMessage("");
         fetchTickets();
         setView('LIST');
       } else throw new Error();
     } catch {
-      toast.error("Failed to create", { id: toastId });
+      showToast.error("Failed to create ticket");
     }
   };
 

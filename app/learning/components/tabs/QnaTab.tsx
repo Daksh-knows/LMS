@@ -5,6 +5,7 @@ import { MessageSquarePlus, Globe, Search, Loader2, ArrowLeft, Send , Trash2 , I
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
 import { CldUploadWidget } from "next-cloudinary";
+import { showToast } from "@/utils/Toast";
 
 interface QnaTabProps {
   lectureId: string;
@@ -86,10 +87,10 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
         setTitle("");
         setDescription("");
         setImages([]); 
-        toast.success("Question posted!");
+        showToast.success("Question posted!");
       }
     } catch (error) {
-      toast.error("Something went wrong");
+      showToast.error("Something went wrong");
     } finally {
       setIsSubmitting(false);
     }
@@ -117,10 +118,10 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
         setSelectedQuestion(updatedQuestion);
         setQuestions(prev => prev.map(q => q.id === updatedQuestion.id ? updatedQuestion : q));
         setReplyContent("");
-        toast.success("Reply added!");
+        showToast.success("Reply added!");
       }
     } catch (error) {
-      toast.error("Failed to post reply");
+      showToast.error("Failed to post reply");
     } finally {
       setIsSubmitting(false);
     }
@@ -131,12 +132,12 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
       try {
         const res = await fetch(`/api/questions/${questionId}`, { method: "DELETE" });
         if (res.ok) {
-          toast.success("Deleted");
+          showToast.success("Deleted");
           setQuestions((prev) => prev.filter((q) => q.id !== questionId));
           if (selectedQuestion?.id === questionId) setSelectedQuestion(null);
         }
       } catch (error) {
-        toast.error("Error deleting");
+        showToast.error("Error deleting");
       }
    };
 

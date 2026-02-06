@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getSession } from "next-auth/react";
 import { EditorToolbar } from "@/components/admin/EditorToolbar"; // Import the toolbar we made above
+import { showToast } from "@/utils/Toast";
 
 export default function AddTextForm({ courseId, sectionId, initialData, onSuccess, onCancel }: any) {
   const [loading, setLoading] = useState(false);
@@ -55,10 +56,10 @@ export default function AddTextForm({ courseId, sectionId, initialData, onSucces
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to save");
 
-      toast.success("Article saved successfully! 📄");
+      showToast.success("Article saved successfully! 📄");
       onSuccess();
     } catch (err: any) {
-      toast.error(err.message);
+      showToast.error(err.message);
     } finally {
       setLoading(false);
     }

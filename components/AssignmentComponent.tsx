@@ -5,6 +5,7 @@ import {
   MessageSquare, Award, Clock, X, Eye, File as FileIcon, ChevronDown, ChevronUp 
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { showToast } from "@/utils/Toast";
 
 interface Resource {
   id: string;
@@ -71,7 +72,7 @@ const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
       const url = URL.createObjectURL(selectedFile);
       setFile(selectedFile);
       setPreviewUrl(url);
-      toast.success("PDF Selected");
+      showToast.success("PDF Selected");
     }
   };
   
@@ -84,7 +85,6 @@ const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
 
   const handleSubmit = async () => {
     if (!file) return;
-    const loadingToast = toast.loading("Uploading assignment...");
     setIsUploading(true);
 
     try {
@@ -103,13 +103,13 @@ const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
         setFile(null);
         setPreviewUrl(null);
         setStatus("SUBMITTED");
-        toast.success("Assignment submitted successfully!", { id: loadingToast });
+        showToast.success("Assignment submitted successfully!");
       } else {
         throw new Error("Failed to upload");
       }
     } catch (error) {
       console.error("Submission error:", error);
-      toast.error("Submission failed.", { id: loadingToast });
+      showToast.error("Submission failed.");
     } finally {
       setIsUploading(false);
     }
