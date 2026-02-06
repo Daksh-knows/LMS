@@ -102,7 +102,7 @@ export const sendLectureNotification = async (
         </div>
 
         <div style="text-align: center; margin-top: 32px;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}/courses" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Start Learning</a>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/my-courses" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Start Learning</a>
         </div>
       </div>
       <div style="background-color: #f1f5f9; padding: 16px; text-align: center; font-size: 12px; color: #94a3b8;">

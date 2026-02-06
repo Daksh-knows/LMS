@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
+import { showToast } from "@/utils/Toast";
 
 // Interface for type safety
 interface RefundRequest {
@@ -83,13 +84,13 @@ export default function AdminRefundsPage() {
       const data = await res.json();
       
       if (data.success) {
-        toast.success(decision === 'APPROVE' ? "Refund Initiated via Razorpay" : "Request Rejected");
+        showToast.success(decision === 'APPROVE' ? "Refund Initiated via Razorpay" : "Request Rejected");
         fetchRequests(); 
       } else {
-        toast.error(data.error || "Action failed");
+        showToast.error(data.error || "Action failed");
       }
     } catch (error) {
-      toast.error("Server error");
+      showToast.error("Server error");
     } finally {
       setProcessingId(null);
     }

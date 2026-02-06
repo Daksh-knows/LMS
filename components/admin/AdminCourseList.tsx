@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Trash2, Edit, Plus, Loader2, Award } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { showToast } from "@/utils/Toast";
 
 interface Course {
   id: string;
@@ -57,11 +58,11 @@ export default function AdminCourseList({ initialCourses }: Props) {
         )
       );
 
-      toast.success("Course status updated");
+      showToast.success("Course status updated");
       router.refresh(); // optional but safe
 
     } catch (error: any) {
-      toast.error(error.message || "Something went wrong");
+      showToast.error(error.message || "Something went wrong");
     } finally {
       setIsPending(null);
     }
