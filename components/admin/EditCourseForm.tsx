@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { EditorToolbar } from "./EditorToolbar"; // Adjust path as needed
+import { showToast } from "@/utils/Toast";
 
 // Language Options
 const LANGUAGES = [
@@ -98,13 +99,13 @@ export default function EditCourseForm({ course, adminId }: { course: any, admin
         throw new Error(result.error || "Failed to update course");
       }
 
-      toast.success("Course updated successfully! 🎉");
+      showToast.success("Course updated successfully! 🎉");
       router.push("/dashboard/admin");
       router.refresh();
 
     } catch (error: any) {
       console.error("Update Error:", error);
-      toast.error(`Update failed: ${error.message}`);
+      showToast.error(`Update failed: ${error.message}`);
     } finally {
       setLoading(false);
     }
