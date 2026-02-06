@@ -11,6 +11,7 @@ export const uploadToGCS = async (
   onProgress?: (progress: number) => void
 ): Promise<string> => {
   try {
+    console.log("this function was called");
     // 1. Ask our API for a secure "Signed URL"
     const signRes = await fetch("/api/upload/signed-url", {
       method: "POST",
@@ -41,6 +42,9 @@ export const uploadToGCS = async (
 
       xhr.onload = () => {
         if (xhr.status === 200) {
+          console.log('---------------------------------------------------')
+          console.log("GCS Upload Successful:", publicUrl);
+          console.log('---------------------------------------------------')
           resolve(publicUrl); // Success! Return the public URL
         } else {
           reject(new Error("Upload failed"));

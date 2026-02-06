@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { getSession } from "next-auth/react";
 import { uploadToGCS } from "@/lib/google/video"; 
 import axios from "axios";
+import { useBackgroundUpload } from "@/context/BackgroundUploadContext";
 
 // Import Sub-Components
 import { LiveVideoSection } from "./sections/LiveVideoSection";
@@ -29,6 +30,8 @@ export default function AddVideoForm({
   onCancel,
 }: Props) {
   const [loading, setLoading] = useState(false);
+  const { startUpload } = useBackgroundUpload();
+  const [videoFile, setVideoFile] = useState<File | null>(null);
 
   // --- Global Form State ---
   const [lectureType, setLectureType] = useState<"VIDEO" | "LIVE">(
@@ -128,37 +131,12 @@ export default function AddVideoForm({
     }
   };
 
-  // --- Background File Upload Handler ---
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // --- File Handler (Simplified) ---
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    setVideoFileName(file.name);
-    setIsUploading(true);
-    setUploadProgress(0);
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      // We use axios here specifically for easy upload progress tracking
-      const res = await axios.post("/api/upload/video", formData, {
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
-          setUploadProgress(percentCompleted);
-        },
-      });
-
-      if (res.data.url) {
-        setVideoUrl(res.data.url);
-        showToast.success("Video uploaded successfully!");
-      }
-    } catch (error) {
-      console.error("Upload error:", error);
-      showToast.error("Video upload failed. Please try again.");
-      setVideoFileName(""); // Reset on failure
-    } finally {
-      setIsUploading(false);
+    if (file){ 
+      setVideoFile(file);
+      setVideoFileName(file.name);
     }
   };
 
@@ -166,21 +144,21 @@ export default function AddVideoForm({
     e.preventDefault();
     setLoading(true);
 
-    const savePromise = async () => {
-      // 1. Upload Attachments
+    try {
+      const session = await getSession();
+      const adminId = session?.user?.id;
+      if (!adminId) throw new Error("Unauthorized");
+
+      // 1. Upload Attachments (Blocking - usually small files)
       const uploadPromises = attachments.map(async (att) => {
-        if (!att.file) {
-            // If it's an existing file (no new file object), we might keep it as is
-            // Note: In a real app, you'd handle existing vs new files differently here
-            return att.file === null && att.title ? att : null; 
-        }
+        if (!att.file) return att.file === null && att.title ? att : null; 
 
         const formData = new FormData();
         formData.append("file", att.file);
 
-        const response = await fetch("/api/upload/file", { // Updated endpoint for general files
-          method: "POST",
-          body: formData,
+        const response = await fetch("/api/upload/file", { 
+          method: "POST", 
+          body: formData 
         });
 
         if (!response.ok) throw new Error(`Failed to upload: ${att.title}`);
@@ -193,59 +171,36 @@ export default function AddVideoForm({
         };
       });
 
-      const uploadedResources = (await Promise.all(uploadPromises)).filter(
-        (item:any) => item !== null
-      );
+      const uploadedResources = (await Promise.all(uploadPromises)).filter((item:any) => item !== null);
 
-      // 2. Payload Construction
-      let payload: any = {
+      // 2. Prepare Payload
+      // Note: We set status to 'UPLOADING' in description so the UI knows to show a spinner immediately
+      const descriptionData = lectureType === "VIDEO" && videoMode === "UPLOAD" 
+        ? { status: "UPLOADING" } 
+        : (lectureType === "LIVE" ? {
+            date: liveDate,
+            time: liveTime,
+            link: liveLink,
+            status: "UPCOMING"
+          } : null);
+
+      const payload = {
         courseId,
         moduleId: sectionId,
         title,
         isFree,
         attachments: uploadedResources,
+        type: lectureType,
+        // If UPLOAD mode, videoUrl is initially empty
+        videoUrl: videoMode === "URL" ? videoUrl : "", 
+        duration: duration ? parseInt(duration) : 0,
+        description: descriptionData ? JSON.stringify(descriptionData) : null,
       };
 
-      if (lectureType === "LIVE") {
-        if (!liveDate || !liveTime || !liveLink)
-          throw new Error("Please fill all live session details");
-
-        const liveData = {
-          date: liveDate,
-          time: liveTime,
-          link: liveLink,
-          status: "UPCOMING",
-        };
-
-        payload = {
-          ...payload,
-          type: "LIVE",
-          videoUrl: liveLink,
-          duration: duration || "60",
-          description: JSON.stringify(liveData),
-        };
-      } else {
-        if (videoMode === "UPLOAD" && !videoUrl) {
-          throw new Error("Please wait for the video to finish uploading.");
-        }
-
-        payload = {
-          ...payload,
-          type: "VIDEO",
-          videoUrl: videoUrl,
-          duration: duration ? parseInt(duration) : 0,
-          description: null,
-        };
-      }
-
-      // 3. API Call
-      const session = await getSession();
-      const adminId = session?.user?.id;
-      if (!adminId) throw new Error("Unauthorized");
-
+      // 3. Create Placeholder in DB
       const isUpdate = !!initialData;
-      const url = isUpdate
-        ? `/api/lecture?adminId=${adminId}&itemId=${initialData.id}`
+      const url = isUpdate 
+        ? `/api/lecture?adminId=${adminId}&itemId=${initialData.id}` 
         : `/api/lecture?adminId=${adminId}`;
 
       const response = await fetch(url, {
@@ -255,19 +210,24 @@ export default function AddVideoForm({
       });
 
       const result = await response.json();
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || "Failed to save details");
-      }
-      return result;
-    };
+      if (!response.ok || !result.success) throw new Error(result.error);
 
-    try{
-      await savePromise();
+      // 4. Start Background Upload via Context
+      if (lectureType === "VIDEO" && videoMode === "UPLOAD" && videoFile && !isUpdate) {
+         // This is the magic line - fire and forget!
+         startUpload(videoFile, result.lectureId); 
+         showToast.success("Upload started in background");
+      } else {
+         showToast.success("Saved successfully!");
+      }
+
+      // 5. Close Modal Immediately
       onSuccess();
-      showToast.success("Saved successfully! 🎉");
-    }catch(err:any){
-      showToast.error(err.message);
-    }finally{
+
+    } catch (error: any) {
+      console.error(error);
+      showToast.error(error.message || "Failed to save");
+    } finally {
       setLoading(false);
     }
   };
