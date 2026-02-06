@@ -7,11 +7,11 @@ export default function Footer() {
   return (
     <footer className="bg-zinc-200 border-t-2 border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-10 gap-x-8">
+        {/* Main Grid: Set to 2 columns on mobile, 4 on medium screens */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-y-10 gap-x-8">
           
-          {/* Brand Section */}
-          <div className="flex flex-col items-center md:items-start text-center md:text-left">
+          {/* Brand Section - Spans 2 columns on mobile to stay centered/full-width */}
+          <div className="col-span-2 md:col-span-1 flex flex-col items-center md:items-start text-center md:text-left">
             <Link href="/" className="flex items-center gap-2 mb-4 group">
               <div className="bg-purple-600 p-1.5 rounded-lg group-hover:scale-110 transition-transform">
                 <GraduationCap className="text-white" size={20} />
@@ -35,11 +35,11 @@ export default function Footer() {
               </Link>
             </div>
           </div>
-
-          {/* Quick Links */}
-          <div className="flex flex-col items-center md:items-start">
+          
+          {/* Quick Links - Takes 1 column on mobile (side-by-side with Support) */}
+          <div className="ml-2 flex flex-col items-start">
             <h4 className="font-bold text-gray-900 mb-5 text-sm uppercase tracking-wider">Platform</h4>
-            <ul className="space-y-3 text-sm text-gray-600 text-center md:text-left">
+            <ul className="space-y-3 text-sm text-gray-600">
               <li><Link href="/courses" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">All Courses</Link></li>
               <li><Link href="/dashboard" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">My Learning</Link></li>
               <li><Link href="/leaderboard" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">Leaderboard</Link></li>
@@ -47,19 +47,19 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Support */}
-          <div className="flex flex-col items-center md:items-start">
+          {/* Support - Takes 1 column on mobile (side-by-side with Platform) */}
+          <div className="flex flex-col items-start">
             <h4 className="font-bold text-gray-900 mb-5 text-sm uppercase tracking-wider">Support</h4>
-            <ul className="space-y-3 text-sm text-gray-600 text-center md:text-left">
+            <ul className="space-y-3 text-sm text-gray-600">
               <li><Link href="/help" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">Help Center</Link></li>
               <li><Link href="/faq" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">FAQs</Link></li>
               <li><Link href="/contact" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">Contact Us</Link></li>
-              <li><Link href="/community" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">Student Community</Link></li>
+              <li><Link href="/community" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">Community</Link></li>
             </ul>
           </div>
 
-          {/* Newsletter */}
-          <div className="flex flex-col items-center md:items-start">
+          {/* Newsletter - Spans 2 columns on mobile to look better below the links */}
+          <div className="col-span-2 md:col-span-1 flex flex-col items-center md:items-start">
             <h4 className="font-bold text-gray-900 mb-5 text-sm uppercase tracking-wider">Stay Updated</h4>
             <p className="text-gray-500 text-sm mb-4 text-center md:text-left">Get notified about new courses and feature updates.</p>
             <div className="flex w-full max-w-sm gap-2">
@@ -68,7 +68,7 @@ export default function Footer() {
                 placeholder="Email address" 
                 className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm w-full focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
               />
-              <button className="bg-purple-600 text-white p-2.5 rounded-xl hover:bg-purple-700 transition-all hover:shadow-lg hover:shadow-purple-200 active:scale-95 shrink-0">
+              <button className="bg-purple-600 text-white p-2.5 rounded-xl hover:bg-purple-700 transition-all active:scale-95 shrink-0">
                 <Mail size={18} />
               </button>
             </div>
@@ -81,9 +81,9 @@ export default function Footer() {
             © {currentYear} LMS Platform. All rights reserved.
           </p>
           <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-xs font-semibold text-gray-400">
-            <Link href="/terms" className="hover:text-purple-600 transition-colors">Terms of Service</Link>
-            <Link href="/privacy" className="hover:text-purple-600 transition-colors">Privacy Policy</Link>
-            <Link href="/cookies" className="hover:text-purple-600 transition-colors">Cookie Policy</Link>
+            <Link href="/terms" className="hover:text-purple-600 transition-colors">Terms</Link>
+            <Link href="/privacy" className="hover:text-purple-600 transition-colors">Privacy</Link>
+            <Link href="/cookies" className="hover:text-purple-600 transition-colors">Cookies</Link>
           </div>
         </div>
       </div>
