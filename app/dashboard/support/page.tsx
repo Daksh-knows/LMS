@@ -86,8 +86,8 @@ export default function StudentSupportPage() {
         }));
         setReplyText("");
       }
-    } catch {
-      toast.error("Failed to send");
+    } catch (err: any) {
+      showToast.error(err.message || "Failed to send");
     }
   };
 

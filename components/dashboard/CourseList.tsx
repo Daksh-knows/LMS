@@ -46,7 +46,7 @@ export default function CourseList({ courses: initialCourses, loading }: CourseL
       const data = await response.json();
       if (data.url) router.push(data.url);
     } catch (error) {
-      toast.error("Failed to load course");
+      showToast.error("Failed to load course");
       setLoadingResumeId(null);
     }
   };

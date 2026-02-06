@@ -39,7 +39,7 @@ export default function AdminRefundsPage() {
         setRequests(data.data);
       }
     } catch (error) {
-      toast.error("Failed to load requests");
+      showToast.error("Failed to load requests");
     } finally {
       setLoading(false);
     }
