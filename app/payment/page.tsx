@@ -19,7 +19,7 @@ export default function PaymentPage() {
     try {
       const session = await getSession();
       if (!session?.user?.id) {
-        toast.error("You must be logged in to proceed.");
+        showToast.error("You must be logged in to proceed.");
         setLoading(false);
         return;
       }
@@ -29,7 +29,7 @@ export default function PaymentPage() {
       const order = await orderRes.json();
 
       if (!order.success) {
-        toast.error("Failed to create order.");
+        showToast.error("Failed to create order.");
         setLoading(false);
         return;
       }
@@ -104,7 +104,7 @@ export default function PaymentPage() {
       rzp.open();
     } catch (error) {
       console.error("Razorpay error:", error);
-      toast.error("Something went wrong.");
+      showToast.error("Something went wrong.");
       setLoading(false);
     }
   };
