@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Loader from "@/utils/Loader";
+import { showToast } from "@/utils/Toast";
 
 interface CourseListProps {
   courses: any[];
@@ -67,31 +68,25 @@ export default function CourseList({ courses: initialCourses, loading }: CourseL
       return result;
     };
 
-    toast.promise(enrollPromise(), {
-      loading: `Enrolling you in ${title}...`,
-      success: () => {
-        setProcessingId(null);
-
-        // 3. IMMEDIATE STATE UPDATE: Mark as enrolled locally
-        setLocalCourses((prevCourses) => 
-          prevCourses.map((c) => 
-            c.id === courseId ? { ...c, isEnrolled: true } : c
-          )
-        );
-
-        // 4. AUTO-NAVIGATE: Take user to the course immediately
-        handleResumeCourse(null, courseId);
-
-        // Background refresh to keep server state in sync
-        router.refresh(); 
-        
-        return `Successfully enrolled! Redirecting... 🚀`;
-      },
-      error: (err) => {
-        setProcessingId(null);
-        return err.message;
-      },
-    });
+    try{
+      toast.loading(`Enrolling you in ${title}...`);
+      const result = await enrollPromise();
+      toast.dismiss();
+      // Immediate state update
+      setLocalCourses((prevCourse)=>{
+        return prevCourse.map((cr) => cr.id === courseId ? {...cr, isEnrolled: true}: cr);
+      })
+      // Auto-navigate to course
+      handleResumeCourse(null, courseId);
+      router.refresh();
+      showToast.success("Successfully enrolled! Redirecting... 🚀");
+    }
+    catch(err: any){
+      toast.dismiss();
+      showToast.error(err.message || "Enrollment failed");
+    }finally{
+      setProcessingId(null);
+    }
   };
 
   return (
@@ -126,7 +121,7 @@ export default function CourseList({ courses: initialCourses, loading }: CourseL
                           isEnrolled ? "border-green-200 cursor-pointer" : "border-indigo-100"
                         }`}
                       >
-                        <div className="md:w-[45%] h-64 md:h-[400px] relative overflow-hidden">
+                        <div className="md:w-[45%] h-64 md:h-100 relative overflow-hidden">
                           <img src={course.imageUrl} alt={course.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                           <div className="absolute top-6 left-6 flex flex-wrap gap-2">
                             {Array.isArray(course.tags) && course.tags.map((tag: string) => (
@@ -181,7 +176,7 @@ export default function CourseList({ courses: initialCourses, loading }: CourseL
                           isEnrolled ? "border-green-200 cursor-pointer" : "border-indigo-500 hover:shadow-xl"
                         }`}
                       >
-                        <div className="relative aspect-[4/3] overflow-hidden">
+                        <div className="relative aspect-4/3 overflow-hidden">
                           <img src={course.imageUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                           <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                             {Array.isArray(course.tags) && course.tags.map((tag: string) => (

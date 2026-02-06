@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Loader2, Sparkles, FileQuestion, AlignLeft, BarChart, Hash } from "lucide-react";
 import { Lecture } from "@/app/generated/prisma/client";
 import toast from "react-hot-toast";
+import { showToast } from "@/utils/Toast";
 
 
 
@@ -80,18 +81,30 @@ export default function AddQuizForm({
   };
 
   // 2. Execute with Toast feedback
-  toast.promise(generateQuizPromise(), {
-    loading: "AI is crafting your quiz questions...",
-    success: () => {
-      onSuccess(); // Close the modal/form
-      return "Quiz generation started! Check back in a moment. ✨";
-    },
-    error: (err) => {
-      // The button becomes clickable again if it fails
-      setSubmitting(false); 
-      return `Error: ${err.message}`;
-    },
-  });
+  // toast.promise(generateQuizPromise(), {
+  //   loading: "AI is crafting your quiz questions...",
+  //   success: () => {
+  //     onSuccess(); // Close the modal/form
+  //     return "Quiz generation started! Check back in a moment. ✨";
+  //   },
+  //   error: (err) => {
+  //     // The button becomes clickable again if it fails
+  //     setSubmitting(false); 
+  //     return `Error: ${err.message}`;
+  //   },
+  // });
+  try{
+    toast.loading("AI is crafting your quiz questions...");
+    await generateQuizPromise();
+    toast.dismiss();
+    setSubmitting(false);
+    onSuccess();
+    showToast.success("Quiz generation started! Check back in a moment. ✨");
+  }catch(err: any){
+    toast.dismiss();
+    setSubmitting(false);
+    showToast.error(`Error: ${err.message}`);
+  }
 };
 
   return (
