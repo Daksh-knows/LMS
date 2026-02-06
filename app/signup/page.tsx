@@ -43,7 +43,7 @@ export default function SignupPage() {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords do not match!");
+      showToast.error("Passwords do not match!");
       return;
     }
 

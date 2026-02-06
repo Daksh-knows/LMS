@@ -1,3 +1,4 @@
+import { showToast } from "@/utils/Toast";
 import toast from "react-hot-toast";
 
 /**
@@ -53,7 +54,7 @@ export const uploadToGCS = async (
 
   } catch (error) {
     console.error("Upload Error:", error);
-    toast.error("Video upload failed");
+    showToast.error("Video upload failed");
     throw error;
   }
 };

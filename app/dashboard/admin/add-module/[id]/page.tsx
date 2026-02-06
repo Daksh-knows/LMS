@@ -61,11 +61,11 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
         setSections(data.sections || []);
         setCourseTitle(data.courseTitle);
       } else {
-        toast.error(data.error);
+        showToast.error(data.error);
       }
     } catch (error) {
       console.error("Error loading curriculum:", error);
-      toast.error("Failed to load content");
+      showToast.error("Failed to load content");
     } finally {
       setIsLoading(false);
     }
@@ -110,11 +110,11 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
       });
       
       await Promise.all(promises);
-      toast.success("Order saved successfully");
+      showToast.success("Order saved successfully");
       setHasUnsavedChanges(false);
       setSelectedLectureId(null);
     } catch (error) {
-      toast.error("Failed to save order");
+      showToast.error("Failed to save order");
     }
   };
   

@@ -65,7 +65,7 @@ const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       if (selectedFile.type !== "application/pdf") {
-        toast.error("Please select a PDF file");
+        showToast.error("Please select a PDF file");
         return;
       }
       
