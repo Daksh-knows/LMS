@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import  cloudinary  from "@/lib/cloudinary";
 
+
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ lectureId: string }> }
@@ -132,5 +133,61 @@ export async function DELETE(
   } catch (error: any) {
     console.error("[LECTURE_DELETE]", error);
     return new NextResponse("Internal Error", { status: 500 });
+  }
+}
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ lectureId: string }> }
+) {
+  try {
+    const { lectureId } = await params;
+    const body = await req.json();
+    
+    // 1. Authorization Check
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    // 2. Verification: Ensure the lecture exists and belongs to the user's course
+    // (Optional but recommended for security)
+    const existingLecture = await db.lecture.findUnique({
+      where: { id: lectureId },
+      include: { module: { include: { course: true } } }
+    });
+
+    if (!existingLecture) {
+      return NextResponse.json({ success: false, error: "Lecture not found" }, { status: 404 });
+    }
+
+    // 3. Perform the Update
+    // We destructure only the allowed fields to prevent accidental overwrites
+    const { videoUrl, title, description, isFree, duration } = body;
+
+    const updatedLecture = await db.lecture.update({
+      where: { id: lectureId },
+      data: {
+        ...(videoUrl !== undefined && { videoUrl }),
+        ...(title !== undefined && { title }),
+        ...(description !== undefined && { description }), // Used for status updates
+        ...(isFree !== undefined && { isFree }),
+        ...(duration !== undefined && { duration: parseInt(duration) }),
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: updatedLecture,
+    });
+
+  } catch (error: any) {
+    console.error("[LECTURE_PATCH_ERROR]", error);
+    return NextResponse.json(
+      { success: false, error: error.message || "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

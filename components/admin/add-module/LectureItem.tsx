@@ -1,6 +1,7 @@
 import React from "react";
-import { ArrowUp, ArrowDown, Edit, Trash2 } from "lucide-react";
+import { ArrowUp, ArrowDown, Edit, Trash2, Loader2 } from "lucide-react";
 import { getTypeStyles } from "./utils"; // Import from above
+import { useBackgroundUpload } from "@/context/BackgroundUploadContext";
 
 interface LectureItemProps {
   lecture: any;
@@ -18,6 +19,38 @@ export const LectureItem = ({
   lecture, index, isSelected, isFirst, isLast, onSelect, onMove, onEdit, onDelete 
 }: LectureItemProps) => {
   const style = getTypeStyles(lecture.type);
+  const { uploads } = useBackgroundUpload();
+
+  const  activeUpload = uploads[lecture.id];
+  console.log('--------------------------------------------------')
+  console.log("Active Upload for Lecture", lecture.id, activeUpload);
+  console.log('--------------------------------------------------')
+
+  const meta = lecture.description ? JSON.parse(lecture.description) : {};
+  const isProcessing = activeUpload?.status === "UPLOADING" || meta.status === "UPLOADING";
+  const progress = activeUpload?.progress || 0;
+
+  if (isProcessing) {
+    return (
+      <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl mb-2">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <Loader2 className="animate-spin text-blue-600" size={18} />
+            <span className="text-sm font-bold text-blue-900">Processing Video...</span>
+          </div>
+          <span className="text-xs font-bold text-blue-600">{progress}%</span>
+        </div>
+        
+        {/* Progress Bar */}
+        <div className="h-1.5 w-full bg-blue-200 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-blue-600 transition-all duration-300 ease-out" 
+            style={{ width: `${progress}%` }} 
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 
