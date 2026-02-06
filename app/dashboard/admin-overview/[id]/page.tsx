@@ -49,10 +49,10 @@ export default function AssignmentGradingPage({ params }: { params: Promise<{ id
           setAssignmentTitle(result.data.title);
           setSubmissions(result.data.submissions);
         } else {
-          toast.error(result.error || "Failed to load");
+          showToast.error(result.error || "Failed to load");
         }
       } catch (error) {
-        toast.error("Network error. Please try again.");
+        showToast.error("Network error. Please try again.");
       } finally {
         setLoading(false);
       }
