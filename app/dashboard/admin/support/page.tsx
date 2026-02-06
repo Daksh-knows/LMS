@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useSession } from "next-auth/react";
+import { showToast } from "@/utils/Toast";
 
 // Helper for badges
 function TicketStatusBadge({ status }: { status: string }) {
@@ -102,9 +103,11 @@ export default function AdminSupportPage() {
         setMarkResolved(false);
         fetchTickets(); // Refresh sidebar list to update status/order
         
-        if(newStatus === 'CLOSED') toast.success("Ticket resolved and closed");
+        if(newStatus === 'CLOSED') showToast.success("Ticket resolved and closed");
       }
-    } catch { toast.error("Failed to send"); }
+    } catch (e) {
+      showToast.error("Failed to send reply");
+    }
   };
 
   const toggleStatus = async () => {
@@ -115,7 +118,7 @@ export default function AdminSupportPage() {
     });
     setActiveTicket((prev: any) => ({ ...prev, status: newStatus }));
     fetchTickets();
-    toast.success(`Ticket ${newStatus === 'CLOSED' ? 'Closed' : 'Reopened'}`);
+    showToast.success(`Ticket ${newStatus === 'CLOSED' ? 'Closed' : 'Reopened'}`);
   };
 
   if (loading) return <div className="p-10 flex justify-center"><Loader2 className="animate-spin text-blue-600"/></div>;

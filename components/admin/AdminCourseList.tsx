@@ -59,9 +59,11 @@ export default function AdminCourseList({ initialCourses }: Props) {
       );
 
       showToast.success("Course status updated");
+      showToast.success("Course status updated");
       router.refresh(); // optional but safe
 
     } catch (error: any) {
+      showToast.error(error.message || "Something went wrong");
       showToast.error(error.message || "Something went wrong");
     } finally {
       setIsPending(null);

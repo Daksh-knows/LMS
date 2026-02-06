@@ -63,7 +63,7 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
         if (updated) setSelectedQuestion(updated);
       }
     } catch (error) {
-      toast.error("Failed to load questions");
+      showToast.error("Failed to load questions");
     } finally {
       setIsLoading(false);
     }
