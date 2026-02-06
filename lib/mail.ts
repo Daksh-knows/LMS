@@ -23,7 +23,6 @@ export async function sendOtpEmailInternal(email: string, otp: string) {
   });
 }
 
-// --- NEW FUNCTION ---
 export async function sendRefundStatusEmail(
   email: string, 
   name: string, 
@@ -115,6 +114,39 @@ export const sendLectureNotification = async (
     from: `"Academy Support" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: `New Content: ${lectureTitle} | ${courseName}`,
+    html: htmlContent,
+  });
+};
+
+export const sendGradingNotification = async (
+  email: string,
+  studentName: string,
+  lectureTitle: string,
+  grade: number,
+  feedback?: string
+) => {
+  const htmlContent = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+      <h2 style="color: #1e293b;">Assignment Graded!</h2>
+      <p>Hello ${studentName || 'Student'},</p>
+      <p>Your submission for <strong>${lectureTitle}</strong> has been reviewed and graded.</p>
+      
+      <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <p style="margin: 0; font-size: 18px;"><strong>Grade:</strong> ${grade}%</p>
+        ${feedback ? `<p style="margin: 10px 0 0 0; color: #475569;"><strong>Feedback:</strong> ${feedback}</p>` : ''}
+      </div>
+
+      <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" 
+         style="display: inline-block; background-color: #6366f1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+         View in Dashboard
+      </a>
+    </div>
+  `;
+
+  return transporter.sendMail({
+    from: `"Course Academy" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: `Grade Received: ${lectureTitle}`, 
     html: htmlContent,
   });
 };
