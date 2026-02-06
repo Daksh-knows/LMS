@@ -9,23 +9,25 @@ import { toast } from "react-hot-toast";
 import { getSession } from "next-auth/react";
 import { LectureItem } from "@/components/admin/add-module/LectureItem"; 
 import { SectionItem } from "@/components/admin/add-module/SectionItem"; 
+import { useConfirm } from "@/context/ConfirmContext";
+import { showToast } from "@/utils/Toast";
 
 export default function AddModulePage({ params }: { params: Promise<{ id: string }> }) {
   const [id, setId] = useState<string>("");
   const [sections, setSections] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [courseTitle, setCourseTitle] = useState("");
-  
+  const {confirm} = useConfirm();
   // UI State
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const [selectedLectureId, setSelectedLectureId] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
+  
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [editingLecture, setEditingLecture] = useState<any>(null);
-
+  
   // --- 1. Initialization ---
   useEffect(() => {
     params.then(async (resolvedParams) => {
@@ -33,7 +35,7 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
       loadContent(resolvedParams.id);
     });
   }, [params]);
-
+  
   // --- 2. Expand/Collapse Logic ---
   useEffect(() => {
     if (sections.length > 0) {
@@ -44,7 +46,7 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
       }
     }
   }, [sections.length]); // Dependency on length detects new modules
-
+  
   const loadContent = async (courseId: string) => {
     try {
       const user: any = await getSession();
@@ -53,7 +55,7 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
       
       const response = await fetch(`${baseUrl}/api/course/${courseId}/content?adminId=${adminId}`);
       if (!response.ok) throw new Error("Failed to fetch curriculum");
-
+      
       const data = await response.json();
       if (data.success) {
         setSections(data.sections || []);
@@ -68,36 +70,36 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
       setIsLoading(false);
     }
   };
-
+  
   // --- 3. Actions ---
-
+  
   const toggleSection = (sectionId: string) => {
     setExpandedSections(prev => 
       prev.includes(sectionId) ? prev.filter(id => id !== sectionId) : [...prev, sectionId]
     );
   };
-
+  
   const moveLecture = (sectionIndex: number, lectureIndex: number, direction: 'up' | 'down') => {
     const newSections = [...sections];
     const section = newSections[sectionIndex];
     const lectures = [...section.lectures];
     const targetIndex = direction === 'up' ? lectureIndex - 1 : lectureIndex + 1;
-
+    
     if (targetIndex < 0 || targetIndex >= lectures.length) return;
-
+    
     [lectures[lectureIndex], lectures[targetIndex]] = [lectures[targetIndex], lectures[lectureIndex]];
     newSections[sectionIndex] = { ...section, lectures };
     
     setSections(newSections);
     setHasUnsavedChanges(true);
   };
-
+  
   const saveOrder = async () => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
       const user: any = await getSession();
       const adminId = user?.user?.id;
-
+      
       const promises = sections.map(section => {
         const orderedLectureIds = section.lectures.map((l: any) => l.id);
         return fetch(`${baseUrl}/api/lecture/reorder`, {
@@ -106,7 +108,7 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
           body: JSON.stringify({ lectureIds: orderedLectureIds, adminId }),
         });
       });
-
+      
       await Promise.all(promises);
       toast.success("Order saved successfully");
       setHasUnsavedChanges(false);
@@ -115,41 +117,68 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
       toast.error("Failed to save order");
     }
   };
-
-  const handleDeleteSection = async (moduleId: string, title: string) => {
-    if (!confirm(`Delete module "${title}"?`)) return;
-    const user: any = await getSession();
+  
+  const handleDeleteSection = async (moduleId : any, title : string) => {
+    // 1. Get user/session info first
+    const user = await getSession();
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+    
+    // 2. Trigger your global confirm modal
+    confirm(
+      "Delete module?",
+      `Are you sure you want to delete the module "${title}"? This action cannot be undone.`,
+      async () => {
+        try {
+          const response = await fetch(
+            `${baseUrl}/api/course/${id}/module/${moduleId}?adminId=${user?.user?.id}`,
+            { method: "DELETE" }
+          );
+          
+          const data = await response.json();
+          
+          if (!data.success) {
+            throw new Error(data.error || "Failed to delete");
+          }
 
-    toast.promise(
-      fetch(`${baseUrl}/api/course/${id}/module/${moduleId}?adminId=${user?.user?.id}`, { method: "DELETE" })
-        .then(res => res.json())
-        .then(data => {
-          if (!data.success) throw new Error(data.error);
+          showToast.delete("Module deleted successfully");
           loadContent(id);
-        }),
-      { loading: "Deleting...", success: "Module deleted", error: (err) => err.message }
+        } catch (err : any) {
+          showToast.error(err.message || "Failed to delete module");
+          throw err; 
+        }
+      }
     );
   };
 
-  const handleDeleteLecture = async (lectureId: string, title: string) => {
-    if (!confirm(`Delete "${title}"?`)) return;
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-      const response = await fetch(`${baseUrl}/api/lecture/${lectureId}`, { method: "DELETE" });
-      const data = await response.json();
-      if (data.success) {
-        toast.success("Deleted");
-        loadContent(id);
-      } else {
-        toast.error(data.error);
-      }
-    } catch (error) {
-      toast.error("Delete failed");
-    }
+  const handleDeleteLecture = (lectureId: string, title: string , type: string) => {
+    const label = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+      confirm(
+        "Delete Lecture",
+        `Are you sure you want to delete "${title}"? This will permanently remove the ${label} item and all related materials.`,
+        async () => {
+          try {
+            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+            const response = await fetch(`${baseUrl}/api/lecture/${lectureId}`, { 
+              method: "DELETE" 
+            });
+            
+            const data = await response.json();
+
+            if (!data.success) {
+              throw new Error(data.error || "Failed to delete lecture");
+            }
+            showToast.delete(`${label} deleted successfully`);
+            loadContent(id);
+          } catch (error: any) {
+            console.error("LECTURE_DELETE_ERROR", error);
+            showToast.error(error.message || "Delete failed. Please try again.");
+            
+            throw error; 
+          }
+        }
+      );
   };
 
-  // --- Render ---
 
   if (isLoading) return <div className="p-12 text-center text-gray-400 animate-pulse">Loading...</div>;
 
@@ -235,7 +264,7 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
                       onSelect={() => setSelectedLectureId(selectedLectureId === lecture.id ? null : lecture.id)}
                       onMove={(dir) => moveLecture(sectionIndex, lectureIndex, dir)}
                       onEdit={() => { setActiveSectionId(section.id); setEditingLecture(lecture); setIsModalOpen(true); }}
-                      onDelete={() => handleDeleteLecture(lecture.id, lecture.title)}
+                      onDelete={() => handleDeleteLecture(lecture.id, lecture.title , lecture.type)}
                     />
                   ))
                 )}

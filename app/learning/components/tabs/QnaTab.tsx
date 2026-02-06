@@ -5,6 +5,8 @@ import { MessageSquarePlus, Globe, Search, Loader2, ArrowLeft, Send , Trash2 , I
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
 import { CldUploadWidget } from "next-cloudinary";
+import { showToast } from "@/utils/Toast";
+import { useConfirm } from "@/context/ConfirmContext";
 
 interface QnaTabProps {
   lectureId: string;
@@ -29,6 +31,7 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
   const [description, setDescription] = useState("");
   const [replyContent, setReplyContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const {confirm} = useConfirm();
 
   // Check if current user is teacher (logic usually goes here or passed as prop)
   useEffect(() => {
@@ -86,10 +89,10 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
         setTitle("");
         setDescription("");
         setImages([]); 
-        toast.success("Question posted!");
+        showToast.success("Question posted!");
       }
     } catch (error) {
-      toast.error("Something went wrong");
+      showToast.error("Something went wrong");
     } finally {
       setIsSubmitting(false);
     }
@@ -117,27 +120,31 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
         setSelectedQuestion(updatedQuestion);
         setQuestions(prev => prev.map(q => q.id === updatedQuestion.id ? updatedQuestion : q));
         setReplyContent("");
-        toast.success("Reply added!");
+        showToast.success("Reply added!");
       }
     } catch (error) {
-      toast.error("Failed to post reply");
+      showToast.error("Failed to post reply");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const onDelete = async (questionId: string) => {
-      if (!confirm("Are you sure?")) return;
-      try {
-        const res = await fetch(`/api/questions/${questionId}`, { method: "DELETE" });
-        if (res.ok) {
-          toast.success("Deleted");
-          setQuestions((prev) => prev.filter((q) => q.id !== questionId));
-          if (selectedQuestion?.id === questionId) setSelectedQuestion(null);
+      confirm("Delete Question" ,
+        "Are you sure you want to delete this question? This action cannot be undone." ,
+        async () => {
+          try {
+            const res = await fetch(`/api/questions/${questionId}`, { method: "DELETE" });
+            if (res.ok) {
+              showToast.delete("Deleted post successfully");
+              setQuestions((prev) => prev.filter((q) => q.id !== questionId));
+              if (selectedQuestion?.id === questionId) setSelectedQuestion(null);
+            }
+          } catch (error) {
+            showToast.error("Error deleting post");
+          }
         }
-      } catch (error) {
-        toast.error("Error deleting");
-      }
+      )
    };
 
   if (isLoading && questions.length === 0) {
@@ -166,7 +173,7 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
                 style={{ backgroundColor: isQuestionTeacher ? "#2563eb" : "#0d9488" }} 
                 className="h-8 w-8 md:h-10 md:w-10 rounded-full flex items-center justify-center text-white font-bold shrink-0 text-sm md:text-base"
               >
-                {selectedQuestion.user?.name?.charAt(0)}
+                {selectedQuestion.user?.image ? <img src={selectedQuestion.user.image} alt="User" className="h-full w-full rounded-full object-cover" /> : <span>{selectedQuestion.user?.name?.charAt(0) || "U"}</span>}
               </div>
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
