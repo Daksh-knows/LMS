@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Plus, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getSession } from "next-auth/react";
+import { showToast } from "@/utils/Toast";
 
 export default function AddModuleForm({ courseId, refreshData}: { courseId: string, refreshData: () => void}) {
   const [loading, setLoading] = useState(false);
@@ -41,19 +42,19 @@ export default function AddModuleForm({ courseId, refreshData}: { courseId: stri
       return result;
     };
 
-    toast.promise(addModulePromise(), {
-      loading: "Creating module...",
-      success: () => {
-        setTitle(""); // Clear the input
-        refreshData();       // Refresh the curriculum list in the parent page
-        setLoading(false);
-        return "Module added successfully! 📂";
-      },
-      error: (err) => {
-        setLoading(false);
-        return `Error: ${err.message}`;
-      }
-    });
+    try{
+      toast.loading("Creating module...");
+      await addModulePromise();
+      toast.dismiss();
+      setTitle(""); // Clear the input
+      refreshData();
+      setLoading(false);
+      showToast.success("Module added successfully! 📂");
+    }catch(err: any){
+      toast.dismiss();
+      setLoading(false);
+      showToast.error(err.message || "Failed to add module.");
+    }
   };
 
   return (

@@ -12,6 +12,7 @@ import {
 import Link from "next/link";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { showToast } from "@/utils/Toast";
 
 interface Submission {
   id: string;
@@ -74,18 +75,20 @@ export default function AssignmentGradingPage({ params }: { params: Promise<{ id
       return data;
     };
 
-    toast.promise(gradePromise(), {
-      loading: "Saving grade...",
-      success: () => {
-        setSavingId(null);
-        // Update local state to show "Graded" status immediately
-        setSubmissions((prev) => 
-          prev.map((s) => s.id === submissionId ? { ...s, grade, feedback } : s)
-        );
-        return "Grade saved successfully!";
-      },
-      error: "Failed to save grade",
-    });
+    try{
+      const result = await gradePromise();
+      setSavingId(null);
+      setSubmissions((prev)=>{
+        return prev.map((s) => s.id === submissionId ? {...s, grade, feedback} : s);
+      })
+      showToast.success('Grade saved successfully!');
+      return 'Grade saved successfully!';
+    }catch(err :any){
+      console.error(err);
+      showToast.error(err.message || 'Failed to save grade');
+    }finally{
+      setSavingId(null);
+    }
   };
 
   if (loading) {

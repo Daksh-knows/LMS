@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { Star, Loader2, Edit2, UserCircle } from "lucide-react";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { showToast } from "@/utils/Toast";
 
 interface Review {
   id?: string;
@@ -91,7 +92,7 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
     setIsSubmitting(true);
     
     const reviewPromise = async () => {
-      const response = await fetch(`/api/lecture/${lectureId}/review`, { // Use same endpoint but POST
+      const response = await fetch(`/api/lecture/${lectureId}/review`, { 
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -117,19 +118,19 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
       return result;
     };
 
-    toast.promise(reviewPromise(), {
-      loading: "Saving your review...",
-      success: () => {
-        setIsSubmitting(false);
-        setIsEditing(false);
-        return "Review submitted successfully! ⭐";
-      },
-      error: (err) => {
-        setIsSubmitting(false);
-        setIsEditing(false);
-        return err.message || "Failed to submit review.";
-      }
-    });
+    try{
+      toast.loading("Saving your review...");
+      await reviewPromise();
+      toast.dismiss();
+      showToast.success("Review submitted successfully!");
+    }catch(err: any){
+      toast.dismiss();
+      showToast.error(err.message || "Failed to submit review.");
+      
+    }finally{
+      setIsSubmitting(false);
+      setIsEditing(false);
+    }
   };
 
   if (isLoading) {
