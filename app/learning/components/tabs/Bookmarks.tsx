@@ -9,7 +9,7 @@ import {
   Bookmark as BookmarkIcon,
   PlusCircle
 } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { useConfirm } from "@/context/ConfirmContext";
 
 interface Bookmark {
   id: string;
@@ -35,7 +35,7 @@ export const BookmarksTab: React.FC<BookmarksProps> = ({
 }) => {
 
 
-
+  const {confirm} = useConfirm();
 
   const formatTime = (seconds: number) => {
     const date = new Date(seconds * 1000);
@@ -70,25 +70,30 @@ export const BookmarksTab: React.FC<BookmarksProps> = ({
   const handleDelete = async (bookmarkId: string) => {
       const previousBookmarks = [...bookmarks];
       if(!setBookmarks) return;
-      setBookmarks((prev) => prev.filter((bm) => bm.id !== bookmarkId));
-
-      try {
-        const response = await fetch(`/api/lecture/bookmark?bookmarkId=${bookmarkId}`, {
-          method: "DELETE",
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to delete bookmark");
-        }
-
-        showToast.delete("Bookmark has been removed from your list.");
-
-      } catch (error) {
-        console.error("Error deleting bookmark:", error);
+      confirm("Delete Bookmark" ,
+          "Are you sure you want to delete this bookmark? This action cannot be undone." ,
+          async () => {
+              try {
+                const response = await fetch(`/api/lecture/bookmark?bookmarkId=${bookmarkId}`, {
+                  method: "DELETE",
+                });
         
-        setBookmarks(previousBookmarks);
+                if (!response.ok) {
+                  throw new Error("Failed to delete bookmark");
+                }
         
-        showToast.error("Failed to delete. Restoring your bookmark...");      }
+                showToast.delete("Bookmark has been removed from your list.");
+        
+              } catch (error) {
+                console.error("Error deleting bookmark:", error);
+                
+                setBookmarks(previousBookmarks);
+                
+                showToast.error("Failed to delete. Restoring your bookmark...");      
+              }
+              setBookmarks((prev) => prev.filter((bm) => bm.id !== bookmarkId));
+          }
+      )
     };
 
   const handleJumpToTime = (timeInSeconds: number) => {
