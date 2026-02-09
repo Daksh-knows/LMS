@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
     const course = lecture.module.course;
     const enrollments = course.students;
 
-    if (enrollments.length > 0) {
+    if (enrollments.length > 0 && ( data.type !== 'VIDEO')) {
       // Use Promise.allSettled so one failed email doesn't crash the API response
       const emailPromises = enrollments.map((en) => {
         if (en.user.email) {
