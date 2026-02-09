@@ -156,11 +156,11 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
               ) : currentLecture ? (
                 <>
                   {/* --- THE STAGE (Video/Quiz Parent) --- */}
-                  <div className="w-full bg-black flex justify-center items-center h-[50vh] md:h-[60vh] lg:h-[65vh] overflow-hidden shadow-inner">
-                    <div className="w-full h-full max-w-5xl mx-auto">
+                  <div className="w-full  flex justify-center items-center min-h-[45vh] md:min-h-[55vh] lg:min-h-[65vh] overflow-hidden shadow-inner">
+                    <div className="w-full flex justify-center items-center h-full  mx-auto">
                       {/* --- lecture UI --- */}
                       {currentLecture.type === 'VIDEO' && (
-                        <div className="flex justify-center aspect-video w-full h-full">
+                        <div className="flex justify-center aspect-video max-h-[90vh] md:max-h-[75vh] w-full h-full">
                           <VideoPlayer  
                              videoUrl={currentLecture.videoUrl} 
                              lectureId={currentLecture.id} 

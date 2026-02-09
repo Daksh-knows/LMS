@@ -362,7 +362,7 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
               </div>
             )}
 
-            <CldUploadWidget
+            {/* <CldUploadWidget
               uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
               onSuccess={(result: any) => setImages((prev) => [...prev, result.info.secure_url])}
               options={{ multiple: true, maxFiles: 5 }}
@@ -370,13 +370,40 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
               {({ open }) => (
                 <button
                   type="button"
-                  onClick={() => open()}
+                  onClick={() => open?.()}
                   className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-[11px] font-bold text-gray-600 hover:bg-gray-100 transition shadow-sm"
                 >
                   <ImageIcon size={14} />
                   Images ({images.length}/5)
                 </button>
               )}
+            </CldUploadWidget> */}
+
+            <CldUploadWidget
+              uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
+              onSuccess={(result: any) => {
+                // result.info.secure_url is the standard way to get the URL
+                setImages((prev) => [...prev, result.info.secure_url]);
+              }}
+              options={{ 
+                multiple: true, 
+                maxFiles: 5,
+                clientAllowedFormats: ["png", "jpeg", "jpg", "webp"] // Good practice
+              }}
+            >
+              {({ open }) => {
+                return (
+                  <button
+                    type="button"
+                    disabled={!open} // Disable button until Cloudinary is ready
+                    onClick={() => open?.()}
+                    className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-[11px] font-bold text-gray-600 hover:bg-gray-100 transition shadow-sm disabled:opacity-50"
+                  >
+                    <ImageIcon size={14} />
+                    Images ({images.length}/5)
+                  </button>
+                );
+              }}
             </CldUploadWidget>
           </div>
 
