@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useRef, ReactNode } from "react";
-import { uploadFileToCloudinary } from "@/lib/google/file"; 
+import { uploadFileToCloudinary } from "@/lib/cloud/file"; 
 import { showToast } from "@/utils/Toast";
 
 interface UploadState {
