@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useRef, ReactNode } from "react";
-import { uploadFileToCloudinary } from "@/lib/cloud/file"; 
+import { uploadFileToCloudinary, uploadFileToGCS } from "@/lib/cloud/file"; 
 import { showToast } from "@/utils/Toast";
 
 interface UploadState {
@@ -45,6 +45,7 @@ export const BackgroundUploadProvider = ({ children }: { children: ReactNode }) 
         for (const att of attachments) {
           if (att.file) {
             // Pass signal to utility
+            // const url = await uploadFileToGCS(att.file, undefined, signal);
             const url = await uploadFileToCloudinary(att.file, undefined, signal);
             uploadedAtts.push({ ...att, url, type: "FILE" });
           }
@@ -74,6 +75,13 @@ export const BackgroundUploadProvider = ({ children }: { children: ReactNode }) 
             [lectureId]: { ...prev[lectureId], progress: p },
           }));
         }, signal);
+
+        // const publicUrl = await uploadFileToGCS(videoFile, (p) => {
+        //   setUploads((prev) => ({
+        //     ...prev,
+        //     [lectureId]: { ...prev[lectureId], progress: p },
+        //   }));
+        // }, signal);
 
         if (!signal.aborted) {
           await fetch(`/api/lecture/${lectureId}`, {
