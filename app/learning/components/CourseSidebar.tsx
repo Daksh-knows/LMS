@@ -193,7 +193,7 @@ const CourseSidebar: React.FC<Props> = ({
                                 <div className={`flex items-center gap-1.5 text-[10px] font-black  tracking-wider ${isActive ? "text-indigo-600" : "text-gray-500"}`}>
                                   {getTypeIcon(item.type, isActive)}
                                   <span>{item.type}</span>
-                                  {item.duration && (
+                                  {item.duration && item.type !== "LIVE" && (
                                     <span className="bg-gray-200 text-gray-600 px-1 rounded-sm">{item.duration}m</span>
                                   )}
                                 </div>
