@@ -31,7 +31,7 @@ export default function CourseFilterList() {
   
   const tabs = ["All", "Completed", "In Progress"];
   
-  console.log("Initial Courses:", initialCourses);
+  // console.log("Initial Courses:", initialCourses);
   useEffect(() => {
     const fetchCourses = async () => {
       try {
