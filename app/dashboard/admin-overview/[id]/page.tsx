@@ -118,35 +118,21 @@ export default function AssignmentGradingPage({ params }: { params: Promise<{ id
         </div>
 
         {/* Submissions Table */}
-        <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
+         <div className="space-y-4">
           {submissions.length === 0 ? (
-            <div className="p-20 text-center text-gray-400">
+            <div className="bg-white p-20 border border-dashed border-gray-200 rounded-3xl text-center text-gray-400">
               <FileText size={48} className="mx-auto mb-4 opacity-20" />
-              <p>No students have submitted this assignment yet.</p>
+              <p>No submissions found.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-50/50 border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500 font-bold">
-                    <th className="p-6">Student</th>
-                    <th className="p-6">Submitted At</th>
-                    <th className="p-6">Work</th>
-                    <th className="p-6 w-32">Grade (0-100)</th>
-                    <th className="p-6 w-24 text-right">Action</th>
-                  </tr>
-                </thead>
-                {/* No single <tbody> here, GradingRow will provide its own grouped <tbody> */}
-                {submissions.map((sub) => (
-                  <GradingRow 
-                    key={sub.id} 
-                    submission={sub} 
-                    onSave={handleGradeSubmit} 
-                    isSaving={savingId === sub.id} 
-                  />
-                ))}
-              </table>            
-            </div>
+            submissions.map((sub) => (
+              <GradingCard 
+                key={sub.id} 
+                submission={sub} 
+                onSave={handleGradeSubmit} 
+                isSaving={savingId === sub.id} 
+              />
+            ))
           )}
         </div>
       </div>
@@ -155,122 +141,118 @@ export default function AssignmentGradingPage({ params }: { params: Promise<{ id
 }
 
 // Separate component for Row to handle local input state cleanly
-function GradingRow({ 
-  submission, 
-  onSave, 
-  isSaving 
-}: { 
-  submission: Submission; 
-  onSave: (id: string, g: number, f: string) => void;
-  isSaving: boolean;
-}) {
+function GradingCard({ submission, onSave, isSaving }: any) {
   const [grade, setGrade] = useState<string>(submission.grade?.toString() || "");
   const [feedback, setFeedback] = useState(submission.feedback || "");
   const [isDirty, setIsDirty] = useState(false);
-  console.log(submission);
   const isGraded = submission.grade !== null;
+  const [justSaved, setJustSaved] = useState(false);
 
+  const handleChange = (type: 'grade' | 'feedback', value: string) => {
+      if (type === 'grade') setGrade(value);
+      if (type === 'feedback') setFeedback(value);
+      setIsDirty(true);
+      setJustSaved(false); // Hide checkmark, show save button again
+    };
+
+    const handleSave = async () => {
+      const success = await onSave(submission.id, parseFloat(grade) || 0, feedback);
+      if (success) {
+        setIsDirty(false);
+        setJustSaved(true); // This triggers the checkmark immediately
+      }
+    };
+
+    const showCheckmark = (submission.grade !== null && !isDirty) || (justSaved && !isDirty);
   return (
-    // Use <tbody> to group the two rows together for one student
-    <tbody className="group border-b border-gray-100 last:border-0">
-      <tr className="hover:bg-blue-50/10 transition-colors">
-        <td className="p-6">
+    <div className="bg-white border border-gray-200 rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex flex-col gap-6">
+        
+        {/* Top Section: Info and Actions */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          
+          {/* Student Info */}
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">
-               {submission.User?.name.charAt(0)||'John Doe'}
+            <div className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-lg">
+              {submission.User?.name.charAt(0)}
             </div>
-            <div>
-              <p className="font-bold text-gray-900 text-sm">{submission.User?.name}</p>
-              <p className="text-xs text-gray-400">{submission.User?.email}</p>
+            <div className="min-w-0">
+              <p className="font-bold text-gray-900 text-sm md:text-base truncate">{submission.User?.name}</p>
+              <p className="text-xs text-gray-400 truncate">{submission.User?.email}</p>
+              <p className="text-[10px] text-gray-400 mt-1 md:hidden">Submitted: {new Date(submission.createdAt).toLocaleDateString()}</p>
             </div>
           </div>
-        </td>
-        
-        <td className="p-6 text-sm text-gray-500">
-          {new Date(submission.createdAt).toLocaleDateString()}
-        </td>
-        
-        <td className="p-6">
+
+          {/* Desktop-only Date */}
+          <div className="hidden md:block text-sm text-gray-500">
+            {new Date(submission.createdAt).toLocaleDateString()}
+          </div>
+
+          {/* Work Link */}
           <a 
             href={submission.fileUrl} 
             target="_blank" 
             rel="noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all"
+            className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-100 transition-colors"
           >
-            <FileText size={14} />
-              View File
-            <ExternalLink size={12} />
+            <FileText size={16} />
+            View Submission
+            <ExternalLink size={14} />
           </a>
-        </td>
-        
-        <td className="p-6">
-          <input 
-            type="number" 
-            min="0" 
-            max="100"
-            value={grade}
-            onChange={(e) => {
-              let value = parseInt(e.target.value);
-              if (isNaN(value)) {
-                setGrade("");
-                return;
-              }
-              if (value > 100) value = 100;
-              if (value < 0) value = 0;
+        </div>
 
-              setGrade(value.toString());
-              setIsDirty(true);
-            }}
-            placeholder="-"
-            className="w-20 p-2 text-center bg-gray-50 border border-gray-200 rounded-lg font-bold text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none"
-          />
-        </td>
-        
-        {/* Action button moved here to be on the primary row */}
-        <td className="p-6 text-right">
-          {isSaving ? (
-            <Loader2 className="animate-spin text-blue-600 ml-auto" size={20} />
-          ) : isDirty ? (
-            <button 
-              onClick={() => {
-                onSave(submission.id, parseFloat(grade) || 0, feedback);
-                setIsDirty(false); // Reset dirty state after save trigger
-              }}
-              className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-95 ml-auto block"
-            >
-              <Save size={18} />
-            </button>
-          ) : isGraded ? (
-            <div className="text-green-500 flex justify-end">
-              <CheckCircle2 size={24} />
-            </div>
-          ) : (
-            <div className="w-9 h-9 ml-auto" /> 
-          )}
-        </td>
-      </tr>
-
-      {/* New Row for Feedback spanning all columns except the last */}
-      <tr>
-        <td colSpan={5} className="px-6 pb-6 pt-0">
-          {/* Added 'max-w-md' to limit width, and 'mx-auto' if you want it centered */}
-          <div className="max-w-md bg-gray-50 rounded-xl p-3 border border-gray-100 focus-within:border-blue-200 transition-all">
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 px-1">
+        {/* Bottom Section: Inputs */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end border-t border-gray-50 pt-4">
+          
+          {/* Feedback Input */}
+          <div className="md:col-span-8 space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
               Feedback
-            </p>
+            </label>
             <textarea 
               value={feedback}
-              onChange={(e) => {
-                setFeedback(e.target.value);
-                setIsDirty(true);
-              }}
-              placeholder="Provide guidance or corrections..."
-              className="w-full bg-transparent text-sm text-gray-700 outline-none resize-none min-h-[40px] px-1"
-              rows={2}
+              onChange={(e) => handleChange('feedback', e.target.value)}
+              placeholder="Add your comments..."
+              className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm text-gray-700 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all resize-none h-20"
             />
           </div>
-        </td>
-      </tr>
-    </tbody>
+
+          {/* Grade and Save */}
+          <div className="md:col-span-4 flex items-end gap-3">
+            <div className="flex-1 space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
+                Grade (0-100)
+              </label>
+              <input 
+                type="number" 
+                value={grade}
+                onChange={(e) => handleChange('grade', e.target.value)}
+                className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl font-bold text-center focus:bg-white focus:ring-2 focus:ring-blue-400 outline-none transition-all"
+              />
+            </div>
+
+            <div className="shrink-0 h-[46px] flex items-center">
+              {isSaving ? (
+                <Loader2 className="animate-spin text-blue-600 mx-4" size={24} />
+              ) : isDirty ? (
+                <button 
+                  onClick={handleSave}
+                  className="bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-95 flex items-center gap-2"
+                >
+                  <Save size={20} />
+                  <span className="md:hidden font-bold text-sm">Save</span>
+                </button>
+              ) : showCheckmark ? (
+                <div className="flex flex-col items-center text-green-500 px-4">
+                   <CheckCircle2 size={28} />
+                </div>
+              ) : (
+                <div className="w-10" />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
