@@ -10,6 +10,7 @@ import { storage } from "@/lib/google-cloud";
  */
 const getCloudinaryPublicId = (url: string): string | null => {
   try {
+    console.log("Extracting public ID from URL:", url);
     const regex = /\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/;
     const match = url.match(regex);
     return match ? match[1] : null;
@@ -37,6 +38,9 @@ export const deleteFromCloudinary = async (url: string) => {
     if (result.result !== "ok") {
         await cloudinary.uploader.destroy(publicId, { resource_type: "raw" });
     }
+    console.log('--------------------------------');
+    console.log(`[Cloudinary] Delete result for ${publicId}:`, result);
+    console.log('--------------------------------');
   } catch (error) {
     console.error(`[Cloudinary] Delete failed for ${publicId}:`, error);
   }
@@ -48,6 +52,7 @@ export const deleteFromCloudinary = async (url: string) => {
  */
 const getGCSDetails = (url: string) => {
   try {
+    console.log("Extracting GCS details from URL:", url);
     const urlObj = new URL(url);
     if (urlObj.hostname !== "storage.googleapis.com") return null;
 
@@ -72,7 +77,10 @@ export const deleteFromGCS = async (url: string) => {
   console.log(`[GCS] Deleting: ${details.fileName} from ${details.bucketName}`);
 
   try {
-    await storage.bucket(details.bucketName).file(details.fileName).delete();
+    const result = await storage.bucket(details.bucketName).file(details.fileName).delete();
+    console.log('***************************************')
+    console.log(`[GCS] Delete result for ${details.fileName}:`, result);
+    console.log('***************************************')
   } catch (error) {
     console.error(`[GCS] Delete failed for ${details.fileName}:`, error);
   }

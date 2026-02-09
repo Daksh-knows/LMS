@@ -100,6 +100,7 @@ export async function DELETE(
       where: { id: lectureId },
       include: {
         resources: true, // <--- Include attachments to get their URLs
+        submissions: true, // <--- Include submissions to get their URLs (if any)
       },
     });
 
@@ -120,6 +121,13 @@ export async function DELETE(
       for (const attachment of lecture.resources) {
         if (attachment.url) {
           deletePromises.push(deleteAsset(attachment.url));
+        }
+      }
+    }
+    if(lecture.submissions && lecture.submissions.length > 0) {
+      for (const submission of lecture.submissions) {
+        if (submission.fileUrl) {
+          deletePromises.push(deleteAsset(submission.fileUrl));
         }
       }
     }
