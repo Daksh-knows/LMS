@@ -1,7 +1,8 @@
 import React from "react";
-import { ArrowUp, ArrowDown, Edit, Trash2, Loader2 } from "lucide-react";
-import { getTypeStyles } from "./utils"; // Import from above
+import { ArrowUp, ArrowDown, Edit, Trash2, Loader2, X } from "lucide-react";
+import { getTypeStyles } from "./utils"; 
 import { useBackgroundUpload } from "@/context/BackgroundUploadContext";
+import { useConfirm } from "@/context/ConfirmContext";
 
 interface LectureItemProps {
   lecture: any;
@@ -13,18 +14,19 @@ interface LectureItemProps {
   onMove: (direction: 'up' | 'down') => void;
   onEdit: () => void;
   onDelete: () => void;
+  onCancel: () => void; 
 }
 
 export const LectureItem = ({ 
-  lecture, index, isSelected, isFirst, isLast, onSelect, onMove, onEdit, onDelete 
+  lecture, index, isSelected, isFirst, isLast, onSelect, onMove, onEdit, onDelete, onCancel
 }: LectureItemProps) => {
   const style = getTypeStyles(lecture.type);
-  const { uploads } = useBackgroundUpload();
+  
+  // Get cancel function from context
+  const { uploads, cancelUpload } = useBackgroundUpload(); 
+  const { confirm } = useConfirm(); // Assuming you have a confirm hook for modals
 
-  const  activeUpload = uploads[lecture.id];
-  console.log('--------------------------------------------------')
-  console.log("Active Upload for Lecture", lecture.id, activeUpload);
-  console.log('--------------------------------------------------')
+  const activeUpload = uploads[lecture.id];
 
   const getMeta = (description: string) => {
     if (!description) return {};
@@ -41,18 +43,48 @@ export const LectureItem = ({
   const isProcessing = activeUpload?.status === "UPLOADING" || meta.status === "UPLOADING";
   const progress = activeUpload?.progress || 0;
 
+  // --- HANDLER FOR CANCELLATION ---
+  const handleCancelUpload = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    confirm(
+        "Stop Uploading?",
+        `Are you sure you want to stop the upload? This will delete the lecture and all uploaded materials.`,
+        async () => {
+          // 1. Abort and Delete via Context
+          await cancelUpload(lecture.id);
+          // 2. Tell Parent to refresh the list
+          if(onCancel) {
+            onCancel();
+          }
+        }
+    )
+  };
+
   if (isProcessing) {
     return (
-      <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl mb-2">
+      <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl mb-2 relative group">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <Loader2 className="animate-spin text-blue-600" size={18} />
-            <span className="text-sm font-bold text-blue-900">Processing Video...</span>
+            <span className="text-sm font-bold text-blue-900">
+               {activeUpload?.currentTask || "Processing..."}
+            </span>
           </div>
-          <span className="text-xs font-bold text-blue-600">{progress}%</span>
+          
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-bold text-blue-600">{progress}%</span>
+            
+            {/* CANCEL BUTTON */}
+            <button 
+              onClick={handleCancelUpload}
+              className="p-1 hover:bg-red-100 text-gray-400 hover:text-red-600 rounded-full transition-colors"
+              title="Cancel Upload"
+            >
+              <X size={16} /> {/* Make sure to import X from lucide-react */}
+            </button>
+          </div>
         </div>
         
-        {/* Progress Bar */}
         <div className="h-1.5 w-full bg-blue-200 rounded-full overflow-hidden">
           <div 
             className="h-full bg-blue-600 transition-all duration-300 ease-out" 

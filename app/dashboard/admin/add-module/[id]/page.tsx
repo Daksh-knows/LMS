@@ -5,7 +5,6 @@ import { ArrowLeft, PlusCircle, Layout, Save, X } from "lucide-react";
 import Link from "next/link";
 import AddModuleForm from "@/components/admin/AddModuleForm"; 
 import AddLectureForm from "@/components/admin/add-lecture/AddLectureForm"; 
-import { toast } from "react-hot-toast";
 import { getSession } from "next-auth/react";
 import { LectureItem } from "@/components/admin/add-module/LectureItem"; 
 import { SectionItem } from "@/components/admin/add-module/SectionItem"; 
@@ -158,6 +157,7 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
         `Are you sure you want to delete "${title}"? This will permanently remove the ${label} item and all related materials.`,
         async () => {
           try {
+            console.log("Attempting to delete lecture with ID:", lectureId);
             const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "";
             const response = await fetch(`${baseUrl}/api/lecture/${lectureId}`, { 
               method: "DELETE" 
@@ -168,6 +168,9 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
             if (!data.success) {
               throw new Error(data.error || "Failed to delete lecture");
             }
+            console.log('--------------------------------------------');
+            console.log("Lecture deleted successfully:", data);
+            console.log('--------------------------------------------');
             showToast.delete(`${label} deleted successfully`);
             loadContent(id);
           } catch (error: any) {
@@ -267,6 +270,7 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
                         onMove={(dir) => moveLecture(sectionIndex, lectureIndex, dir)}
                         onEdit={() => { setActiveSectionId(section.id); setEditingLecture(lecture); setIsModalOpen(true); }}
                         onDelete={() => handleDeleteLecture(lecture.id, lecture.title , lecture.type)}
+                        onCancel={() => loadContent(id)}
                       />
                     ))
                   )}

@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import  cloudinary  from "@/lib/cloudinary";
+import { deleteAsset } from "@/lib/cloud/delete-assets";
 
 
 export async function GET(
@@ -90,44 +90,51 @@ export async function DELETE(
   try {
     const session = await auth();
     const { lectureId } = await context.params;
-    // console.log(lectureId)
+
     if (!session?.user || session.user.role !== "ADMIN") {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // 1. Fetch the lecture to get the video metadata before deletion 
+    // 1. Fetch Lecture AND Attachments to get all URLs
     const lecture = await db.lecture.findUnique({
       where: { id: lectureId },
-      select: { type: true, videoUrl: true }
+      include: {
+        resources: true, // <--- Include attachments to get their URLs
+      },
     });
 
     if (!lecture) {
       return new NextResponse("Lecture not found", { status: 404 });
     }
 
-    // 2. If it's a video, attempt to delete from Cloudinary
-    if (lecture.type === "VIDEO" && lecture.videoUrl?.includes("cloudinary.com")) {
-      try {
-        // Extract publicId from URL (e.g., .../upload/v1234/folder/video_name.mp4)
-        const parts = lecture.videoUrl.split("/");
-        const fileName = parts[parts.length - 1]; // "video_name.mp4"
-        const publicId = fileName.split(".")[0]; // "video_name"
-        console.log("Deleting video with publicId:", publicId);
-        // If your videos are in folders, you'll need the full path:
-        // const publicId = lecture.videoUrl.split('/upload/')[1].split('/')[1].split('.')[0];
+    // 2. Collect all delete promises
+    const deletePromises: Promise<void>[] = [];
 
-        await cloudinary.uploader.destroy(publicId, {
-          resource_type: "video",
-        });
-      } catch (cloudErr) {
-        console.error("Cloudinary Delete Error:", cloudErr);
+    // A. Delete Main Video
+    if (lecture.videoUrl) {
+      deletePromises.push(deleteAsset(lecture.videoUrl));
+    }
+
+    // B. Delete All Attachments
+    if (lecture.resources && lecture.resources.length > 0) {
+      for (const attachment of lecture.resources) {
+        if (attachment.url) {
+          deletePromises.push(deleteAsset(attachment.url));
+        }
       }
     }
 
-    // 3. Delete from DB (Triggers cascade for quizQuestions and answerOptions) 
+    // Wait for all cloud deletions to finish (or fail silently)
+    // We use Promise.allSettled so one failure doesn't stop the DB deletion
+    await Promise.allSettled(deletePromises);
+
+    // 3. Delete from DB 
+    // (This triggers cascade delete for attachments/questions in the DB)
     await db.lecture.delete({
       where: { id: lectureId },
     });
+
+    console.log(`[LECTURE_DELETE] Deleted lecture ${lectureId} and its assets.`);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

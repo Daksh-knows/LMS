@@ -4,8 +4,6 @@ import React, { useState } from "react";
 import { Loader2, Type, Video, MonitorPlay } from "lucide-react";
 import toast from "react-hot-toast";
 import { getSession } from "next-auth/react";
-import { uploadToGCS } from "@/lib/google/video"; 
-import axios from "axios";
 import { useBackgroundUpload } from "@/context/BackgroundUploadContext";
 
 // Import Sub-Components
@@ -54,9 +52,7 @@ export default function AddVideoForm({
     initialData?.duration?.toString() || ""
   );
 
-  // --- Background Upload State ---
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
+  // --- UI State ---
   const [videoFileName, setVideoFileName] = useState("");
 
   // --- Live Session State ---
@@ -104,37 +100,10 @@ export default function AddVideoForm({
     setAttachments(newResources);
   };
 
-  // --- Handlers ---
-  const handleVideoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setVideoFileName(file.name); // Set filename for UI
-    
-    try {
-      setIsUploading(true);
-      // Use the utility function provided in previous context
-      const publicUrl = await uploadToGCS(file, (progress) => {
-        setUploadProgress(progress);
-      });
-
-      if (publicUrl) {
-        setVideoUrl(publicUrl);
-        showToast.success("Video uploaded successfully!");
-      }
-    } catch (error) {
-      console.error("Upload error:", error);
-      showToast.error("Video upload failed. Please try again.");
-      setVideoFileName("");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  // --- File Handler (Simplified) ---
+  // --- File Handler ---
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file){ 
+    if (file) {
       setVideoFile(file);
       setVideoFileName(file.name);
     }
@@ -149,58 +118,40 @@ export default function AddVideoForm({
       const adminId = session?.user?.id;
       if (!adminId) throw new Error("Unauthorized");
 
-      // 1. Upload Attachments (Blocking - usually small files)
-      const uploadPromises = attachments.map(async (att) => {
-        if (!att.file) return att.file === null && att.title ? att : null; 
+      // 1. Prepare Description Data
+      // We set status to 'UPLOADING' if there are files to process
+      const hasUploads = (lectureType === "VIDEO" && videoMode === "UPLOAD" && videoFile) || 
+                         attachments.some(a => a.file !== null);
 
-        const formData = new FormData();
-        formData.append("file", att.file);
-
-        const response = await fetch("/api/upload/file", { 
-          method: "POST", 
-          body: formData 
-        });
-
-        if (!response.ok) throw new Error(`Failed to upload: ${att.title}`);
-        const data = await response.json();
-
-        return {
-          title: att.title || att.file.name,
-          url: data.url,
-          type: "FILE",
-        };
-      });
-
-      const uploadedResources = (await Promise.all(uploadPromises)).filter((item:any) => item !== null);
-
-      // 2. Prepare Payload
-      // Note: We set status to 'UPLOADING' in description so the UI knows to show a spinner immediately
-      const descriptionData = lectureType === "VIDEO" && videoMode === "UPLOAD" 
-        ? { status: "UPLOADING" } 
-        : (lectureType === "LIVE" ? {
+      const descriptionData = hasUploads
+        ? { status: "UPLOADING" }
+        : lectureType === "LIVE"
+        ? {
             date: liveDate,
             time: liveTime,
             link: liveLink,
-            status: "UPCOMING"
-          } : null);
+            status: "UPCOMING",
+          }
+        : null;
 
+      // 2. Prepare Payload (Shell)
+      // Note: We send empty attachments initially. The background worker will patch them in.
       const payload = {
         courseId,
         moduleId: sectionId,
         title,
         isFree,
-        attachments: uploadedResources,
+        attachments: [], // Empty for now, Context handles uploads
         type: lectureType,
-        // If UPLOAD mode, videoUrl is initially empty
-        videoUrl: videoMode === "URL" ? videoUrl : "", 
+        videoUrl: videoMode === "URL" ? videoUrl : "",
         duration: duration ? parseInt(duration) : 0,
         description: descriptionData ? JSON.stringify(descriptionData) : null,
       };
 
-      // 3. Create Placeholder in DB
+      // 3. Create/Update in DB
       const isUpdate = !!initialData;
-      const url = isUpdate 
-        ? `/api/lecture?adminId=${adminId}&itemId=${initialData.id}` 
+      const url = isUpdate
+        ? `/api/lecture?adminId=${adminId}&itemId=${initialData.id}`
         : `/api/lecture?adminId=${adminId}`;
 
       const response = await fetch(url, {
@@ -212,18 +163,17 @@ export default function AddVideoForm({
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error);
 
-      // 4. Start Background Upload via Context
-      if (lectureType === "VIDEO" && videoMode === "UPLOAD" && videoFile && !isUpdate) {
-         // This is the magic line - fire and forget!
-         startUpload(videoFile, result.lectureId); 
-         showToast.success("Upload started in background");
+      // 4. Start Background Upload (Files + Video)
+      if (hasUploads && !isUpdate) {
+        // We pass the ID, the video file (if exists), and the raw attachments array
+        startUpload(result.lectureId, videoFile, attachments);
+        showToast.success("Assets uploading in background...");
       } else {
-         showToast.success("Saved successfully!");
+        showToast.success("Saved successfully!");
       }
 
       // 5. Close Modal Immediately
       onSuccess();
-
     } catch (error: any) {
       console.error(error);
       showToast.error(error.message || "Failed to save");
@@ -305,8 +255,8 @@ export default function AddVideoForm({
           setVideoUrl={setVideoUrl}
           duration={duration}
           setDuration={setDuration}
-          isUploading={isUploading}
-          uploadProgress={uploadProgress}
+          isUploading={false}
+          uploadProgress={0}
           videoFileName={videoFileName}
           onFileSelect={handleFileSelect}
         />
@@ -331,13 +281,11 @@ export default function AddVideoForm({
         </button>
         <button
           type="submit"
-          disabled={loading || isUploading}
+          disabled={loading}
           className="flex-2 bg-blue-600 text-white p-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
         >
           {loading ? (
             <Loader2 className="animate-spin" size={20} />
-          ) : isUploading ? (
-            "Wait for Upload..."
           ) : initialData ? (
             "Save Changes"
           ) : lectureType === "LIVE" ? (
