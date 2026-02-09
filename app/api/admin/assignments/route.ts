@@ -6,14 +6,24 @@ export async function GET() {
   try {
     const session = await auth();
 
-    if (!session?.user) {
+    // Check if user is authenticated and is an ADMIN (or INSTRUCTOR)
+    if (!session?.user?.id || session.user.role !== "ADMIN") {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // Fetch ASSIGNMENT lectures that have submissions
+    const adminId = session.user.id;
+
+    // Fetch ASSIGNMENT lectures that belong to courses created by THIS admin/instructor
     const assignments = await db.lecture.findMany({
       where: {
         type: "ASSIGNMENT",
+        // 1. Filter by Course Creator (Instructor)
+        module: {
+          course: {
+            adminId: adminId, 
+          },
+        },
+        // 2. Only show assignments that actually have submissions
         submissions: {
           some: {},
         },
@@ -54,8 +64,8 @@ export async function GET() {
       };
     });
 
-    // Sort lectures with pending reviews first
-    data.sort((a, b) => b.pendingReviews - a.pendingReviews);
+    // Sort lectures: pending reviews first, then by total count
+    data.sort((a, b) => b.pendingReviews - a.pendingReviews || b.totalSubmissions - a.totalSubmissions);
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
