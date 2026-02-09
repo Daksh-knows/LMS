@@ -295,12 +295,12 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
         {isModalOpen && activeSectionId && (
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-gray-900/60 backdrop-blur-sm p-0 sm:p-4 transition-opacity" onClick={() => setIsModalOpen(false)}>
             <div className="bg-white w-full sm:max-w-xl rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-4 duration-300" onClick={(e) => e.stopPropagation()}>
-              <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+              {/* <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
                   <h3 className="font-bold text-lg text-gray-900">{editingLecture ? "Edit Content" : "Add New Content"}</h3>
                   <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-gray-200 rounded-full text-gray-500 transition-colors">
                     <X size={20} />
                   </button>
-              </div>
+              </div> */}
               <div className="p-6 max-h-[80vh] overflow-y-auto">
                 <AddLectureForm 
                   courseId={id} 
