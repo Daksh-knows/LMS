@@ -28,7 +28,7 @@ export default function Sidebar({
   const oneCourse = process.env.NEXT_PUBLIC_ONE_COURSE === "true";
   const navItems = [
     { label: "Overview", icon: LayoutDashboard, href: isAdmin ? "/dashboard/admin-overview" : "/dashboard" },
-    ...(isAdmin ? [{ label: "Admin", icon: ShieldCheck, href: "/dashboard/admin" }] : []),
+    ...(isAdmin ? [{ label: "Manage Courses", icon: ShieldCheck, href: "/dashboard/admin" }] : []),
 ...(!oneCourse ? [{ label: "My Courses", icon: Library, href: "/dashboard/my-courses" }] : []),
     { label: "Support", icon: HeadphonesIcon, href: isAdmin ? "/dashboard/admin/support" : "/dashboard/support" },
     { label: "Career Services", icon: Briefcase, href: "/dashboard/career-services" },
