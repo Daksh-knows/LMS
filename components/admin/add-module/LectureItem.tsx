@@ -26,7 +26,18 @@ export const LectureItem = ({
   console.log("Active Upload for Lecture", lecture.id, activeUpload);
   console.log('--------------------------------------------------')
 
-  const meta = lecture.description ? JSON.parse(lecture.description) : {};
+  const getMeta = (description: string) => {
+    if (!description) return {};
+    try {
+      return JSON.parse(description);
+    } catch (e) {
+      // If it's not JSON, return an empty object or handle as raw text
+      return { rawDescription: description };
+    }
+  };
+
+  const meta = getMeta(lecture.description);
+
   const isProcessing = activeUpload?.status === "UPLOADING" || meta.status === "UPLOADING";
   const progress = activeUpload?.progress || 0;
 
