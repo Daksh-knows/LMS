@@ -1,291 +1,284 @@
 "use client";
 
-import React, { useRef, useState } from "react";
-import { LogOut, Camera, Loader2, X, ShieldCheck } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, useRef } from "react";
+import { 
+  Plus, MessageCircle, Send, Loader2, CheckCircle2, 
+  Clock, XCircle, ChevronLeft 
+} from "lucide-react";
+import { useSession } from "next-auth/react";
 import { showToast } from "@/utils/Toast";
-import Loader from "@/utils/Loader";
+import { motion, AnimatePresence } from "framer-motion";
 
-// Add hasPendingRefund prop
-export default function ProfileClient({ initialData, hasPendingRefund }: { initialData: any, hasPendingRefund: boolean }) {
-  const router = useRouter();
-  const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { data: session, update } = useSession();
+export default function StudentSupportPage() {
+  const { data: session } = useSession();
+  const [view, setView] = useState<'LIST' | 'CREATE' | 'CHAT'>('LIST');
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [activeTicket, setActiveTicket] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // States for Image Handling
-  const [avatarPreview, setAvatarPreview] = useState(initialData.image || null);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [priority, setPriority] = useState("MEDIUM");
+  const [replyText, setReplyText] = useState("");
 
-  // Refund Modal State
-  const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
-  const [refundReason, setRefundReason] = useState("");
-  const [isSubmittingRefund, setIsSubmittingRefund] = useState(false);
-  
-  const [formData, setFormData] = useState({
-    fullName: initialData.fullName,
-    domain: initialData.domain,
-    collegeName: initialData.collegeName,
-    collegeDegree: initialData.collegeDegree,
-    collegeYear: initialData.collegeYear,
-    image: initialData.image,
-  });
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB Limit
-        return showToast.error("Image size must be less than 2MB");
-      }
-      setAvatarFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+  useEffect(() => { fetchTickets(); }, []);
+
+  useEffect(() => {
+    if (view === 'CHAT') chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [activeTicket, view]);
+
+  const fetchTickets = async () => {
+    const res = await fetch("/api/support");
+    const data = await res.json();
+    if (data.success) setTickets(data.data);
+    setLoading(false);
   };
 
-const handleSave = async () => {
-    setLoading(true);
+  const createTicket = async () => {
+    if (!subject || !message) return showToast.error("Please fill all fields");
     try {
-      // Prepare Payload
-      const payload = { 
-        ...formData, 
-        image: avatarPreview // Sending the base64 string/URL
-      };
-
-      const response = await fetch("/api/user/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error || "Update failed");
-      
-      await update({
-          ...session,
-          user: {
-            ...session?.user,
-            name: formData.fullName,
-            image: result.imageUrl, 
-          }
-      });
-
-
-      showToast.success("Profile updated successfully!");
-      setIsEditing(false);
-      router.refresh();
-    } catch (err: any) {
-      showToast.error(err.message || "Could not save profile");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRefundSubmit = async () => {
-    if(!refundReason.trim()) return showToast.error("Please enter a reason");
-    
-    setIsSubmittingRefund(true);
-    try {
-      const res = await fetch("/api/premium/refund", {
+      const res = await fetch("/api/support", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason: refundReason })
+        body: JSON.stringify({ subject, message, priority }),
       });
-      
-      const data = await res.json();
-      if(!data.success) throw new Error(data.error);
-      
-      showToast.success("Refund request initiated successfully");
-      setIsRefundModalOpen(false);
-      router.refresh(); 
-    } catch (error: any) {
-      showToast.error(error.message || "Failed to submit request");
-    } finally {
-      setIsSubmittingRefund(false);
+      if (res.ok) {
+        showToast.success("Ticket created!");
+        setSubject(""); setMessage("");
+        fetchTickets();
+        setView('LIST');
+      } else throw new Error();
+    } catch {
+      showToast.error("Failed to create ticket");
     }
   };
+
+  const openTicket = async (ticketId: string) => {
+    const res = await fetch(`/api/support/${ticketId}`);
+    const data = await res.json();
+    if (data.success) {
+      setActiveTicket(data.data);
+      setView('CHAT');
+    }
+  };
+
+  const sendReply = async () => {
+    if (!replyText.trim()) return;
+    try {
+      const res = await fetch(`/api/support/${activeTicket.id}`, {
+        method: "POST",
+        body: JSON.stringify({ message: replyText }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const newMessage = {
+            ...data.data,
+            sender: { name: session?.user?.name, role: "STUDENT" }
+        };
+        setActiveTicket((prev: any) => ({
+          ...prev,
+          messages: [...prev.messages, newMessage]
+        }));
+        setReplyText("");
+      }
+    } catch (err: any) {
+      showToast.error(err.message || "Failed to send");
+    }
+  };
+
+  if (loading) return (
+    <div className="p-10 flex justify-center h-[60vh] items-center">
+      <Loader2 className="animate-spin text-brand-blue" size={32} />
+    </div>
+  );
 
   return (
-    <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="max-w-4xl mx-auto p-4 md:p-6 min-h-[85vh]">
       
-      {loading && (
-        <div className="absolute inset-0 z-[100] bg-white/60 backdrop-blur-sm flex items-center justify-center">
-          <Loader message="Syncing Profile..." size="lg" />
+      {/* HEADER */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-black text-foreground leading-tight tracking-tight uppercase">Support Center</h1>
+          <p className="text-sm md:text-base text-foreground/60 font-medium">Need help? We're here for you.</p>
         </div>
-      )}
-
-
-      {/* Banner & Avatar (Same as before) */}
-      <div className="h-32 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-gray-100 relative">
-        <div className="absolute -bottom-10 left-10">
-          <div className="relative group">
-            <div className="w-24 h-24 rounded-full bg-red-700 flex items-center justify-center text-white text-3xl font-bold border-4 border-white shadow-xl overflow-hidden">
-              {avatarPreview ? (
-                <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                initialData.initials
-              )}
-            </div>
-            
-            {/* Hidden File Input */}
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              hidden 
-              accept="image/*" 
-              onChange={handleImageChange} 
-              disabled={!isEditing}
-            />
-
+        <div className="flex gap-2 w-full sm:w-auto">
+          {view === 'LIST' ? (
             <button 
-              onClick={() => fileInputRef.current?.click()}
-              className="absolute bottom-0 right-0 p-2 bg-gray-900 text-white rounded-full shadow-md border-2 border-white hover:scale-110 transition-transform"
+              onClick={() => setView('CREATE')}
+              className="w-full sm:w-auto bg-foreground text-background px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-foreground/5"
             >
-              <Camera size={16} />
+              <Plus size={18} /> New Ticket
             </button>
-          </div>
+          ) : (
+            <button 
+              onClick={() => setView('LIST')} 
+              className="text-foreground/50 hover:text-foreground flex items-center gap-2 font-bold transition-colors"
+            >
+              <ChevronLeft size={20} /> Back to Tickets
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="pt-14 pb-8 px-10">
-        
-        {/* Navigation Tabs */}
-        <div className="flex gap-8 border-b border-gray-100 mb-8">
-          <button className="pb-3 border-b-2 border-red-500 text-sm font-bold text-gray-800">Profile Details</button>
-          {/* <button className="pb-3 text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors">My Purchases</button> */}
-        </div>
-
-        {/* --- REFUND STATUS BANNER --- */}
-        {hasPendingRefund && (
-          <div className="mb-8 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-             <div className="bg-amber-100 p-2 rounded-full text-amber-600">
-                <Loader2 size={18} className="animate-spin" />
-             </div>
-             <div>
-               <h3 className="text-sm font-bold text-amber-900">Refund In Progress</h3>
-               <p className="text-xs text-amber-700 mt-1">
-                 You have initiated a refund request. Our team will verify your eligibility within 7 days.
-               </p>
-             </div>
-          </div>
+      <AnimatePresence mode="wait">
+        {view === 'LIST' && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
+            {tickets.length === 0 ? (
+              <div className="text-center py-20 bg-card/50 rounded-[2rem] border border-dashed border-border-muted">
+                <MessageCircle size={48} className="mx-auto text-foreground/10 mb-4" />
+                <p className="text-foreground/30 font-bold uppercase tracking-widest text-xs">No tickets yet.</p>
+              </div>
+            ) : (
+              tickets.map((ticket) => (
+                <div 
+                  key={ticket.id} 
+                  onClick={() => openTicket(ticket.id)}
+                  className="bg-card border border-border-muted p-5 md:p-6 rounded-2xl shadow-sm hover:border-brand-blue/50 transition-all cursor-pointer group"
+                >
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                    <div className="flex-1">
+                      <h3 className="text-base md:text-lg font-bold text-foreground group-hover:text-brand-blue transition-colors">
+                        {ticket.subject}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-2 text-[10px] font-black uppercase tracking-widest text-foreground/40">
+                         <span>{new Date(ticket.createdAt).toLocaleDateString()}</span>
+                         <span className="hidden sm:inline">•</span>
+                         <span className={ticket.priority === 'HIGH' ? 'text-red-500' : ''}>{ticket.priority} Priority</span>
+                      </div>
+                    </div>
+                    <TicketStatusBadge status={ticket.status} />
+                  </div>
+                </div>
+              ))
+            )}
+          </motion.div>
         )}
 
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-lg font-bold text-gray-800">Update your account details here</h2>
-          {!isEditing && (
-            <button 
-              onClick={() => setIsEditing(true)}
-              className="bg-[#e57373]/10 text-[#d32f2f] px-6 py-2 rounded-lg font-bold text-sm hover:bg-[#e57373]/20 transition-all"
-            >
-              Edit Profile
-            </button>
-          )}
-        </div>
-
-        {/* Form Grid (Same as before) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-8 mb-12">
-          <ProfileInput label="Full Name" value={formData.fullName} disabled={!isEditing} onChange={(val: string) => setFormData({...formData, fullName: val})} subtext="This name will appear on your certificate." />
-          <ProfileInput label="Email" value={initialData.email} disabled={true} />
-          <ProfileInput label="Current Domain" value={formData.domain} disabled={!isEditing} onChange={(val: string) => setFormData({...formData, domain: val})} />
-        </div>
-
-        {/* <h2 className="text-lg font-bold text-gray-800 mb-8">Academic Details</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-8 mb-12">
-          <ProfileInput label="College Name" value={formData.collegeName} disabled={!isEditing} onChange={(val: string) => setFormData({...formData, collegeName: val})} />
-          <ProfileInput label="College Degree" value={formData.collegeDegree} disabled={!isEditing} onChange={(val: string) => setFormData({...formData, collegeDegree: val})} />
-          <ProfileInput label="Current Year" type="number" value={formData.collegeYear} disabled={!isEditing} onChange={(val: string) => setFormData({...formData, collegeYear: val})} />
-        </div> */}
-
-        {/* Action Buttons */}
-        <div className="flex justify-between items-center pt-8 border-t border-gray-50">
-          <div className="flex gap-4">
-             
-
-             {/* REFUND BUTTON - Only show if NO pending refund */}
-             {!hasPendingRefund && (
-               <button 
-                 onClick={() => setIsRefundModalOpen(true)}
-                 className="flex items-center gap-2 bg-blue-500 text-black-400 px-4 py-2.5 rounded-xl font-semibold hover:bg-gray-50 hover:text-gray-600 transition-all text-sm"
-               >
-                 <ShieldCheck size={16} /> Request Refund
-               </button>
-             )}
-             <button onClick={() => signOut({ callbackUrl: "/login" })} className="flex items-center gap-2 bg-[#c66a6a] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#b05a5a] transition-all">
-               <LogOut size={18} /> Logout
-             </button>
-          </div>
-          
-          {isEditing && (
-            <div className="flex gap-4">
-               <button onClick={() => { setIsEditing(false); setFormData(initialData); }} className="px-6 py-2.5 rounded-xl font-bold text-gray-400 hover:bg-gray-50">Cancel</button>
-               <button onClick={handleSave} disabled={loading} className="bg-[#ef4444] text-white px-8 py-2.5 rounded-xl font-bold shadow-lg shadow-red-200 flex items-center gap-2">
-                 {loading && <Loader2 size={16} className="animate-spin" />} Save Changes
-               </button>
+        {view === 'CREATE' && (
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-card border border-border-muted p-6 md:p-8 rounded-[2rem] max-w-2xl mx-auto shadow-xl">
+            <h2 className="text-xl font-black text-foreground mb-6 uppercase tracking-tight">Create New Ticket</h2>
+            <div className="space-y-6">
+              <div>
+                <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest ml-1">Subject</label>
+                <input 
+                  value={subject} 
+                  onChange={(e) => setSubject(e.target.value)}
+                  className="w-full mt-2 p-4 bg-background border border-border-muted rounded-xl font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all"
+                  placeholder="Brief summary of the issue"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest ml-1">Priority</label>
+                <select 
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value)}
+                  className="w-full mt-2 p-4 bg-background border border-border-muted rounded-xl font-medium text-foreground appearance-none cursor-pointer"
+                >
+                  <option value="LOW">Low - General Question</option>
+                  <option value="MEDIUM">Medium - Need Help</option>
+                  <option value="HIGH">High - Urgent Issue</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest ml-1">Description</label>
+                <textarea 
+                  value={message} 
+                  onChange={(e) => setMessage(e.target.value)}
+                  className="w-full mt-2 p-4 bg-background border border-border-muted rounded-xl font-medium min-h-[150px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all"
+                  placeholder="Tell us more about what's happening..."
+                />
+              </div>
+              <button onClick={createTicket} className="w-full bg-foreground text-background py-4 rounded-xl font-black text-lg hover:opacity-90 transition-all active:scale-[0.98]">
+                Submit Ticket
+              </button>
             </div>
-          )}
-        </div>
-      </div>
+          </motion.div>
+        )}
 
-      {/* --- REFUND MODAL --- */}
-      {isRefundModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-           <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
-              <div className="flex justify-between items-start mb-4">
-                 <h3 className="text-xl font-black text-gray-900">Initiate Refund</h3>
-                 <button onClick={() => setIsRefundModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full"><X size={20} className="text-gray-400" /></button>
+        {view === 'CHAT' && activeTicket && (
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col h-[75vh] md:h-[70vh] bg-card border border-border-muted rounded-2xl md:rounded-[2.5rem] shadow-sm overflow-hidden">
+            <div className="p-4 md:p-6 border-b border-border-muted bg-foreground/[0.03] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <div>
+                <h2 className="font-black text-foreground text-base md:text-lg line-clamp-1">{activeTicket.subject}</h2>
+                <div className="flex items-center gap-3 mt-1">
+                   <span className="text-[10px] font-mono text-foreground/40 uppercase tracking-wider">#{activeTicket.id.slice(-6)}</span>
+                   <TicketStatusBadge status={activeTicket.status} />
+                </div>
               </div>
-              
-              <div className="bg-blue-50 p-4 rounded-xl mb-6">
-                 <p className="text-xs text-blue-700 font-medium leading-relaxed">
-                    Refund requests are manually reviewed by our admin team. Once initiated, the process is guaranteed to start within <span className="font-bold">7 days</span>.
-                 </p>
-              </div>
+            </div>
 
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Reason for Refund</label>
-              <textarea 
-                value={refundReason}
-                onChange={(e) => setRefundReason(e.target.value)}
-                placeholder="Briefly describe why you are requesting a refund..."
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 min-h-[100px] mb-6 resize-none"
-              />
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-background/30">
+              {activeTicket.messages.map((msg: any) => {
+                const isMe = msg.senderId === session?.user?.id;
+                const isAdmin = msg.sender.role === 'ADMIN';
+                return (
+                  <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                    <div className="max-w-[90%] sm:max-w-[80%]">
+                       <div className={`flex items-center gap-2 mb-1.5 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                          <span className="text-[10px] font-black text-foreground/30 uppercase tracking-tighter">
+                            {isAdmin ? 'Support Team' : msg.sender.name}
+                          </span>
+                          {isAdmin && <CheckCircle2 size={12} className="text-brand-blue" />}
+                       </div>
+                       <div className={`p-4 rounded-[1.5rem] text-sm leading-relaxed shadow-sm ${
+                         isMe ? 'bg-foreground text-background rounded-tr-none' 
+                         : isAdmin ? 'bg-brand-blue text-white rounded-tl-none' 
+                         : 'bg-card-muted text-foreground border border-border-muted rounded-tl-none'
+                       }`}>
+                         {msg.message}
+                       </div>
+                       <span className={`text-[9px] font-bold text-foreground/20 mt-1.5 block ${isMe ? 'text-right' : 'text-left'}`}>
+                         {new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                       </span>
+                    </div>
+                  </div>
+                );
+              })}
+              <div ref={chatEndRef} />
+            </div>
 
-              <div className="flex gap-3">
-                 <button onClick={() => setIsRefundModalOpen(false)} className="flex-1 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-50">Cancel</button>
-                 <button 
-                   onClick={handleRefundSubmit} 
-                   disabled={isSubmittingRefund}
-                   className="flex-1 bg-black text-white py-3 rounded-xl font-bold hover:bg-gray-800 disabled:opacity-70 flex justify-center items-center gap-2"
-                 >
-                    {isSubmittingRefund && <Loader2 size={16} className="animate-spin" />}
-                    Confirm Request
-                 </button>
-              </div>
-           </div>
-        </div>
-      )}
-
+            <div className="p-4 bg-card border-t border-border-muted">
+               {activeTicket.status === 'CLOSED' ? (
+                 <div className="text-center py-3 bg-background/50 rounded-xl text-foreground/40 font-black text-[10px] uppercase tracking-widest border border-dashed border-border-muted">
+                   Ticket Closed
+                 </div>
+               ) : (
+                 <div className="flex gap-2">
+                   <input 
+                     value={replyText}
+                     onChange={(e) => setReplyText(e.target.value)}
+                     onKeyDown={(e) => e.key === 'Enter' && sendReply()}
+                     className="flex-1 bg-background border border-border-muted rounded-xl px-4 py-3 text-sm text-foreground focus:ring-2 focus:ring-brand-blue/20 focus:outline-none"
+                     placeholder="Type your message..."
+                   />
+                   <button onClick={sendReply} className="bg-foreground text-background p-3 rounded-xl hover:opacity-90 transition-all shrink-0">
+                     <Send size={20} />
+                   </button>
+                 </div>
+               )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-// ... ProfileInput helper remains same ...
-function ProfileInput({ label, value, subtext, type = "text", disabled = false, onChange }: any) {
-    return (
-      <div className="space-y-1">
-        <label className="text-xs font-semibold text-gray-400">{label}</label>
-        <input 
-          type={type} 
-          value={value} 
-          disabled={disabled}
-          onChange={(e) => onChange && onChange(e.target.value)}
-          className="w-full border-b border-gray-200 py-2 text-sm font-medium focus:outline-none focus:border-red-400 transition-colors bg-transparent disabled:text-gray-400" 
-        />
-        {subtext && <p className="text-[10px] text-gray-400">📇 {subtext}</p>}
-      </div>
-    );
-  }
+function TicketStatusBadge({ status }: { status: string }) {
+  const styles = {
+    OPEN: "bg-green-500/10 text-green-500 border-green-500/20",
+    IN_PROGRESS: "bg-brand-blue/10 text-brand-blue border-brand-blue/20",
+    CLOSED: "bg-foreground/5 text-foreground/40 border-foreground/10",
+  };
+  const icons = {
+    OPEN: <CheckCircle2 size={12} />,
+    IN_PROGRESS: <Clock size={12} />,
+    CLOSED: <XCircle size={12} />,
+  };
+  return (
+    <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase border shrink-0 ${styles[status as keyof typeof styles]}`}>
+      {icons[status as keyof typeof icons]} {status.replace('_', ' ')}
+    </div>
+  )
+}

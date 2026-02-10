@@ -5,9 +5,9 @@ import {
   Plus, MessageCircle, Send, Loader2, CheckCircle2, 
   Clock, XCircle, ChevronLeft 
 } from "lucide-react";
-import { toast } from "react-hot-toast";
 import { useSession } from "next-auth/react";
 import { showToast } from "@/utils/Toast";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function StudentSupportPage() {
   const { data: session } = useSession();
@@ -16,7 +16,6 @@ export default function StudentSupportPage() {
   const [activeTicket, setActiveTicket] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Form States
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [priority, setPriority] = useState("MEDIUM");
@@ -24,9 +23,7 @@ export default function StudentSupportPage() {
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    fetchTickets();
-  }, []);
+  useEffect(() => { fetchTickets(); }, []);
 
   useEffect(() => {
     if (view === 'CHAT') chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -40,8 +37,7 @@ export default function StudentSupportPage() {
   };
 
   const createTicket = async () => {
-    if (!subject || !message) return toast.error("Please fill all fields");
-
+    if (!subject || !message) return showToast.error("Please fill all fields");
     try {
       const res = await fetch("/api/support", {
         method: "POST",
@@ -91,201 +87,222 @@ export default function StudentSupportPage() {
     }
   };
 
-  if (loading) return <div className="p-10 flex justify-center"><Loader2 className="animate-spin text-gray-400"/></div>;
+  if (loading) return (
+    <div className="p-10 flex justify-center h-[60vh] items-center">
+      <Loader2 className="animate-spin text-brand-blue" size={32} />
+    </div>
+  );
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-6 min-h-[85vh]">
+    <div className="max-w-4xl mx-auto p-4 md:p-6 min-h-[85vh] transition-colors duration-500">
       
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-gray-900 leading-tight">Support Center</h1>
-          <p className="text-sm md:text-base text-gray-500">Need help? We're here for you.</p>
+          <h1 className="text-2xl md:text-3xl font-black text-foreground leading-tight tracking-tight">Support Center</h1>
+          <p className="text-sm md:text-base text-foreground/50 font-medium">Need help? We're here for you.</p>
         </div>
-        {view === 'LIST' && (
-          <button 
-            onClick={() => setView('CREATE')}
-            className="w-full sm:w-auto bg-black text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:scale-105 transition-transform"
-          >
-            <Plus size={18} /> New Ticket
-          </button>
-        )}
-        {view !== 'LIST' && (
-          <button onClick={() => setView('LIST')} className="text-gray-500 hover:text-black flex items-center gap-2 font-bold transition-colors">
-            <ChevronLeft size={20} /> Back to Tickets
-          </button>
-        )}
-      </div>
-
-      {/* VIEW: TICKET LIST */}
-      {view === 'LIST' && (
-        <div className="space-y-4">
-          {tickets.length === 0 ? (
-            <div className="text-center py-20 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
-              <MessageCircle size={48} className="mx-auto text-gray-300 mb-4" />
-              <p className="text-gray-400 font-bold">No tickets yet.</p>
-            </div>
+        <div className="flex gap-2 w-full sm:w-auto">
+          {view === 'LIST' ? (
+            <button 
+              onClick={() => setView('CREATE')}
+              className="w-full sm:w-auto bg-foreground text-background px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-foreground/5"
+            >
+              <Plus size={18} /> New Ticket
+            </button>
           ) : (
-            tickets.map((ticket) => (
-              <div 
-                key={ticket.id} 
-                onClick={() => openTicket(ticket.id)}
-                className="bg-white border border-gray-100 p-5 md:p-6 rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer group"
-              >
-                <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                  <div className="flex-1">
-                    <h3 className="text-base md:text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                      {ticket.subject}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-2 text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-400">
-                       <span>{new Date(ticket.createdAt).toLocaleDateString()}</span>
-                       <span className="hidden sm:inline">•</span>
-                       <span className={ticket.priority === 'HIGH' ? 'text-red-500' : 'text-gray-400'}>{ticket.priority} Priority</span>
-                    </div>
-                  </div>
-                  <TicketStatusBadge status={ticket.status} />
-                </div>
-              </div>
-            ))
+            <button 
+              onClick={() => setView('LIST')} 
+              className="text-foreground/50 hover:text-foreground flex items-center gap-2 font-bold transition-colors"
+            >
+              <ChevronLeft size={20} /> Back to Tickets
+            </button>
           )}
         </div>
-      )}
+      </div>
 
-      {/* VIEW: CREATE FORM */}
-      {view === 'CREATE' && (
-        <div className="bg-white border border-gray-200 p-6 md:p-8 rounded-3xl max-w-2xl mx-auto shadow-sm">
-          <h2 className="text-xl font-bold mb-6">Create New Ticket</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Subject</label>
-              <input 
-                value={subject} 
-                onChange={(e) => setSubject(e.target.value)}
-                className="w-full mt-1.5 p-3 border border-gray-200 rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-black transition-all"
-                placeholder="Brief summary"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Priority</label>
-              <select 
-                value={priority}
-                onChange={(e) => setPriority(e.target.value)}
-                className="w-full mt-1.5 p-3 border border-gray-200 rounded-xl font-medium appearance-none bg-white"
-              >
-                <option value="LOW">Low - General Question</option>
-                <option value="MEDIUM">Medium - Need Help</option>
-                <option value="HIGH">High - Urgent Issue</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Description</label>
-              <textarea 
-                value={message} 
-                onChange={(e) => setMessage(e.target.value)}
-                className="w-full mt-1.5 p-3 border border-gray-200 rounded-xl font-medium min-h-[120px] md:min-h-[150px] focus:outline-none focus:ring-2 focus:ring-black transition-all"
-                placeholder="Explain in detail..."
-              />
-            </div>
-            <button 
-              onClick={createTicket}
-              className="w-full bg-black text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-800 transition-colors shadow-lg active:scale-[0.98]"
-            >
-              Submit Ticket
-            </button>
-          </div>
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {/* VIEW: TICKET LIST */}
+        {view === 'LIST' && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-4"
+          >
+            {tickets.length === 0 ? (
+              <div className="text-center py-20 bg-card-muted rounded-[2rem] border border-dashed border-border-muted">
+                <MessageCircle size={48} className="mx-auto text-foreground/10 mb-4" />
+                <p className="text-foreground/30 font-bold uppercase tracking-widest text-xs">No tickets yet.</p>
+              </div>
+            ) : (
+              tickets.map((ticket) => (
+                <div 
+                  key={ticket.id} 
+                  onClick={() => openTicket(ticket.id)}
+                  className="bg-card-muted border border-border-muted p-5 md:p-6 rounded-2xl shadow-sm hover:border-brand-blue/30 transition-all cursor-pointer group"
+                >
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                    <div className="flex-1">
+                      <h3 className="text-base md:text-lg font-bold text-foreground group-hover:text-brand-blue transition-colors">
+                        {ticket.subject}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-2 text-[10px] font-black uppercase tracking-widest text-foreground/30">
+                         <span>{new Date(ticket.createdAt).toLocaleDateString()}</span>
+                         <span className="hidden sm:inline">•</span>
+                         <span className={ticket.priority === 'HIGH' ? 'text-red-500' : ''}>{ticket.priority} Priority</span>
+                      </div>
+                    </div>
+                    <TicketStatusBadge status={ticket.status} />
+                  </div>
+                </div>
+              ))
+            )}
+          </motion.div>
+        )}
 
-      {/* VIEW: CHAT INTERFACE */}
-      {view === 'CHAT' && activeTicket && (
-        <div className="flex flex-col h-[75vh] md:h-[70vh] bg-white border border-gray-200 rounded-2xl md:rounded-3xl shadow-sm overflow-hidden">
-          {/* Chat Header */}
-          <div className="p-4 md:p-6 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+        {/* VIEW: CREATE FORM */}
+        {view === 'CREATE' && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }} 
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card-muted border border-border-muted p-6 md:p-8 rounded-[2rem] max-w-2xl mx-auto shadow-xl"
+          >
+            <h2 className="text-xl font-black text-foreground mb-6">Create New Ticket</h2>
+            <div className="space-y-6">
               <div>
-                <h2 className="font-bold text-base md:text-lg line-clamp-1">{activeTicket.subject}</h2>
-                <div className="flex items-center gap-2 text-[10px] text-gray-500">
-                   <span className="font-mono">#{activeTicket.id.slice(-6)}</span>
+                <label className="text-xs font-bold text-foreground/40 uppercase tracking-widest ml-1">Subject</label>
+                <input 
+                  value={subject} 
+                  onChange={(e) => setSubject(e.target.value)}
+                  className="w-full mt-2 p-4 bg-background border border-border-muted rounded-xl font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all"
+                  placeholder="Brief summary of the issue"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-foreground/40 uppercase tracking-widest ml-1">Priority</label>
+                <select 
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value)}
+                  className="w-full mt-2 p-4 bg-background border border-border-muted rounded-xl font-medium text-foreground appearance-none cursor-pointer"
+                >
+                  <option value="LOW">Low - General Question</option>
+                  <option value="MEDIUM">Medium - Need Help</option>
+                  <option value="HIGH">High - Urgent Issue</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-foreground/40 uppercase tracking-widest ml-1">Description</label>
+                <textarea 
+                  value={message} 
+                  onChange={(e) => setMessage(e.target.value)}
+                  className="w-full mt-2 p-4 bg-background border border-border-muted rounded-xl font-medium min-h-[150px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all"
+                  placeholder="Tell us more about what's happening..."
+                />
+              </div>
+              <button 
+                onClick={createTicket}
+                className="w-full bg-brand-blue text-white py-4 rounded-xl font-black text-lg hover:opacity-90 transition-all shadow-lg shadow-brand-blue/20 active:scale-[0.98]"
+              >
+                Submit Ticket
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* VIEW: CHAT INTERFACE */}
+        {view === 'CHAT' && activeTicket && (
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }} 
+            animate={{ opacity: 1, x: 0 }}
+            className="flex flex-col h-[75vh] md:h-[70vh] bg-card-muted border border-border-muted rounded-2xl md:rounded-[2.5rem] shadow-sm overflow-hidden"
+          >
+            <div className="p-4 md:p-6 border-b border-border-muted bg-foreground/[0.02] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <div>
+                <h2 className="font-black text-foreground text-base md:text-lg line-clamp-1">{activeTicket.subject}</h2>
+                <div className="flex items-center gap-3 mt-1">
+                   <span className="text-[10px] font-mono text-foreground/40 uppercase tracking-wider">#{activeTicket.id.slice(-6)}</span>
                    <TicketStatusBadge status={activeTicket.status} />
                 </div>
               </div>
-          </div>
+            </div>
 
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6 bg-slate-50">
-            {activeTicket.messages.map((msg: any) => {
-              const isMe = msg.senderId === session?.user?.id;
-              const isAdmin = msg.sender.role === 'ADMIN';
-              
-              return (
-                <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[90%] sm:max-w-[80%] ${isMe ? 'order-1' : 'order-2'}`}>
-                     <div className={`flex items-center gap-2 mb-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase">
-                          {isAdmin ? 'Support Team' : msg.sender.name}
-                        </span>
-                        {isAdmin && <CheckCircle2 size={12} className="text-blue-500" />}
-                     </div>
-                     <div className={`p-3 md:p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
-                       isMe ? 'bg-black text-white rounded-tr-none' 
-                       : isAdmin ? 'bg-blue-600 text-white rounded-tl-none' 
-                       : 'bg-white text-gray-800 border border-gray-200 rounded-tl-none'
-                     }`}>
-                       {msg.message}
-                     </div>
-                     <span className={`text-[10px] text-gray-400 mt-1 block ${isMe ? 'text-right' : 'text-left'}`}>
-                       {new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                     </span>
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-background/50">
+              {activeTicket.messages.map((msg: any) => {
+                const isMe = msg.senderId === session?.user?.id;
+                const isAdmin = msg.sender.role === 'ADMIN';
+                
+                return (
+                  <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[90%] sm:max-w-[80%]`}>
+                       <div className={`flex items-center gap-2 mb-1.5 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                          <span className="text-[10px] font-black text-foreground/30 uppercase tracking-tighter">
+                            {isAdmin ? 'Support Team' : msg.sender.name}
+                          </span>
+                          {isAdmin && <CheckCircle2 size={12} className="text-brand-blue" />}
+                       </div>
+                       <div className={`p-4 rounded-[1.5rem] text-sm leading-relaxed shadow-sm transition-colors ${
+                         isMe ? 'bg-foreground text-background rounded-tr-none' 
+                         : isAdmin ? 'bg-brand-blue text-white rounded-tl-none shadow-brand-blue/10' 
+                         : 'bg-card-muted text-foreground border border-border-muted rounded-tl-none'
+                       }`}>
+                         {msg.message}
+                       </div>
+                       <span className={`text-[9px] font-bold text-foreground/20 mt-1.5 block ${isMe ? 'text-right' : 'text-left'}`}>
+                         {new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                       </span>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-            <div ref={chatEndRef} />
-          </div>
+                );
+              })}
+              <div ref={chatEndRef} />
+            </div>
 
-          {/* Reply Input */}
-          <div className="p-3 md:p-4 bg-white border-t border-gray-100">
-             {activeTicket.status === 'CLOSED' ? (
-               <div className="text-center py-3 bg-gray-50 rounded-xl text-gray-500 font-bold text-xs md:text-sm">
-                 This ticket is closed.
-               </div>
-             ) : (
-               <div className="flex gap-2 md:gap-3">
-                 <input 
-                   value={replyText}
-                   onChange={(e) => setReplyText(e.target.value)}
-                   onKeyDown={(e) => e.key === 'Enter' && sendReply()}
-                   className="flex-1 bg-gray-50 border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none"
-                   placeholder="Type your reply..."
-                 />
-                 <button 
-                   onClick={sendReply}
-                   className="bg-black text-white p-3 rounded-xl hover:bg-gray-800 transition-colors shrink-0"
-                 >
-                   <Send size={20} />
-                 </button>
-               </div>
-             )}
-          </div>
-        </div>
-      )}
+            <div className="p-4 bg-card-muted border-t border-border-muted">
+               {activeTicket.status === 'CLOSED' ? (
+                 <div className="text-center py-3 bg-background/50 rounded-xl text-foreground/40 font-black text-[10px] uppercase tracking-widest border border-dashed border-border-muted">
+                   This ticket has been resolved and closed.
+                 </div>
+               ) : (
+                 <div className="flex gap-2">
+                   <input 
+                     value={replyText}
+                     onChange={(e) => setReplyText(e.target.value)}
+                     onKeyDown={(e) => e.key === 'Enter' && sendReply()}
+                     className="flex-1 bg-background border border-border-muted rounded-xl px-4 py-3 text-sm text-foreground focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue focus:outline-none transition-all"
+                     placeholder="Type your message..."
+                   />
+                   <button 
+                     onClick={sendReply}
+                     className="bg-foreground text-background p-3 rounded-xl hover:opacity-90 transition-all shrink-0 active:scale-90"
+                   >
+                     <Send size={20} />
+                   </button>
+                 </div>
+               )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
 function TicketStatusBadge({ status }: { status: string }) {
   const styles = {
-    OPEN: "bg-green-100 text-green-700 border-green-200",
-    IN_PROGRESS: "bg-blue-100 text-blue-700 border-blue-200",
-    CLOSED: "bg-gray-100 text-gray-500 border-gray-200",
+    OPEN: "bg-green-500/10 text-green-500 border-green-500/20",
+    IN_PROGRESS: "bg-brand-blue/10 text-brand-blue border-brand-blue/20",
+    CLOSED: "bg-foreground/5 text-foreground/40 border-foreground/10",
   };
   const icons = {
     OPEN: <CheckCircle2 size={12} />,
     IN_PROGRESS: <Clock size={12} />,
     CLOSED: <XCircle size={12} />,
   };
-  // @ts-ignore
-  return <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase border shrink-0 ${styles[status]}`}>
-    {/* @ts-ignore */}
-    {icons[status]} {status.replace('_', ' ')}
-  </div>
+  
+  return (
+    <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase border shrink-0 ${styles[status as keyof typeof styles]}`}>
+      {icons[status as keyof typeof icons]} {status.replace('_', ' ')}
+    </div>
+  )
 }

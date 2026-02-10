@@ -1,24 +1,47 @@
 @import "tailwindcss";
-
-
-
-
-/* 1. Add the Typography Plugin */
 @plugin "@tailwindcss/typography";
 
-/* 2. Customizing for your Article/Editor */
 @theme {
+  /* 1. Define the custom property names */
+  --color-background: #fffbeb;    /* Light: amber-50 */
+  --color-foreground: #111827;    /* Light: gray-900 */
+  --color-card: #fef3c7;          /* Light: amber-100 */
+  --color-border-muted: #fde68a;  /* Light: amber-200 */
   --color-brand-blue: #2563eb;
-  /* Add any other custom theme variables here */
+--color-card-muted: rgba(255, 255, 255, 0.7)
 }
 
-/* app/globals.css */
+/* 2. Override the values when the .dark class is active */
+@layer base {
+  .dark {
+    --color-background: #09090b;  /* Dark: Zinc-950 */
+    --color-foreground: #fde68a;  /* Dark: Amber-200 */
+    --color-card: #18181b;        /* Dark: Zinc-900 */
+    --color-border-muted: #27272a;/* Dark: Zinc-800 */
+    --color-brand-blue: #60a5fa;
+    --color-card-muted: rgba(18, 18, 21, 0.8);
+  }
 
-/* Target the Tiptap editor and the viewer specifically */
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    /* Smooth transition for the whole app */
+    transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
+  }
+}
+
+/* Your existing Tiptap and Animation code follows... */
 .tiptap p, .prose p {
-  margin-top: 0.25em !important;   /* Reduce top gap */
-  margin-bottom: 0.25em !important;/* Reduce bottom gap */
-  line-height: 1;                /* Standard readable line height */
+  margin-top: 0.25em !important;
+  margin-bottom: 0.25em !important;
+  line-height: 1.5;
+}
+
+.moving-grid {
+  background-image: radial-gradient(var(--color-foreground) 1.5px, transparent 1.5px);
+  background-size: 30px 30px;
+  animation: slide 3s linear infinite;
+  opacity: 0.05; 
 }
 
 /* Ensure lists don't have double gaps */
@@ -70,4 +93,8 @@
 
 .animate-blob {
   animation: float 10s ease-in-out infinite;
+}
+
+[data-sonner-toast] {
+  backdrop-filter: blur(8px);
 }

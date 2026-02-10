@@ -5,85 +5,89 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-zinc-200 border-t-2 border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
-        {/* Main Grid: Set to 2 columns on mobile, 4 on medium screens */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-y-10 gap-x-8">
+    <footer className="bg-background border-t border-border-muted transition-colors duration-500">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
+        {/* Main Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-y-12 gap-x-8">
           
-          {/* Brand Section - Spans 2 columns on mobile to stay centered/full-width */}
+          {/* Brand Section */}
           <div className="col-span-2 md:col-span-1 flex flex-col items-center md:items-start text-center md:text-left">
-            <Link href="/" className="flex items-center gap-2 mb-4 group">
-              <div className="bg-purple-600 p-1.5 rounded-lg group-hover:scale-110 transition-transform">
-                <GraduationCap className="text-white" size={20} />
+            <Link href="/" className="flex items-center gap-2 mb-6 group">
+              <div className="bg-brand-blue p-2 rounded-xl group-hover:rotate-12 transition-transform duration-300 shadow-lg shadow-brand-blue/20">
+                <GraduationCap className="text-white" size={24} />
               </div>
-              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
-                LMS Platform
+              <span className="text-2xl font-black tracking-tighter text-foreground transition-colors">
+                LMS<span className="text-brand-blue">.</span>
               </span>
             </Link>
-            <p className="text-gray-500 text-sm leading-relaxed mb-6 max-w-xs">
-              Empowering students worldwide with high-quality courses, interactive quizzes, and personalized learning paths.
+            <p className="text-foreground/50 text-sm leading-relaxed mb-8 max-w-xs font-medium">
+              Empowering students worldwide with high-quality courses and personalized learning paths.
             </p>
-            <div className="flex gap-5">
-              <Link href="#" className="text-gray-400 hover:text-purple-600 transition-colors transform hover:-translate-y-1">
-                <Twitter size={20} />
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-purple-600 transition-colors transform hover:-translate-y-1">
-                <Github size={20} />
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-purple-600 transition-colors transform hover:-translate-y-1">
-                <Linkedin size={20} />
-              </Link>
+            <div className="flex gap-6">
+              {[Twitter, Github, Linkedin].map((Icon, idx) => (
+                <Link key={idx} href="#" className="text-foreground/30 hover:text-brand-blue transition-all transform hover:-translate-y-1">
+                  <Icon size={20} />
+                </Link>
+              ))}
             </div>
           </div>
           
-          {/* Quick Links - Takes 1 column on mobile (side-by-side with Support) */}
-          <div className="ml-2 flex flex-col items-start">
-            <h4 className="font-bold text-gray-900 mb-5 text-sm uppercase tracking-wider">Platform</h4>
-            <ul className="space-y-3 text-sm text-gray-600">
-              <li><Link href="/courses" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">All Courses</Link></li>
-              <li><Link href="/dashboard" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">My Learning</Link></li>
-              <li><Link href="/leaderboard" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">Leaderboard</Link></li>
-              <li><Link href="/certificates" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">Certificates</Link></li>
-            </ul>
-          </div>
-
-          {/* Support - Takes 1 column on mobile (side-by-side with Platform) */}
+          {/* Platform Links */}
           <div className="flex flex-col items-start">
-            <h4 className="font-bold text-gray-900 mb-5 text-sm uppercase tracking-wider">Support</h4>
-            <ul className="space-y-3 text-sm text-gray-600">
-              <li><Link href="/help" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">Help Center</Link></li>
-              <li><Link href="/faq" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">FAQs</Link></li>
-              <li><Link href="/contact" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">Contact Us</Link></li>
-              <li><Link href="/community" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">Community</Link></li>
+            <h4 className="font-black text-foreground mb-6 text-xs uppercase tracking-[0.2em]">Platform</h4>
+            <ul className="space-y-4 text-sm font-bold text-foreground/50">
+              {['All Courses', 'My Learning', 'Leaderboard', 'Certificates'].map((item) => (
+                <li key={item}>
+                  <Link href={`/${item.toLowerCase().replace(' ', '-')}`} className="hover:text-brand-blue transition-colors">
+                    {item}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Newsletter - Spans 2 columns on mobile to look better below the links */}
+          {/* Support Links */}
+          <div className="flex flex-col items-start">
+            <h4 className="font-black text-foreground mb-6 text-xs uppercase tracking-[0.2em]">Support</h4>
+            <ul className="space-y-4 text-sm font-bold text-foreground/50">
+              {['Help Center', 'FAQs', 'Contact Us', 'Community'].map((item) => (
+                <li key={item}>
+                  <Link href={`/${item.toLowerCase().replace(' ', '-')}`} className="hover:text-brand-blue transition-colors">
+                    {item}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Newsletter */}
           <div className="col-span-2 md:col-span-1 flex flex-col items-center md:items-start">
-            <h4 className="font-bold text-gray-900 mb-5 text-sm uppercase tracking-wider">Stay Updated</h4>
-            <p className="text-gray-500 text-sm mb-4 text-center md:text-left">Get notified about new courses and feature updates.</p>
+            <h4 className="font-black text-foreground mb-6 text-xs uppercase tracking-[0.2em]">Stay Updated</h4>
+            <p className="text-foreground/50 text-sm mb-6 text-center md:text-left font-medium">Get notified about new courses and feature updates.</p>
             <div className="flex w-full max-w-sm gap-2">
               <input 
                 type="email" 
                 placeholder="Email address" 
-                className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm w-full focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
+                className="bg-foreground/5 border border-border-muted rounded-2xl px-4 py-3 text-sm w-full focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all text-foreground placeholder:text-foreground/30"
               />
-              <button className="bg-purple-600 text-white p-2.5 rounded-xl hover:bg-purple-700 transition-all active:scale-95 shrink-0">
-                <Mail size={18} />
+              <button className="bg-brand-blue text-white p-3 rounded-2xl hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-brand-blue/20 shrink-0">
+                <Mail size={20} />
               </button>
             </div>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-16 pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-xs text-gray-400 font-medium">
-            © {currentYear} LMS Platform. All rights reserved.
+        <div className="mt-20 pt-8 border-t border-border-muted flex flex-col md:flex-row justify-between items-center gap-6">
+          <p className="text-[10px] text-foreground/30 uppercase tracking-widest font-black">
+            © {currentYear} LMS Platform. Built for the future.
           </p>
-          <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-xs font-semibold text-gray-400">
-            <Link href="/terms" className="hover:text-purple-600 transition-colors">Terms</Link>
-            <Link href="/privacy" className="hover:text-purple-600 transition-colors">Privacy</Link>
-            <Link href="/cookies" className="hover:text-purple-600 transition-colors">Cookies</Link>
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-[10px] font-black uppercase tracking-widest text-foreground/30">
+            {['Terms', 'Privacy', 'Cookies'].map((item) => (
+              <Link key={item} href={`/${item.toLowerCase()}`} className="hover:text-brand-blue transition-colors">
+                {item}
+              </Link>
+            ))}
           </div>
         </div>
       </div>

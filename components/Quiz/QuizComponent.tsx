@@ -4,10 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { BrainCircuit, HelpCircle, PlayCircle, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Award, Loader2 } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import QuizIntro from './Quiz/QuizIntro';
-import QuizActive from './Quiz/QuizActive';
-import QuizResult from './Quiz/QuizResult';
-import QuizSubmitted from './Quiz/QuizSubmitted';
+import QuizIntro from './QuizIntro';
+import QuizActive from './QuizActive';
+import QuizResult from './QuizResult';
+import QuizSubmitted from './QuizSubmitted';
 
 interface Option {
   id: string;

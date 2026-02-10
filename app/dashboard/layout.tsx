@@ -1,6 +1,3 @@
-// app/layout.tsx
-import Sidebar from "@/components/Sidebar";
-import Header from "@/components/Header";
 import { getCurrentUser } from "@/lib/auth-utils"; // Import our new helper
 import LayoutShell from "./layoutShell";
 
