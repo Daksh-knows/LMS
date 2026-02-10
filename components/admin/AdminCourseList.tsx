@@ -99,12 +99,18 @@ export default function AdminCourseList({ initialCourses }: Props) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest">
+        <h2 
+          className="text-sm font-bold uppercase tracking-widest"
+          style={{ color: 'var(--color-foreground)', opacity: 0.5 }}
+        >
           Your Courses ({courses.length})
         </h2>
 
         <Link href="/dashboard/admin/add-course">
-          <button className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition-all">
+          <button 
+            className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all hover:brightness-110 active:scale-95 shadow-sm"
+            style={{ backgroundColor: 'var(--color-brand-blue)' }}
+          >
             <Plus size={16} />
             Add New Course
           </button>
@@ -113,15 +119,20 @@ export default function AdminCourseList({ initialCourses }: Props) {
 
       {/* Empty state */}
       {courses.length === 0 ? (
-        <div className="p-10 border-2 border-dashed rounded-3xl text-center text-gray-400 bg-gray-50/50">
+        <div 
+          className="p-10 border-2 border-dashed rounded-3xl text-center"
+          style={{ 
+            backgroundColor: 'rgba(255, 255, 255, 0.4)', // Subtle card-muted effect
+            borderColor: 'var(--color-border-muted)',
+            color: 'var(--color-foreground)',
+            opacity: 0.6
+          }}
+        >
           You haven&apos;t created any courses yet.
         </div>
       ) : (
         courses.map((course) => (
-          <div
-            key={course.id}
-            className="flex items-center justify-between p-5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all"
-          >
+          <div key={course.id} className="listitem">
             {/* Course Info */}
             <Link
               href={`/dashboard/admin/add-module/${course.id}`}
@@ -132,44 +143,48 @@ export default function AdminCourseList({ initialCourses }: Props) {
                   {course.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="text-[9px] font-black uppercase text-blue-600 bg-blue-50 px-2 py-0.5 rounded"
+                      className="text-[9px] font-black uppercase px-2 py-0.5 rounded"
+                      style={{ 
+                        color: 'var(--color-brand-blue)', 
+                        backgroundColor: 'var(--color-brand-muted)',
+                        border: '1px solid var(--color-border-muted)'
+                      }}
                     >
                       {tag}
                     </span>
                   ))}
                 </div>
 
-                <h3 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                  {course.title}
+                <h3 
+                  className="font-bold transition-colors"
+                  style={{ color: 'var(--color-foreground)' }}
+                >
+                  <span className="group-hover:text-[var(--color-brand-blue)] transition-colors">
+                    {course.title}
+                  </span>
                 </h3>
               </div>
             </Link>
 
             {/* Actions */}
             <div className="flex gap-3 ml-4 shrink-0">
-              {/* Toggle Completed */}
+              {/* Certificate Toggle */}
               <button
-                onClick={() =>
-                  handleToggleContent(course.id, course.isCompleted)
-                }
+                onClick={() => handleToggleContent(course.id, course.isCompleted)}
                 disabled={isPending === course.id}
-                title={
-                  course.isCompleted
-                    ? "Disable Certificates"
-                    : "Enable Certificates"
-                }
-                className={`p-2 rounded-xl transition-all ${
-                  course.isCompleted
-                    ? "text-amber-600 bg-amber-50 hover:bg-amber-100"
-                    : "text-gray-400 hover:text-amber-600 hover:bg-amber-50"
-                }`}
+                className="p-2 rounded-xl transition-all"
+                style={{ 
+                  backgroundColor: course.isCompleted ? 'var(--color-brand-muted)' : 'transparent',
+                  color: course.isCompleted ? '#d97706' : 'var(--color-foreground)'
+                }}
               >
                 {isPending === course.id ? (
                   <Loader2 size={20} className="animate-spin" />
                 ) : (
                   <Award
                     size={20}
-                    className={course.isCompleted ? "fill-amber-600" : ""}
+                    className={course.isCompleted ? "fill-current" : ""}
+                    style={{ opacity: course.isCompleted ? 1 : 0.4 }}
                   />
                 )}
               </button>
@@ -177,8 +192,10 @@ export default function AdminCourseList({ initialCourses }: Props) {
               {/* Edit */}
               <Link href={`/dashboard/admin/edit-course/${course.id}`}>
                 <button
-                  title="Edit Course"
-                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                  className="p-2 rounded-xl transition-all"
+                  style={{ color: 'var(--color-foreground)', opacity: 0.4 }}
+                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.4")}
                 >
                   <Edit size={20} />
                 </button>
@@ -188,12 +205,13 @@ export default function AdminCourseList({ initialCourses }: Props) {
               <button
                 onClick={() => handleDelete(course.id)}
                 disabled={isDeleting === course.id}
-                title="Delete Course"
-                className={`p-2 rounded-xl transition-all ${
-                  isDeleting === course.id
-                    ? "text-gray-300 bg-gray-50 cursor-not-allowed"
-                    : "text-gray-400 hover:text-red-600 hover:bg-red-50"
-                }`}
+                className="p-2 rounded-xl transition-all"
+                style={{ 
+                  color: isDeleting === course.id ? 'gray' : '#ef4444', 
+                  opacity: 0.5 
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.5")}
               >
                 {isDeleting === course.id ? (
                   <Loader2 size={20} className="animate-spin" />
