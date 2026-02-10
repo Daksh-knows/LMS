@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactPlayer from 'react-player';
 import { BookmarkPlus, Info, Save } from "lucide-react";
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { showToast } from "@/utils/Toast";
 import {
   MediaController,
@@ -33,6 +33,9 @@ interface Props {
 const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekComplete, onBookmarkAdded }) => {
   const { data: session, status } = useSession();
   const userId = session?.user?.id;
+  const searchParams = useSearchParams();
+  const urlSeekParam = searchParams.get('seek');
+  
   console.log("VideoURL :" , videoUrl)
   const controllerRef = useRef<any>(null);
   const watchStartTime = useRef<number | null>(null);
@@ -50,6 +53,7 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
   const [originalControl, setOriginalControl] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasCompleted, setHasCompleted] = useState(false);
+  const [urlSeekProcessed, setUrlSeekProcessed] = useState(false);
 
   const storageKey = `watch-progress-${userId}-${lectureId}`;
   
@@ -124,27 +128,78 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
         };
     }, [isPlaying, lectureId]);
     
-    //seek to specific time if provided
-    useEffect(() => {
-      if (seekTo !== null && controllerRef.current) {
-        let timeToSeek: number = 0;
+    //helper function to parse time string to seconds
+    const parseTimeToSeconds = (timeStr: string | null): number => {
+      if (!timeStr) return 0;
+      
+      let seconds: number = 0;
 
-        if (typeof seekTo === 'string' && seekTo.includes(':')) {
-          const parts = seekTo.split(':').map(Number);
-          if (parts.length === 2) {
-            timeToSeek = parts[0] * 60 + parts[1];
-          } else if (parts.length === 3) {
-            timeToSeek = parts[0] * 3600 + parts[1] * 60 + parts[2];
+      if (timeStr.includes(':')) {
+        // Handle MM:SS or HH:MM:SS format
+        const parts = timeStr.split(':').map(Number);
+        if (parts.length === 2) {
+          seconds = parts[0] * 60 + parts[1];
+        } else if (parts.length === 3) {
+          seconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+        }
+      } else {
+        // Handle plain number (seconds)
+        seconds = parseFloat(timeStr);
+      }
+
+      return isNaN(seconds) ? 0 : seconds;
+    };
+
+    //seek to time from URL parameter
+    useEffect(() => {
+      if (urlSeekParam && !urlSeekProcessed && controllerRef.current?.media && !isVideoLoading) {
+        const timeToSeek = parseTimeToSeconds(urlSeekParam);
+
+        if (timeToSeek > 0) {
+          try {
+            const mediaElement = controllerRef.current.media;
+            if (mediaElement && mediaElement.currentTime !== undefined) {
+              mediaElement.currentTime = timeToSeek;
+              
+              setTimeout(() => {
+                setIsPlaying(true);
+                if (controllerRef.current) {
+                  controllerRef.current.paused = false;
+                }
+              }, 100);
+
+              console.log(`Seeked to ${timeToSeek} seconds from URL param`);
+            }
+          } catch (error) {
+            console.error("URL seek error:", error);
           }
-        } else {
-          timeToSeek = typeof seekTo === 'string' ? parseFloat(seekTo) : seekTo;
         }
 
-        if (!isNaN(timeToSeek)) {
-          // Media-chrome allows setting time via the controller
-          controllerRef.current.media.currentTime = timeToSeek;
-          setIsPlaying(true);
-          controllerRef.current.paused = false;
+        setUrlSeekProcessed(true);
+      }
+    }, [urlSeekParam, urlSeekProcessed, isVideoLoading]);
+    
+    //seek to specific time if provided via props
+    useEffect(() => {
+      if (seekTo !== null && controllerRef.current && controllerRef.current.media) {
+        const timeToSeek = parseTimeToSeconds(seekTo);
+
+        if (timeToSeek > 0 && controllerRef.current.media) {
+          try {
+            const mediaElement = controllerRef.current.media;
+            if (mediaElement && mediaElement.currentTime !== undefined) {
+              mediaElement.currentTime = timeToSeek;
+              
+              setTimeout(() => {
+                setIsPlaying(true);
+                if (controllerRef.current) {
+                  controllerRef.current.paused = false;
+                }
+              }, 100);
+            }
+          } catch (error) {
+            console.error("Seek error:", error);
+          }
         }
 
         onSeekComplete();

@@ -76,7 +76,7 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
         if (!response.ok) throw new Error("Failed to fetch lecture");
         const data = await response.json();
         setCurrentLecture(data);
-        console.log("Fetched lecture data:", data);
+        // console.log("Fetched lecture data:", data);
       } catch (error) {
         console.error("Error loading lecture:", error);
       } finally {
