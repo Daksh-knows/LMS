@@ -160,7 +160,7 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
                     <div className="w-full flex justify-center items-center h-full  mx-auto">
                       {/* --- lecture UI --- */}
                       {currentLecture.type === 'VIDEO' && (
-                        <div className="flex justify-center aspect-video max-h-[90vh] md:max-h-[75vh] w-full h-full">
+                        <div id="video-stage" className="flex justify-center aspect-video max-h-[90vh] md:max-h-[75vh] w-full h-full">
                           <VideoPlayer  
                              videoUrl={currentLecture.videoUrl} 
                              lectureId={currentLecture.id} 

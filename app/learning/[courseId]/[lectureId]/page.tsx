@@ -27,7 +27,7 @@ async function Page({ params }: PageProps) {
     }
 
     course = await response.json();
-    // console.log("Fetched course data:", course);
+    console.log("Fetched course data:", course);
   } catch (error) {
     console.error("Error fetching course in Server Component:", error);
   }
