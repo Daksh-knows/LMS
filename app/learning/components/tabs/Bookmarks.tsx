@@ -30,161 +30,136 @@ interface BookmarksProps {
 
 export const BookmarksTab: React.FC<BookmarksProps> = ({
   lecture,
-  onBookmarkClick ,
-  bookmarks =[] ,  loadingBookmarks = false , setBookmarks , setLoadingBookmarks
+  onBookmarkClick,
+  bookmarks = [],
+  loadingBookmarks = false,
+  setBookmarks,
 }) => {
-
-
-  const {confirm} = useConfirm();
+  const { confirm } = useConfirm();
+  
+  const getTypeStyles = (type: string) => {
+  switch (type) {
+    case "IMPORTANT":
+      return "bg-amber-500/10 text-amber-600 border-amber-500/20";
+    case "QUESTION":
+      return "bg-rose-500/10 text-rose-600 border-rose-500/20";
+    default:
+      return "bg-brand-blue/10 text-brand-blue border-brand-blue/20";
+  }
+};
 
   const formatTime = (seconds: number) => {
-    const date = new Date(seconds * 1000);
-    const mm = date.getUTCMinutes();
-    const ss = String(date.getUTCSeconds()).padStart(2, '0');
+    const mm = Math.floor(seconds / 60);
+    const ss = String(Math.floor(seconds % 60)).padStart(2, "0");
     return `${mm}:${ss}`;
   };
 
-  const getTypeStyles = (type: string) => {
-    switch (type) {
-      case "IMPORTANT":
-        return {
-          backgroundColor: "#fef3c7", // Amber 100
-          color: "#b45309",           // Amber 700
-          borderColor: "#fde68a"      // Amber 200
-        };
-      case "QUESTION":
-        return {
-          backgroundColor: "#ffe4e6", // Rose 100
-          color: "#be123c",           // Rose 700
-          borderColor: "#fecdd3"      // Rose 200
-        };
-      default:
-        return {
-          backgroundColor: "#dbeafe", // Blue 100
-          color: "#1d4ed8",           // Blue 700
-          borderColor: "#bfdbfe"      // Blue 200
-        };
-    }
+  const handleDelete = async (bookmarkId: string) => {
+    if (!setBookmarks) return;
+    const previousBookmarks = [...bookmarks];
+
+    confirm(
+      "Delete Bookmark",
+      "Are you sure you want to delete this bookmark? This action cannot be undone.",
+      async () => {
+        try {
+          setBookmarks((prev) => prev.filter((bm) => bm.id !== bookmarkId));
+          const response = await fetch(`/api/lecture/bookmark?bookmarkId=${bookmarkId}`, {
+            method: "DELETE",
+          });
+
+          if (!response.ok) throw new Error("Failed to delete");
+          showToast.delete("Bookmark removed.");
+        } catch (error) {
+          setBookmarks(previousBookmarks);
+          showToast.error("Failed to delete. Restored.");
+        }
+      }
+    );
   };
 
-  const handleDelete = async (bookmarkId: string) => {
-      const previousBookmarks = [...bookmarks];
-      if(!setBookmarks) return;
-      confirm("Delete Bookmark" ,
-          "Are you sure you want to delete this bookmark? This action cannot be undone." ,
-          async () => {
-              try {
-                const response = await fetch(`/api/lecture/bookmark?bookmarkId=${bookmarkId}`, {
-                  method: "DELETE",
-                });
-        
-                if (!response.ok) {
-                  throw new Error("Failed to delete bookmark");
-                }
-        
-                showToast.delete("Bookmark has been removed from your list.");
-        
-              } catch (error) {
-                console.error("Error deleting bookmark:", error);
-                
-                setBookmarks(previousBookmarks);
-                
-                showToast.error("Failed to delete. Restoring your bookmark...");      
-              }
-              setBookmarks((prev) => prev.filter((bm) => bm.id !== bookmarkId));
-          }
-      )
-    };
-
   const handleJumpToTime = (timeInSeconds: number) => {
-    // 1. Trigger the video seek logic
     onBookmarkClick(formatTime(timeInSeconds));
-    console.log("Scfroll up");
-    // 2. Scroll to top
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth", // Use 'smooth' for a polished feel or 'auto' for instant jump
-    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
-    <div className="max-w-4xl mx-auto animate-in fade-in duration-500">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <BookmarkIcon className="text-purple-600" size={20} />
-          <h2 className="text-md lg:text-xl font-bold text-gray-800">Lecture Bookmarks</h2>
+    <div className="max-w-4xl mx-auto py-4 md:py-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* HEADER SECTION */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
+        <div>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-brand-blue/10 rounded-xl">
+              <BookmarkIcon className="text-brand-blue" size={20} />
+            </div>
+            <h2 className="text-xl font-black text-foreground tracking-tighter">Lecture Bookmarks</h2>
+          </div>
+          <p className="text-[10px] font-black tracking-widest text-foreground/30 mt-1 uppercase">
+            {bookmarks.length} saved moments
+          </p>
         </div>
-        <p className="text-sm text-gray-500 font-medium">
-          {bookmarks.length} saved moments
-        </p>
       </div>
 
-      {/* BOOKMARKS LIST CONTAINER */}
-      <div className="flex flex-col border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
+      {/* LIST CONTAINER */}
+      <div className="rounded-[2rem] border border-border-muted bg-background shadow-sm overflow-hidden">
         {loadingBookmarks ? (
-          <div className="p-20 flex flex-col items-center gap-4">
-            <Loader2 className="animate-spin text-purple-500" size={32} />
-            <p className="text-gray-400 text-sm">Loading your timestamps...</p>
+          <div className="py-20 flex flex-col items-center gap-4">
+            <Loader2 className="animate-spin text-brand-blue/20" size={32} />
+            <p className="text-foreground/30 text-[10px] font-black tracking-widest uppercase">Syncing timestamps...</p>
           </div>
         ) : bookmarks.length === 0 ? (
-          <div className="p-20 text-center flex flex-col items-center gap-3">
-            <div className="p-4 bg-gray-50 rounded-full text-gray-300">
-              <PlusCircle size={40} />
+          <div className="py-20 text-center flex flex-col items-center gap-4">
+            <div className="h-16 w-16 bg-foreground/5 rounded-3xl flex items-center justify-center text-foreground/10">
+              <PlusCircle size={32} />
             </div>
-            <p className="text-gray-500 font-medium">No bookmarks yet</p>
-            <p className="text-sm text-gray-400 max-w-[250px]">
-              Add bookmarks while watching the video to see them here.
-            </p>
+            <div className="space-y-1">
+              <p className="text-foreground/60 font-black text-sm tracking-tight">The list is empty</p>
+              <p className="text-xs text-foreground/30 max-w-[200px] mx-auto font-medium">
+                Add bookmarks while watching to capture key insights.
+              </p>
+            </div>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-border-muted">
             {bookmarks.map((bm) => (
-              <div 
-                key={bm.id} 
-                className="group flex items-center justify-between p-5 hover:bg-gray-50/50 transition-colors"
+              <div
+                key={bm.id}
+                className="group flex flex-col sm:flex-row sm:items-center justify-between p-5 md:p-6 hover:bg-foreground/[0.02] transition-all"
               >
                 {/* Text Label */}
-                <div className="flex-1 min-w-0 pr-4">
-                  <h4 className="text-sm font-semibold text-gray-700 truncate group-hover:text-purple-700 transition-colors">
+                <div className="flex-1 min-w-0 mb-4 sm:mb-0">
+                  <h4 className="text-sm md:text-base font-black text-foreground/80 truncate group-hover:text-brand-blue transition-colors tracking-tight">
                     {bm.label || "Untitled Bookmark"}
                   </h4>
                 </div>
 
-                {/* Right Side Actions/Pills */}
-                <div className="flex items-center gap-3 shrink-0">
-                  {/* Blue Timestamp Pill */}
-                  <button 
-                    onClick={() => handleJumpToTime(bm.time)}
-                    className="flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-full hover:bg-blue-700 hover:scale-105 transition-all active:scale-95 shadow-sm"
-                  >
-                    <PlayCircle size={14} />
-                    {formatTime(bm.time)}
-                  </button>
-                  
-                  {/* Dynamic Type Pill */}
-                  <span 
-                    style={getTypeStyles(bm.type)}
-                    className="px-4 py-1.5 border text-[10px] font-black uppercase tracking-wider rounded-full"
-                  >
-                      {bm.type}
-                  </span>
+                {/* Actions */}
+                <div className="flex items-center gap-3 justify-between sm:justify-end">
+                  <div className="flex items-center gap-2">
+                    {/* Timestamp Button */}
+                    <button
+                      onClick={() => handleJumpToTime(bm.time)}
+                      className="flex items-center gap-2 px-4 py-2 bg-foreground text-background text-[10px] font-black tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-foreground/5"
+                    >
+                      <PlayCircle size={14} />
+                      {formatTime(bm.time)}
+                    </button>
 
-                  {/* Delete Button (Visible on hover) */}
-                  <button 
-                    onClick={() => handleDelete(bm.id)} // You can implement the delete logic here
-                    style={{
-                      marginLeft: '8px',
-                      padding: '8px',
-                      borderRadius: '9999px',
-                      transition: 'all 0.2s ease',
-                      cursor: 'pointer',
-                      border: 'none',
-                      backgroundColor: '#fff1f2', // rose-50 on hover
-                      color: '#000000'
-                    }}
-                    title="Delete bookmark"
+                    {/* Dynamic Type Pill */}
+                    <span
+                      className={`px-3 py-2 border text-[9px] font-black uppercase tracking-widest rounded-xl ${getTypeStyles(bm.type)}`}
+                    >
+                      {bm.type}
+                    </span>
+                  </div>
+
+                  {/* Delete Action */}
+                  <button
+                    onClick={() => handleDelete(bm.id)}
+                    className="p-2.5 text-foreground/20 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+                    title="Delete"
                   >
-                        <Trash2 size={16} />
+                    <Trash2 size={18} />
                   </button>
                 </div>
               </div>
@@ -193,9 +168,11 @@ export const BookmarksTab: React.FC<BookmarksProps> = ({
         )}
       </div>
 
-      <p className="mt-4 text-center text-xs text-gray-400">
-        Click on a timestamp to jump to that moment in the video.
-      </p>
+      <div className="mt-8 flex items-center justify-center gap-2 text-foreground/20">
+        <div className="h-px w-8 bg-border-muted" />
+        <p className="text-[10px] font-black tracking-[0.2em] uppercase">End of bookmarks</p>
+        <div className="h-px w-8 bg-border-muted" />
+      </div>
     </div>
   );
 };
