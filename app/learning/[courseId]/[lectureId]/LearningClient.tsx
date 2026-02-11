@@ -13,6 +13,7 @@ import AssignmentComponent from "@/components/AssignmentComponent";
 import ArticleComponent from "../../components/ArticleComponent";
 import Footer from "@/components/Footer";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import LiveSessionComponent from "../../components/LiveSessionComponent";
 
 interface LearningClientProps {
   course: any;
@@ -155,6 +156,16 @@ export default function LearningClient({ course, lectureId, user }: LearningClie
                         <ArticleComponent lecture={currentLecture} />
                       </div>
                     )}
+
+                    {/* --- LIVE UI --- */}
+                      {currentLecture.type === 'LIVE' && currentLecture.description && (
+                        <div className="h-full w-full">
+                          <LiveSessionComponent
+                            data={currentLecture.description} 
+                            lectureTitle={currentLecture.title} 
+                          />
+                        </div>
+                      )}
                   </div>
                 </div>
 

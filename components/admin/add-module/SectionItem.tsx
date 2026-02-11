@@ -16,7 +16,7 @@ export const SectionItem = ({
 }: SectionItemProps) => {
   return (
     <div 
-      className="card-base transition-all duration-300 hover:shadow-md overflow-hidden"
+      className="card-base transition-all duration-300  overflow-hidden"
       style={{ borderColor: 'var(--color-border)' }}
     >
       {/* Header */}

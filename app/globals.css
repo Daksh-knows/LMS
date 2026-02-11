@@ -33,6 +33,7 @@
   --color-status-unsaved-bg: #fff7ed; /* Orange-50 */
   --color-status-unsaved-text: #c2410c; /* Orange-700 */
   --color-status-unsaved-border: #ffedd5; /* Orange-100 */
+  --color-card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 
 @layer base {
@@ -64,6 +65,7 @@
     --color-status-unsaved-bg: rgba(124, 45, 18, 0.2);
     --color-status-unsaved-text: #fdba74; /* Orange-300 */
     --color-status-unsaved-border: rgba(251, 146, 60, 0.2);
+    --color-card-shadow: 0 10px 25px -5px rgba(253, 230, 138, 0.15), 0 8px 10px -6px rgba(253, 230, 138, 0.1);
   }
 
   body {
@@ -73,6 +75,8 @@
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
   }
 }
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 @layer components {
   .listitem {
@@ -85,7 +89,7 @@
     
     background-color: var(--color-listitem-bg);
     border: 1px solid var(--color-listitem-border);
-    box-shadow: var(--color-listitem-shadow);
+    box-shadow: var(--color-card-shadow);
   }
 
   .listitem:hover {
@@ -115,6 +119,7 @@
     @apply rounded-2xl border overflow-hidden shadow-sm transition-colors duration-300;
     background-color: var(--color-card);
     border-color: var(--color-border);
+    box-shadow: var(--color-card-shadow);
   }
 
   .card-header {
