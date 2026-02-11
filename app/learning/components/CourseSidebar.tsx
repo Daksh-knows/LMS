@@ -137,7 +137,7 @@ const CourseSidebar: React.FC<Props> = ({
                 >
                   <ChevronDown size={20} strokeWidth={3} />
                 </motion.div>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 ">
                   <h3 className={`font-black text-[14px] leading-tight transition-colors tracking-tight ${isOpen ? "text-foreground" : "text-foreground/70"}`}>
                     {section.title}
                   </h3>
@@ -159,9 +159,9 @@ const CourseSidebar: React.FC<Props> = ({
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
+                    className="overflow-hidden my-3"
                   >
-                    <div className="mx-4 mb-6 border border-border-muted rounded-[1.5rem] overflow-hidden bg-background dark:bg-foreground/[0.02]">
+                    <div className="mx-4 border border-border-muted rounded-[1.5rem] overflow-hidden bg-background dark:bg-foreground/[0.02]">
                       {section.lectures.map((item) => {
                         const isActive = item.id === currentLectureId;
                         const isLocked = !isEnrolled && !item.isFree;
