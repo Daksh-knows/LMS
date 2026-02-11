@@ -180,6 +180,18 @@
     color: var(--color-foreground);
     opacity: 0.4;
   }
+
+  .admin-card {
+    background-color: var(--color-card);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--color-card-shadow);
+    transition: all 0.3s ease;
+  }
+  
+  .admin-card-interactive:hover {
+    border-color: var(--color-brand-blue);
+    transform: translateY(-2px);
+  }
 }
 
 /* Your existing Tiptap and Animation code follows... */
