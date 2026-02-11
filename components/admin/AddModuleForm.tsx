@@ -59,16 +59,22 @@ export default function AddModuleForm({ courseId, refreshData}: { courseId: stri
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4">
-      <div className="flex-1 relative">
+      <div className="flex-1 relative group">
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g., 3. Introduction to Middleware"
           required
-          className="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all pr-12"
+          className="input-field pr-12 placeholder:text-current placeholder:opacity-40" 
+          // 'placeholder:text-current' ensures the placeholder adapts to dark mode text color automatically
         />
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300">
+        
+        {/* Icon: Uses opacity for perfect contrast in both themes */}
+        <div 
+          className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-opacity group-focus-within:opacity-100"
+          style={{ color: 'var(--color-foreground)', opacity: 0.3 }}
+        >
           <Plus size={20} />
         </div>
       </div>
@@ -76,7 +82,12 @@ export default function AddModuleForm({ courseId, refreshData}: { courseId: stri
       <button
         type="submit"
         disabled={loading || !title.trim()}
-        className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 transition-all flex items-center justify-center gap-2 min-w-[160px]"
+        className="px-8 py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 min-w-[160px] shadow-lg hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+        style={{ 
+          backgroundColor: 'var(--color-brand-blue)', 
+          color: 'var(--color-brand-contrast)',
+          boxShadow: '0 8px 20px -6px var(--color-brand-muted)' // Colored glow effect
+        }}
       >
         {loading ? (
           <>

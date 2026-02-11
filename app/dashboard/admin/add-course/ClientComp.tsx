@@ -263,7 +263,7 @@ export default function AddCoursePageClient({ user }: Props) {
           <div 
             className="p-8 border-t flex justify-end"
             style={{ 
-              backgroundColor: 'var(--color-card-muted)', 
+              backgroundColor: 'var(--color-card-background)', 
               borderColor: 'var(--color-border-muted)' 
             }}
           >
