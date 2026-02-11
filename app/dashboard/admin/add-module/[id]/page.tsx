@@ -259,7 +259,7 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
               </h2>
               <button 
                 onClick={() => setExpandedSections([])} 
-                className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded transition-colors hover:opacity-100"
+                className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded transition-colors hover:opacity-100 cursor-pointer border-1 rounded-xl"
                 style={{ 
                   backgroundColor: 'var(--color-card-muted)',
                   color: 'var(--color-foreground)',
