@@ -59,6 +59,8 @@
   }
 }
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer components {
   .listitem {
     display: flex;
