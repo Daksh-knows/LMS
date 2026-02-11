@@ -148,7 +148,8 @@ export default function CourseFilterList() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 key={course.id}
                 onClick={() => handleCourseSelect(course.id)}
-                className="bg-card-muted backdrop-blur-xl rounded-[2rem] p-4 flex flex-col md:flex-row gap-4 md:gap-6 shadow-xl border border-border-muted items-start md:items-center hover:border-brand-blue/30 transition-all cursor-pointer group relative overflow-hidden"
+                className="bg-card-muted backdrop-blur-xl rounded-[2rem] p-4 flex flex-col md:flex-row gap-4 md:gap-6 border border-border-muted items-start md:items-center hover:border-brand-blue/30 transition-all cursor-pointer group relative overflow-hidden"
+                style={{ boxShadow: 'var(--color-card-shadow)' }}
               >
                 {/* Thumbnail */}
                 <div className="w-full md:w-48 h-40 md:h-28 rounded-2xl overflow-hidden shrink-0 bg-foreground/5 relative">

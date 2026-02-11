@@ -26,6 +26,7 @@
   --color-btn-secondary-text: #374151;           /* text-gray-700 */
   --color-btn-secondary-hover-border: #3b82f6;   /* border-blue-500 */
   --color-btn-secondary-hover-text: #2563eb;     /* text-blue-600 */
+  --color-card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 
 @layer base {
@@ -50,6 +51,7 @@
     --color-btn-secondary-text: #e4e4e7;         /* Zinc-200 (readable light gray) */
     --color-btn-secondary-hover-border: #3b82f6; /* Blue-500 (keeps brand identity) */
     --color-btn-secondary-hover-text: #60a5fa;   /* Blue-400 (lighter blue for dark bg) */
+    --color-card-shadow: 0 10px 25px -5px rgba(253, 230, 138, 0.15), 0 8px 10px -6px rgba(253, 230, 138, 0.1);
   }
 
   body {
