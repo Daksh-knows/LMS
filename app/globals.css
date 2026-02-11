@@ -9,11 +9,11 @@
   --color-background: #fffbeb;      /* Amber-50 (Warm Light) */
   --color-foreground: #111827;      /* Gray-900 */
   
-  --color-card: #ffffff;            /* White Card */
+  --color-card: #fef3c7;            /* White Card */
   --color-card-muted: #f9fafb;      /* Gray-50 */
   
   --color-border: #e5e7eb;          /* Gray-200 */
-  --color-border-muted: #f3f4f6;    /* Gray-100 */
+  --color-border-muted: #fde68a;    /* Gray-100 */
   
   --color-brand-blue: #2563eb;   /* Blue-600 */
   --color-brand-muted: rgba(37, 99, 235, 0.1);
