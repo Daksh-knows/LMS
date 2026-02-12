@@ -179,7 +179,7 @@ export default function LearningClient({
                   <div className="w-full h-full max-w-[1600px] mx-auto">
 
                     {currentLecture.type === "VIDEO" && (
-                      <div className="aspect-video w-full h-full shadow-2xl">
+                      <div id="video-stage" className="aspect-video w-full h-full shadow-2xl">
                         <VideoPlayer
                           videoUrl={currentLecture.videoUrl}
                           lectureId={currentLecture.id}

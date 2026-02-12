@@ -225,7 +225,7 @@ export const BookmarksTab: React.FC<BookmarksProps> = ({
       </div>
 
       {/* LIST CONTAINER */}
-      <div className="rounded-[2rem] border border-border-muted bg-card shadow-sm overflow-hidden min-h-[300px]">
+      <div className="rounded-[2rem] border border-border-muted bg-card shadow-sm overflow-hidden ">
         {loading ? (
           <div className="py-20 flex flex-col items-center gap-4">
             <Loader2 className="animate-spin text-brand-blue/30" size={32} />

@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
         type ,
       }
     });
-
+    console.log(bookmark);
     return NextResponse.json(bookmark);
   } catch (error) {
     return new NextResponse("Internal Error", { status: 500 });
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
   try {
     const user = await getCurrentUser();
     const userId = user?.id;
-    
+    console.log('hello world');
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
