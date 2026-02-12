@@ -28,7 +28,7 @@ export const AttachmentsSection: React.FC<AttachmentsSectionProps> = ({
       <div className="flex justify-between items-center">
         <label 
           className="text-xs font-bold uppercase flex items-center gap-2"
-          style={{ color: 'var(--color-foreground)', opacity: 0.6 }}
+          style={{ color: 'var(--color-foreground)', opacity: 0.8 }}
         >
           <FileText size={14} /> Supporting Files
         </label>

@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { Loader2, Type, Video, MonitorPlay } from "lucide-react";
-import toast from "react-hot-toast";
 import { getSession } from "next-auth/react";
 import { useBackgroundUpload } from "@/context/BackgroundUploadContext";
 
@@ -285,13 +284,13 @@ export default function AddVideoForm({
 
       {/* --- Footer Actions --- */}
       <div 
-        className="flex flex-col-reverse sm:flex-row gap-3 pt-6 border-t"
+        className="flex gap-3 pt-4 border-t"
         style={{ borderColor: 'var(--color-border-muted)' }}
       >
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 p-4 rounded-2xl font-bold transition-all active:scale-95 border"
+          className="flex-1 p-3 border rounded-xl font-bold transition-colors hover:brightness-95"
           style={{ 
             borderColor: 'var(--color-border)',
             color: 'var(--color-foreground)',
@@ -311,12 +310,11 @@ export default function AddVideoForm({
         <button
           type="submit"
           disabled={loading}
-          className="flex-2 p-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+          className="flex-2 p-3 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-70 active:scale-95"
           style={{ 
-            backgroundColor: 'var(--color-brand-blue)',
-            color: 'var(--color-brand-contrast)',
-            // The semantic colored shadow:
-            boxShadow: '0 10px 15px -3px var(--color-brand-muted)'
+            backgroundColor: 'var(--color-foreground)', // Black (Light) / White (Dark)
+            color: 'var(--color-background)',           // White (Light) / Black (Dark)
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
           }}
         >
           {loading ? (

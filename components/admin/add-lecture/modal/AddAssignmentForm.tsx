@@ -8,13 +8,8 @@ import {
   Paperclip, X, File as FileIcon 
 } from "lucide-react";
 import { showToast } from "@/utils/Toast";
+import { AttachmentsSection, FileAttachment } from "./sections/AttachmentsSection";
 
-// Unified interface for both existing and new files
-interface FileAttachment {
-  title: string;
-  url?: string;      // Present if it's already uploaded/existing
-  file: File | null; // Present if it's a new file waiting to upload
-}
 
 export default function AddAssignmentForm({ 
   courseId, 
@@ -41,28 +36,33 @@ export default function AddAssignmentForm({
   );
 
   // --- Resource Actions ---
+  const addResource = () => {
+      setAttachments([...attachments, { title: "", file: null }]);
+    };
   
-  // Adds a blank row for a new file
-  const addAttachment = () => {
-    setAttachments([...attachments, { title: "", file: null }]);
-  };
-
-  const removeAttachment = (index: number) => {
-    setAttachments(attachments.filter((_, i) => i !== index));
-  };
-
-  // Updates a specific row (e.g. setting the file or changing the title)
-  const updateAttachment = (index: number, field: keyof FileAttachment, value: any) => {
-    const newAttachments = [...attachments];
-    newAttachments[index] = { ...newAttachments[index], [field]: value };
-
-    // UX Improvement: Auto-fill the title with the filename if title is empty
-    if (field === 'file' && value instanceof File && !newAttachments[index].title) {
-      newAttachments[index].title = value.name;
-    }
-
-    setAttachments(newAttachments);
-  };
+    const removeResource = (index: number) => {
+      setAttachments(attachments.filter((_, i) => i !== index));
+    };
+  
+    const updateResource = (
+      index: number,
+      field: keyof FileAttachment,
+      value: any
+    ) => {
+      const newResources = [...attachments];
+      newResources[index] = { ...newResources[index], [field]: value };
+  
+      if (
+        field === "file" &&
+        value instanceof File &&
+        !newResources[index].title
+      ) {
+        newResources[index].title = value.name;
+      }
+  
+      setAttachments(newResources);
+    };
+  
 
   // --- Submission Handler ---
   const handleSubmit = async (e: React.FormEvent) => {
@@ -165,131 +165,79 @@ export default function AddAssignmentForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      
+    <form onSubmit={handleSubmit} className="space-y-6 animate-in fade-in duration-300">    
       {/* Title */}
       <div className="space-y-1">
-         <label className="text-xs font-bold text-gray-500 uppercase ml-1">Assignment Title</label>
-         <input 
-           required 
-           value={title} 
-           onChange={(e) => setTitle(e.target.value)} 
-           className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-gray-800" 
-           placeholder="e.g. Final Project Submission" 
-         />
+        <label 
+          className="text-xs font-bold uppercase ml-1"
+          style={{ color: 'var(--color-foreground)', opacity: 0.8 }}
+        >
+          Assignment Title
+        </label>
+        <input 
+          required 
+          value={title} 
+          onChange={(e) => setTitle(e.target.value)} 
+          className="input-field font-bold" 
+          placeholder="e.g. Final Project Submission" 
+        />
       </div>
 
       {/* Instructions */}
       <div className="space-y-1">
-         <label className="text-xs font-bold text-gray-500 uppercase ml-1">Instructions</label>
-         <textarea 
-            required
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Describe the task details here..."
-            className="w-full h-32 p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none text-sm"
-           />
+        <label 
+          className="text-xs font-bold uppercase ml-1"
+          style={{ color: 'var(--color-foreground)', opacity: 0.8 }}
+        >
+          Instructions
+        </label>
+        <textarea 
+          required
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Describe the task details here..."
+          className="input-field min-h-[128px] resize-none text-sm leading-relaxed"
+        />
       </div>
 
-      {/* Attachments Section */}
-      <div className="space-y-3">
-         <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-gray-500 uppercase ml-1">
-              Reference Files (PDFs, Docs, Images)
-            </label>
-            <button 
-              type="button" 
-              onClick={addAttachment}
-              className="text-xs font-bold text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
-            >
-              <Plus size={14} /> Add File
-            </button>
-         </div>
-
-         <div className="space-y-3">
-            {attachments.length === 0 && (
-              <div className="text-center p-6 border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/50">
-                 <p className="text-xs text-gray-400 font-medium">No reference files attached yet.</p>
-                 <button type="button" onClick={addAttachment} className="mt-2 text-xs font-bold text-blue-600 underline">Add one now</button>
-              </div>
-            )}
-
-            {attachments.map((att, index) => (
-              <div key={index} className="flex flex-col md:flex-row gap-3 p-3 bg-white border border-gray-200 rounded-xl shadow-sm animate-in slide-in-from-top-2">
-                 
-                 {/* File Input Area */}
-                 <div className="flex-2 flex items-center gap-3">
-                    <div className="p-3 bg-gray-100 rounded-lg text-gray-500 shrink-0">
-                       {att.file ? <UploadCloud size={20} className="text-blue-500" /> : <Paperclip size={20} />}
-                    </div>
-                    
-                    <div className="flex-1 overflow-hidden">
-                       {/* If it's an existing file with a URL and no new file selected */}
-                       {att.url && !att.file ? (
-                          <div className="flex flex-col">
-                             <a href={att.url} target="_blank" className="text-sm font-bold text-blue-600 hover:underline truncate block">
-                               {att.title || "Existing File"}
-                             </a>
-                             <span className="text-[10px] text-green-600 font-bold uppercase">Attached</span>
-                          </div>
-                       ) : (
-                          /* File Selection Input */
-                          <div className="relative group">
-                             <p className="text-xs font-bold text-gray-700 truncate">
-                                {att.file ? att.file.name : "Select a file..."}
-                             </p>
-                             <input 
-                               type="file" 
-                               className="absolute inset-0 opacity-0 cursor-pointer"
-                               onChange={(e) => {
-                                 const file = e.target.files?.[0];
-                                 if (file) updateAttachment(index, 'file', file);
-                               }}
-                             />
-                          </div>
-                       )}
-                    </div>
-                 </div>
-
-                 {/* Title Input */}
-                 <div className="flex-3 flex gap-2">
-                    <input 
-                      placeholder="Display Title (e.g. Problem Statement)"
-                      value={att.title}
-                      onChange={(e) => updateAttachment(index, 'title', e.target.value)}
-                      className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                    />
-                    <button 
-                      type="button" 
-                      onClick={() => removeAttachment(index)}
-                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                 </div>
-              </div>
-            ))}
-         </div>
-      </div>
-
+      {/* --- Attachments Section --- */}
+            <AttachmentsSection
+              attachments={attachments}
+              onAdd={addResource}
+              onRemove={removeResource}
+              onUpdate={updateResource}
+            />
       {/* Actions */}
-      <div className="flex gap-3 pt-4 border-t border-gray-100">
-         <button 
-           type="button" 
-           onClick={onCancel} 
-           disabled={loading}
-           className="flex-1 p-3 border border-gray-200 rounded-xl font-bold text-gray-600 hover:bg-gray-50 transition-colors"
-         >
-           Cancel
-         </button>
-         <button 
-           type="submit" 
-           disabled={loading} 
-           className="flex-2 bg-black text-white p-3 rounded-xl font-bold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
-         >
-           {loading ? <Loader2 className="animate-spin" size={20} /> : <FileText size={20} />}
-           {loading ? "Saving..." : "Save Assignment"}
-         </button>
+      <div 
+        className="flex gap-3 pt-4 border-t"
+        style={{ borderColor: 'var(--color-border-muted)' }}
+      >
+        <button 
+          type="button" 
+          onClick={onCancel} 
+          disabled={loading}
+          className="flex-1 p-3 border rounded-xl font-bold transition-colors hover:brightness-95"
+          style={{ 
+            borderColor: 'var(--color-border)',
+            color: 'var(--color-foreground)',
+            opacity: 0.7
+          }}
+        >
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          disabled={loading} 
+          className="flex-2 p-3 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-70 active:scale-95"
+          style={{ 
+            backgroundColor: 'var(--color-foreground)', // Black (Light) / White (Dark)
+            color: 'var(--color-background)',           // White (Light) / Black (Dark)
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+          }}
+        >
+          {loading ? <Loader2 className="animate-spin" size={20} /> : <FileText size={20} />}
+          {loading ? "Saving..." : "Save Assignment"}
+        </button>
       </div>
     </form>
   );
