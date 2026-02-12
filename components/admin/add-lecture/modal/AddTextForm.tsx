@@ -19,7 +19,7 @@ export default function AddTextForm({ courseId, sectionId, initialData, onSucces
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl m-5 focus:outline-none min-h-[300px] max-w-none prose-p:my-1 prose-headings:mb-2 prose-headings:mt-4',
+        class: 'prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg max-w-none focus:outline-none min-h-[300px] p-6 transition-colors duration-500',
       },
     },
   });

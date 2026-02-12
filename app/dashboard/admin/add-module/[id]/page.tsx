@@ -338,7 +338,7 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(4px)' }}
           >
             <div 
-              className="w-full sm:max-w-xl rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-4 duration-300 border"
+              className="mt-20 w-full sm:max-w-xl rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-4 duration-300 border"
               style={{ 
                 backgroundColor: 'var(--color-card)',
                 borderColor: 'var(--color-border)'
