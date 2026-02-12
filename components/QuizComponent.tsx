@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { BrainCircuit, HelpCircle, PlayCircle, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Award, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import QuizIntro from './Quiz/QuizIntro';
@@ -44,7 +44,6 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
   const userId = session?.user?.id;
   const questions = lecture.quizQuestions || [];
 
-  // --- 1. Check for Existing Submission ---
     const metadata = React.useMemo(() => {
     try {
       return JSON.parse(lecture.description);
@@ -54,7 +53,6 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
   }, [lecture.description]);
   
   useEffect(() => {
-    // console.log("Loaded quiz " , lecture)
     const checkQuizStatus = async () => {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/lecture/quiz-status/${lecture.id}`);
@@ -79,57 +77,71 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmitQuiz = async () => {
-    if (isSubmitting) return;
+const handleSubmitQuiz = async () => {
+  if (isSubmitting) return;
+  setIsSubmitting(true);
+  
+  const scoreCount = calculateScore();
+  const percentage = Math.round((scoreCount / questions.length) * 100);
 
-    setIsSubmitting(true);
-    
-    const scoreCount = calculateScore();
-    const percentage = Math.round((scoreCount / questions.length) * 100);
+  try {
+    const response = await fetch("/api/lecture/quiz-progress", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lectureId: lecture.id,
+        courseId: courseId,
+        score: percentage,
+      }),
+    });
 
-    try {
-      const response = await fetch("/api/lecture/quiz-progress", {
+    const result = await response.json();
+
+    if (response.ok) {
+      // Logic for failing score (< 80%)
+      if (result.passed === false) {
+        // We stay in the Result view, but the Result view should now 
+        // show a "Try Again" button instead of finishing.
+        setQuizState('result'); 
+        // Optionally pass a flag or state to show they failed
+        return; 
+      }
+
+      // Logic for passing score (>= 80%)
+      // Track activity only on success
+      await fetch(`/api/user/activity?userId=${userId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          lectureId: lecture.id,
-          courseId: courseId,
-          score: percentage,
+          type: "QUIZ_ATTEMPT",
+          lectureId: lecture.id
         }),
       });
 
-      if (response.ok) {
-        await fetch(`/api/user/activity?userId=${userId}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "QUIZ_ATTEMPT",
-            duration: 5, // Give them 5 minutes of 'activity credit' for finishing a quiz
-            lectureId: lecture.id
-          }),
-        });
-        // 1. Update Server Data (for Sidebar/Nav)
-        router.refresh(); 
+      setPrevSubmission({
+        score: percentage,
+        date: new Date().toLocaleDateString()
+      });
+      setQuizState('already-submitted');
+      router.refresh(); 
 
-        // 2. UPDATE LOCAL STATE INSTANTLY
-        // This ensures the UI changes without a manual reload
-        setPrevSubmission({
-          score: percentage,
-          date: new Date().toLocaleDateString()
-        });
-        
-        // 3. Move to the submitted view
-        setQuizState('already-submitted'); 
-        
-      } else {
-        alert("Failed to save progress.");
-      }
-    } catch (error) {
-      console.error("Submission failed:", error);
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      alert("Failed to save progress.");
     }
-  };
+  } catch (error) {
+    console.error("Submission failed:", error);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+// Add a Reset function to allow retaking
+const handleRetake = () => {
+  setCurrentIdx(0);
+  setSelectedOptions({});
+  setSubmitted({});
+  setQuizState('intro');
+};
 
   const calculateScore = () => {
     return questions.reduce((score, q, idx) => {
@@ -162,6 +174,7 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
       questions ={questions} 
       isSubmitting={isSubmitting}
       handleSubmitQuiz={handleSubmitQuiz}
+      handleRetake={handleRetake}
     /> )
 
   if (quizState === 'active') return (<QuizActive

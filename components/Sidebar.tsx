@@ -31,7 +31,6 @@ export default function Sidebar({
     ...(isAdmin ? [{ label: "Manage Courses", icon: ShieldCheck, href: "/dashboard/admin" }] : []),
 ...(!oneCourse ? [{ label: "My Courses", icon: Library, href: "/dashboard/my-courses" }] : []),
     { label: "Support", icon: HeadphonesIcon, href: isAdmin ? "/dashboard/admin/support" : "/dashboard/support" },
-    { label: "Career Services", icon: Briefcase, href: "/dashboard/career-services" },
   ];
 
   const NavLinks = () => (
