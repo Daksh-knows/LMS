@@ -26,11 +26,13 @@ export default function Sidebar({
   const pathname = usePathname();
   const isAdmin = user?.role === "ADMIN" || user?.role === "admin";
   const oneCourse = process.env.NEXT_PUBLIC_ONE_COURSE === "true";
+
   const navItems = [
     { label: "Overview", icon: LayoutDashboard, href: isAdmin ? "/dashboard/admin-overview" : "/dashboard" },
     ...(isAdmin ? [{ label: "Manage Courses", icon: ShieldCheck, href: "/dashboard/admin" }] : []),
-...(!oneCourse ? [{ label: "My Courses", icon: Library, href: "/dashboard/my-courses" }] : []),
+    ...(!oneCourse ? [{ label: "My Courses", icon: Library, href: "/dashboard/my-courses" }] : []),
     { label: "Support", icon: HeadphonesIcon, href: isAdmin ? "/dashboard/admin/support" : "/dashboard/support" },
+    // { label: "Career Services", icon: Briefcase, href: "/dashboard/career-services" },
   ];
 
   const NavLinks = () => (
@@ -47,13 +49,12 @@ export default function Sidebar({
             <Link
               href={item.href}
               onClick={() => {
-                // IMPORTANT: Only trigger close on mobile
                 if (window.innerWidth < 1024) onClose();
               }}
               className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group relative ${
                 isActive 
-                  ? "text-[#ef4444] bg-orange-50/50" 
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                  ? "text-[#ef4444] bg-card" // Red text, theme-aware background
+                  : "text-foreground/60 hover:bg-card hover:text-foreground"
               }`}
             >
               {isActive && (
@@ -65,7 +66,7 @@ export default function Sidebar({
               
               <item.icon 
                 size={20} 
-                className={isActive ? "text-[#ef4444]" : "text-gray-400 group-hover:text-gray-600"} 
+                className={isActive ? "text-[#ef4444]" : "text-foreground/40 group-hover:text-foreground"} 
               />
               <span className={`font-semibold text-sm ${isActive ? "text-[#ef4444]" : ""}`}>
                 {item.label}
@@ -80,10 +81,7 @@ export default function Sidebar({
   return (
     <>
       {/* --- DESKTOP SIDEBAR --- */}
-      {/* We use !isOpen check here to ensure that when the mobile sidebar is active, 
-          the desktop one doesn't accidentally catch clicks.
-      */}
-      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-64 bg-amber-50 flex-col z-50">
+      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-64 bg-background flex-col z-50 border-r border-border-muted transition-colors duration-500">
         <div className="h-16 flex items-center px-6 mt-2 mb-4">
           <Logo />
         </div>
@@ -91,22 +89,19 @@ export default function Sidebar({
       </aside>
 
       {/* --- MOBILE SIDEBAR --- */}
-      {/* We only render this when isOpen is true. 
-          The 'AnimatePresence' in LayoutShell handles the exit animation.
-      */}
       {isOpen && (
         <motion.aside
           initial={{ x: "-100%" }}
           animate={{ x: 0 }}
           exit={{ x: "-100%" }}
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          className="lg:hidden fixed top-0 left-0 bottom-0 w-[280px] bg-amber-50 z-[100] shadow-2xl flex flex-col border-r border-gray-100"
+          className="lg:hidden fixed top-0 left-0 bottom-0 w-[280px] bg-background z-[100] shadow-2xl flex flex-col border-r border-border-muted transition-colors duration-500"
         >
           <div className="flex items-center justify-between p-6">
             <Logo />
             <button 
               onClick={onClose}
-              className="p-2 bg-white/50 text-gray-500 hover:text-gray-900 rounded-xl transition-colors shadow-sm"
+              className="p-2 bg-card text-foreground/60 hover:text-foreground rounded-xl transition-colors shadow-sm border border-border-muted"
             >
               <X size={20} />
             </button>

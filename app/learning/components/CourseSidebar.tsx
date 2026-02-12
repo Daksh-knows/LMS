@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// --- Types ---
+// --- Types (Kept for consistency) ---
 export type ItemType = "VIDEO" | "TEXT" | "QUIZ" | "ASSIGNMENT" | "LIVE";
 export interface Resource { title: string; url: string; }
 export interface CourseItem {
@@ -73,12 +73,12 @@ const CourseSidebar: React.FC<Props> = ({
 
   const getStatusIndicator = (item: CourseItem, isActive: boolean) => {
     const isCompleted = item.userProgress?.[0]?.isCompleted;
-    if (!isEnrolled && !item.isFree) return <Lock size={16} className="text-gray-400" />;
+    if (!isEnrolled && !item.isFree) return <Lock size={16} className="text-foreground/30" />;
     
     if (isCompleted) {
       return (
         <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }}>
-          <CheckCircle2 size={20} className="text-emerald-600 fill-white" />
+          <CheckCircle2 size={20} className="text-emerald-500 fill-background" />
         </motion.div>
       );
     }
@@ -86,16 +86,16 @@ const CourseSidebar: React.FC<Props> = ({
     if (isActive) {
       return (
         <div className="relative flex items-center justify-center w-5 h-5 z-10">
-          <span className="absolute inset-0 rounded-full bg-indigo-600/20 animate-ping" />
-          <span className="relative w-3 h-3 rounded-full bg-indigo-600 border-2 border-white shadow-md" />
+          <span className="absolute inset-0 rounded-full bg-purple-500/20 animate-ping" />
+          <span className="relative w-3 h-3 rounded-full bg-purple-600 border-2 border-background shadow-md" />
         </div>
       );
     }
-    return <Circle size={18} className="text-gray-400 bg-white z-10" />;
+    return <Circle size={18} className="text-foreground/20 bg-background z-10" />;
   };
 
   const getTypeIcon = (type: ItemType, isActive: boolean) => {
-    const iconProps = { size: 14, className: isActive ? "text-indigo-600" : "text-gray-500" };
+    const iconProps = { size: 14, className: isActive ? "text-purple-600 dark:text-purple-400" : "text-foreground/40" };
     switch (type) {
       case "VIDEO": return <TvMinimalPlay {...iconProps} />;
       case "TEXT": return <FileText {...iconProps} />;
@@ -107,12 +107,12 @@ const CourseSidebar: React.FC<Props> = ({
   };
 
   return (
-    <div className="w-full h-full bg-white flex flex-col border-l border-gray-300 font-sans shadow-sm">
+    <div className="w-full h-full bg-white dark:bg-background flex flex-col border-l border-border-muted font-sans shadow-sm transition-colors duration-500">
       {/* Sidebar Header */}
-      <div className="p-5 border-b-2 border-gray-200 shrink-0 bg-gray-50/50 backdrop-blur-md sticky top-0 z-20">
-        <h2 className="font-black text-gray-900 text-lg tracking-tight flex items-center justify-between">
+      <div className="p-6 border-b border-border-muted shrink-0 bg-white/50 dark:bg-background/50 backdrop-blur-md sticky top-0 z-20">
+        <h2 className="font-black text-foreground text-lg tracking-tighter flex items-center justify-between">
           Course Content
-          <span className="text-[10px] bg-gray-800 text-white px-2 py-1 rounded-md uppercase tracking-widest font-bold">
+          <span className="text-[9px] bg-foreground text-background px-2 py-1 rounded-lg uppercase tracking-[0.15em] font-black">
             {sections.length} Module{sections.length > 1 ? "s" : ""}
           </span>
         </h2>
@@ -123,29 +123,29 @@ const CourseSidebar: React.FC<Props> = ({
           const isOpen = openSections.includes(section.id);
           
           return (
-            <div key={section.id} className="border-b border-gray-300 last:border-b-0">
+            <div key={section.id} className="border-b border-border-muted last:border-b-0">
               {/* Module Header */}
               <button
                 onClick={() => toggleSection(section.id)}
-                className={`w-full flex items-center gap-3 px-5 py-5 transition-all duration-200 text-left group ${
-                  isOpen ? "bg-white" : "hover:bg-gray-100/50"
+                className={`w-full flex items-center gap-4 px-6 py-6 transition-all duration-200 text-left group ${
+                  isOpen ? "bg-foreground/[0.02]" : "hover:bg-foreground/[0.01]"
                 }`}
               >
                 <motion.div
                   animate={{ rotate: isOpen ? 180 : 0 }}
-                  className={`${isOpen ? "text-indigo-600" : "text-gray-500"}`}
+                  className={`${isOpen ? "text-purple-600" : "text-foreground/30"}`}
                 >
                   <ChevronDown size={20} strokeWidth={3} />
                 </motion.div>
-                <div className="flex-1 min-w-0">
-                  <h3 className={`font-extrabold text-[15px] leading-tight transition-colors ${isOpen ? "text-indigo-900" : "text-gray-800"}`}>
+                <div className="flex-1 min-w-0 ">
+                  <h3 className={`font-black text-[14px] leading-tight transition-colors tracking-tight ${isOpen ? "text-foreground" : "text-foreground/70"}`}>
                     {section.title}
                   </h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[11px] font-bold text-gray-500 uppercase tracking-tighter bg-gray-200/60 px-1.5 py-0.5 rounded">
-                       {section.lectures.length} Lesson{section.lectures.length > 1 ? "s" : ""}
+                  <div className="flex items-center gap-3 mt-1.5">
+                    <span className="text-[10px] font-black text-foreground/30 uppercase tracking-widest bg-foreground/5 px-2 py-0.5 rounded-md">
+                       {section.lectures.length} Lessons
                     </span>
-                    <span className="text-[11px]  text-indigo-600/70">
+                    <span className="text-[10px] font-bold text-purple-600/50 uppercase tracking-wider">
                       {section.lectures.reduce((acc, curr) => acc + (curr.duration || 0), 0)} mins
                     </span>
                   </div>
@@ -159,12 +159,10 @@ const CourseSidebar: React.FC<Props> = ({
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: "circOut" }}
-                    className="overflow-hidden bg-gray-50/30"
+                    className="overflow-hidden my-3"
                   >
-                    {/* Darker Inner Card Border */}
-                    <div className="mx-4 mb-4 border-2 border-gray-300 rounded-xl overflow-hidden bg-white">
-                      {section.lectures.map((item, lIdx) => {
+                    <div className="mx-4 border border-border-muted rounded-[1.5rem] overflow-hidden bg-background dark:bg-foreground/[0.02]">
+                      {section.lectures.map((item) => {
                         const isActive = item.id === currentLectureId;
                         const isLocked = !isEnrolled && !item.isFree;
 
@@ -172,29 +170,26 @@ const CourseSidebar: React.FC<Props> = ({
                           <div
                             key={item.id}
                             onClick={() => !isLocked && onSelectLecture(item)}
-                            className={`group relative flex items-start gap-4 p-4 transition-all border-b border-gray-200 last:border-b-0 ${
+                            className={`group relative flex items-start gap-4 p-5 transition-all border-b border-border-muted last:border-b-0 ${
                               isActive
-                                ? "bg-indigo-50"
-                                : "hover:bg-gray-50"
-                            } ${isLocked ? "cursor-not-allowed" : "cursor-pointer"}`}
+                                ? "bg-purple-600/5"
+                                : "hover:bg-foreground/[0.03]"
+                            } ${isLocked ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
                           >
-                            {/* Connector Line (The pathway effect) */}
-                            {/* <div className="absolute left-[33px] top-0 bottom-0 w-[2px] bg-gray-200 group-first:top-1/2 group-last:bottom-1/2" /> */}
-
-                            <div className="mt-0.5 shrink-0 relative bg-white rounded-full">
+                            <div className="mt-0.5 shrink-0">
                               {getStatusIndicator(item, isActive)}
                             </div>
 
                             <div className="flex-1 min-w-0">
-                              <p className={`text-[13px] leading-snug transition-colors ${isActive ? "font-bold text-indigo-900" : "text-gray-700 font-medium group-hover:text-black"}`}>
+                              <p className={`text-[13px] leading-snug transition-colors tracking-tight ${isActive ? "font-black text-purple-600" : "text-foreground/70 font-bold"}`}>
                                 {item.title}
                               </p>
-                              <div className="flex items-center gap-3 mt-1.5">
-                                <div className={`flex items-center gap-1.5 text-[10px] font-black  tracking-wider ${isActive ? "text-indigo-600" : "text-gray-500"}`}>
+                              <div className="flex items-center gap-3 mt-2">
+                                <div className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.1em] ${isActive ? "text-purple-600/60" : "text-foreground/20"}`}>
                                   {getTypeIcon(item.type, isActive)}
                                   <span>{item.type}</span>
-                                  {item.duration && item.type !== "LIVE" && (
-                                    <span className="bg-gray-200 text-gray-600 px-1 rounded-sm">{item.duration}m</span>
+                                  {item.duration && (
+                                    <span className="bg-foreground/5 px-1.5 py-0.5 rounded-sm">{item.duration}m</span>
                                   )}
                                 </div>
                               </div>
@@ -202,8 +197,8 @@ const CourseSidebar: React.FC<Props> = ({
 
                             {isActive && (
                               <motion.div 
-                                layoutId="activePill"
-                                className="absolute right-0 top-2 bottom-2 w-1.5 bg-indigo-600 rounded-l-full shadow-[0_0_10px_rgba(79,70,229,0.4)]"
+                                layoutId="activePillSidebar"
+                                className="absolute right-0 top-3 bottom-3 w-1 bg-purple-600 rounded-l-full shadow-[0_0_10px_rgba(147,51,234,0.4)]"
                               />
                             )}
                           </div>
@@ -220,18 +215,17 @@ const CourseSidebar: React.FC<Props> = ({
 
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
+          width: 5px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: #f1f1f1;
+          background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #d1d5db;
-          border-radius: 10px;
-          border: 1px solid #f1f1f1;
+          background: rgba(var(--foreground-rgb), 0.1);
+          border-radius: 20px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #9ca3af;
+          background: rgba(var(--foreground-rgb), 0.2);
         }
       `}</style>
     </div>

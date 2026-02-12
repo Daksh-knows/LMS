@@ -1,4 +1,5 @@
 "use client";
+
 import { showToast } from "@/utils/Toast";
 import React, { useState, useEffect, useMemo } from "react";
 import { Lecture } from "../../types";
@@ -10,11 +11,10 @@ import {
   Bookmark as BookmarkIcon,
   PlusCircle,
   Filter,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
 import { useConfirm } from "@/context/ConfirmContext";
 
-// --- Types ---
 interface Bookmark {
   id: string;
   time: number;
@@ -30,9 +30,8 @@ interface Bookmark {
 }
 
 interface BookmarksProps {
-  lecture: Lecture; // The current lecture object
+  lecture: Lecture;
   onBookmarkClick: (time: string) => void;
-  currentUserId?: string; // Optional if not used directly
 }
 
 export const BookmarksTab: React.FC<BookmarksProps> = ({
@@ -42,32 +41,28 @@ export const BookmarksTab: React.FC<BookmarksProps> = ({
   const router = useRouter();
   const params = useParams();
   const { confirm } = useConfirm();
-  
-  // 1. Get IDs directly from URL
-  // Route: /learning/[courseId]/[lectureId]
-  const courseId = params?.courseId as string; 
 
-  // --- State ---
+  const courseId = params?.courseId as string;
+
+  /* ---------------- STATE ---------------- */
   const [allBookmarks, setAllBookmarks] = useState<Bookmark[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // --- UI Filters ---
+
   const [scope, setScope] = useState<"CURRENT" | "ALL">("CURRENT");
   const [sortBy, setSortBy] = useState<"TIME" | "RECENT">("TIME");
 
-  // --- 2. Fetch Logic (Once per Course) ---
+  /* ---------------- FETCH ---------------- */
   useEffect(() => {
     const fetchAllCourseBookmarks = async () => {
       if (!courseId) return;
-      
+
       setLoading(true);
       try {
-        // We fetch ALL bookmarks for this course regardless of the current view
-        // This allows instant toggling later
-        const response = await fetch(`/api/lecture/bookmark?courseId=${courseId}`);
-        
+        const response = await fetch(
+          `/api/lecture/bookmark?courseId=${courseId}`
+        );
+
         if (!response.ok) throw new Error("Failed to fetch");
-        
         const data = await response.json();
         setAllBookmarks(data);
       } catch (error) {
@@ -79,69 +74,76 @@ export const BookmarksTab: React.FC<BookmarksProps> = ({
     };
 
     fetchAllCourseBookmarks();
-  }, [courseId]); // Only re-fetch if the COURSE changes, not the lecture
+  }, [courseId]);
 
-  // --- 3. Client-Side Filtering & Sorting ---
+  /* ---------------- FILTER + SORT ---------------- */
   const visibleBookmarks = useMemo(() => {
     let filtered = [...allBookmarks];
 
-    // Filter A: Scope (Current Lecture vs All)
     if (scope === "CURRENT") {
-      filtered = filtered.filter(bm => bm.lectureId === lecture.id);
+      filtered = filtered.filter((bm) => bm.lectureId === lecture.id);
     }
 
-    // Filter B: Sort
     if (sortBy === "TIME") {
-      // Sort by lecture position first, then timestamp
       filtered.sort((a, b) => {
         if (scope === "ALL") {
-           // If different lectures, sort by lecture order first
-           const posA = a.lecture?.position || 0;
-           const posB = b.lecture?.position || 0;
-           if (posA !== posB) return posA - posB;
+          const posA = a.lecture?.position || 0;
+          const posB = b.lecture?.position || 0;
+          if (posA !== posB) return posA - posB;
         }
         return a.time - b.time;
       });
     } else {
-      // Sort by creation date (Newest First)
-      filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      filtered.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() -
+          new Date(a.createdAt).getTime()
+      );
     }
 
     return filtered;
   }, [allBookmarks, scope, sortBy, lecture.id]);
 
-  // --- Helpers ---
+  /* ---------------- HELPERS ---------------- */
   const formatTime = (seconds: number) => {
-    const date = new Date(seconds * 1000);
-    const mm = date.getUTCMinutes();
-    const ss = String(date.getUTCSeconds()).padStart(2, '0');
+    const mm = Math.floor(seconds / 60);
+    const ss = String(Math.floor(seconds % 60)).padStart(2, "0");
     return `${mm}:${ss}`;
   };
 
   const getTypeStyles = (type: string) => {
     switch (type) {
-      case "IMPORTANT": return { backgroundColor: "#fef3c7", color: "#b45309", borderColor: "#fde68a" };
-      case "QUESTION": return { backgroundColor: "#ffe4e6", color: "#be123c", borderColor: "#fecdd3" };
-      default: return { backgroundColor: "#dbeafe", color: "#1d4ed8", borderColor: "#bfdbfe" };
+      case "IMPORTANT":
+        return "bg-amber-500/10 text-amber-600 border-amber-500/20";
+      case "QUESTION":
+        return "bg-rose-500/10 text-rose-600 border-rose-500/20";
+      default:
+        return "bg-brand-blue/10 text-brand-blue border-brand-blue/20";
     }
   };
 
-  // --- Actions ---
+  /* ---------------- ACTIONS ---------------- */
   const handleDelete = async (bookmarkId: string) => {
-    // Optimistic Update on the MASTER list
-    const previousBookmarks = [...allBookmarks];
-    setAllBookmarks((prev) => prev.filter((bm) => bm.id !== bookmarkId));
+    const previous = [...allBookmarks];
 
     confirm(
       "Delete Bookmark",
       "Are you sure? This cannot be undone.",
       async () => {
         try {
-          const response = await fetch(`/api/lecture/bookmark?bookmarkId=${bookmarkId}`, { method: "DELETE" });
-          if (!response.ok) throw new Error("Failed");
+          setAllBookmarks((prev) =>
+            prev.filter((bm) => bm.id !== bookmarkId)
+          );
+
+          const res = await fetch(
+            `/api/lecture/bookmark?bookmarkId=${bookmarkId}`,
+            { method: "DELETE" }
+          );
+
+          if (!res.ok) throw new Error("Failed");
           showToast.delete("Bookmark removed.");
         } catch (error) {
-          setAllBookmarks(previousBookmarks); // Revert master list
+          setAllBookmarks(previous);
           showToast.error("Failed to delete. Restored bookmark.");
         }
       }
@@ -150,62 +152,71 @@ export const BookmarksTab: React.FC<BookmarksProps> = ({
 
   const handleJump = (bm: Bookmark) => {
     if (bm.lectureId === lecture.id) {
-      // Same lecture: Seek & Scroll
       onBookmarkClick(formatTime(bm.time));
       const stage = document.querySelector("#video-stage");
       if (stage) {
         stage.scrollIntoView({ behavior: "smooth", block: "start" });
       } else {
-        // Fallback to top of window
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     } else {
-      // Different lecture: Navigate to it
-      // The video player on the new page will read the 'seek' param
-      router.push(`/learning/${courseId}/${bm.lectureId}?seek=${bm.time}`);
+      router.push(
+        `/learning/${courseId}/${bm.lectureId}?seek=${bm.time}`
+      );
     }
   };
 
+  /* ======================================================= */
+  /* ======================== UI ============================ */
+  /* ======================================================= */
+
   return (
-    <div className="max-w-4xl mx-auto animate-in fade-in duration-500">
-      
-      {/* HEADER & CONTROLS */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-2">
-          <BookmarkIcon className="text-purple-600" size={20} />
-          <h2 className="text-md lg:text-xl font-bold text-gray-800">Bookmarks</h2>
-          <span className="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded-full">
+    <div className="max-w-4xl mx-auto py-4 md:py-6 animate-in fade-in duration-500">
+
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-brand-blue/10 rounded-xl">
+            <BookmarkIcon className="text-brand-blue" size={20} />
+          </div>
+          <h2 className="text-xl font-black text-foreground tracking-tighter">
+            Bookmarks
+          </h2>
+          <span className="px-2 py-1 text-[10px] font-black tracking-widest rounded-full bg-foreground/5 text-foreground/60">
             {visibleBookmarks.length}
           </span>
         </div>
 
-        <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-xl border border-gray-200 self-start md:self-auto">
-          {/* Scope Toggle */}
+        {/* FILTER CONTROLS */}
+        <div className="flex items-center gap-2 bg-background border border-border-muted p-1 rounded-xl">
           <button
             onClick={() => setScope("CURRENT")}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-              scope === "CURRENT" ? "bg-white text-purple-700 shadow-sm" : "text-gray-500 hover:text-gray-900"
+            className={`px-3 py-1.5 text-[10px] font-black tracking-widest rounded-lg transition-all ${
+              scope === "CURRENT"
+                ? "bg-card text-brand-blue shadow-sm"
+                : "text-foreground/40 hover:text-foreground"
             }`}
           >
-            Current Lecture
+            Current
           </button>
           <button
             onClick={() => setScope("ALL")}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-              scope === "ALL" ? "bg-white text-purple-700 shadow-sm" : "text-gray-500 hover:text-gray-900"
+            className={`px-3 py-1.5 text-[10px] font-black tracking-widest rounded-lg transition-all ${
+              scope === "ALL"
+                ? "bg-card text-brand-blue shadow-sm"
+                : "text-foreground/40 hover:text-foreground"
             }`}
           >
-            All Lectures
+            All
           </button>
-          
-          {/* Divider */}
-          <div className="w-px h-4 bg-gray-300 mx-1" />
 
-          {/* Sort Toggle */}
+          <div className="w-px h-4 bg-border-muted mx-1" />
+
           <button
-            onClick={() => setSortBy(sortBy === "TIME" ? "RECENT" : "TIME")}
-            className="px-3 py-1.5 flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-gray-900 hover:bg-white hover:shadow-sm rounded-lg transition-all"
-            title={sortBy === "TIME" ? "Sorted by Time" : "Sorted by Recently Added"}
+            onClick={() =>
+              setSortBy(sortBy === "TIME" ? "RECENT" : "TIME")
+            }
+            className="px-3 py-1.5 flex items-center gap-1 text-[10px] font-black tracking-widest text-foreground/40 hover:text-foreground rounded-lg transition-all"
           >
             <Filter size={12} />
             {sortBy === "TIME" ? "Time" : "Newest"}
@@ -213,84 +224,79 @@ export const BookmarksTab: React.FC<BookmarksProps> = ({
         </div>
       </div>
 
-      {/* BOOKMARKS LIST */}
-      <div className="flex flex-col border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm min-h-[300px]">
+      {/* LIST CONTAINER */}
+      <div className="rounded-[2rem] border border-border-muted bg-card shadow-sm overflow-hidden min-h-[300px]">
         {loading ? (
-          <div className="flex-1 flex flex-col items-center justify-center gap-4 min-h-[300px]">
-            <Loader2 className="animate-spin text-purple-500" size={32} />
-            <p className="text-gray-400 text-sm">Loading notes...</p>
+          <div className="py-20 flex flex-col items-center gap-4">
+            <Loader2 className="animate-spin text-brand-blue/30" size={32} />
+            <p className="text-foreground/30 text-[10px] font-black tracking-widest uppercase">
+              Loading bookmarks...
+            </p>
           </div>
         ) : visibleBookmarks.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center gap-3 min-h-[300px] p-8">
-            <div className="p-4 bg-gray-50 rounded-full text-gray-300">
-              <PlusCircle size={40} />
+          <div className="py-20 text-center flex flex-col items-center gap-4">
+            <div className="h-16 w-16 bg-foreground/5 rounded-3xl flex items-center justify-center text-foreground/10">
+              <PlusCircle size={32} />
             </div>
-            <p className="text-gray-500 font-medium">No bookmarks found</p>
-            <p className="text-sm text-gray-400 text-center max-w-[250px]">
-              {scope === "CURRENT" 
-                ? "Add bookmarks while watching this video to see them here."
-                : "You haven't added any bookmarks in this course yet."}
+            <p className="text-foreground/60 font-black text-sm tracking-tight">
+              No bookmarks found
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-border-muted">
             {visibleBookmarks.map((bm) => {
-              const isDifferentLecture = bm.lectureId !== lecture.id;
+              const isDifferent = bm.lectureId !== lecture.id;
 
               return (
-                <div 
-                  key={bm.id} 
-                  className="group flex flex-col sm:flex-row sm:items-center justify-between p-5 hover:bg-gray-50/50 transition-colors gap-3"
+                <div
+                  key={bm.id}
+                  className="group flex flex-col sm:flex-row sm:items-center justify-between p-5 hover:bg-foreground/[0.02] transition-all gap-4"
                 >
-                  {/* Left: Content */}
                   <div className="flex-1 min-w-0">
-                    {/* Context Header (If viewing all lectures OR if sorted by recent) */}
-                    {(scope === "ALL" || sortBy === "RECENT") && isDifferentLecture && bm.lecture && (
-                      <div className="flex items-center gap-2 mb-1.5 text-[10px] uppercase font-bold text-gray-400 tracking-wider">
-                        <span className="bg-gray-100 px-1.5 py-0.5 rounded">Lecture {bm.lecture.position}</span>
-                        <span className="truncate max-w-[200px]">{bm.lecture.title}</span>
-                      </div>
-                    )}
+                    {(scope === "ALL" || sortBy === "RECENT") &&
+                      isDifferent &&
+                      bm.lecture && (
+                        <div className="text-[9px] font-black tracking-widest text-foreground/30 uppercase mb-1 truncate">
+                          Lecture {bm.lecture.position} · {bm.lecture.title}
+                        </div>
+                      )}
 
-                    <h4 className="text-sm font-semibold text-gray-700 break-words group-hover:text-purple-700 transition-colors">
+                    <h4 className="text-sm font-black text-foreground/80 truncate group-hover:text-brand-blue transition-colors">
                       {bm.label || "Untitled Bookmark"}
                     </h4>
                   </div>
 
-                  {/* Right: Actions */}
-                  <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 w-full sm:w-auto">
-                    
-                    {/* Timestamp Button */}
-                    <button 
+                  <div className="flex items-center gap-3">
+                    <button
                       onClick={() => handleJump(bm)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full transition-all shadow-sm active:scale-95 border ${
-                        isDifferentLecture 
-                          ? "bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-600"
-                          : "bg-blue-600 text-white border-transparent hover:bg-blue-700"
+                      className={`flex items-center gap-2 px-4 py-2 text-[10px] font-black tracking-widest rounded-xl transition-all shadow-sm ${
+                        isDifferent
+                          ? "bg-background text-foreground border border-border-muted hover:border-brand-blue"
+                          : "bg-foreground text-background"
                       }`}
                     >
-                      {isDifferentLecture ? <ArrowRight size={14} /> : <PlayCircle size={14} />}
+                      {isDifferent ? (
+                        <ArrowRight size={14} />
+                      ) : (
+                        <PlayCircle size={14} />
+                      )}
                       {formatTime(bm.time)}
                     </button>
-                    
-                    <div className="flex items-center gap-3">
-                      {/* Type Badge */}
-                      <span 
-                        style={getTypeStyles(bm.type)}
-                        className="px-3 py-1 border text-[10px] font-black uppercase tracking-wider rounded-full"
-                      >
-                        {bm.type}
-                      </span>
 
-                      {/* Delete */}
-                      <button 
-                        onClick={() => handleDelete(bm.id)} 
-                        className="p-2 bg-transparent text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
-                        title="Delete bookmark"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                    <span
+                      className={`px-3 py-1 border text-[9px] font-black uppercase tracking-widest rounded-xl ${getTypeStyles(
+                        bm.type
+                      )}`}
+                    >
+                      {bm.type}
+                    </span>
+
+                    <button
+                      onClick={() => handleDelete(bm.id)}
+                      className="p-2 text-foreground/20 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 </div>
               );

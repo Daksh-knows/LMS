@@ -62,10 +62,6 @@ export default async function EditPage({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-6 md:p-12">
-      <div className="max-w-5xl mx-auto">
-        <EditCourseForm course={formattedCourse} adminId={user.id} />
-      </div>
-    </div>
+    <EditCourseForm course={formattedCourse} adminId={user.id} />
   );
 }

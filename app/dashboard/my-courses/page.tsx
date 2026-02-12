@@ -13,17 +13,18 @@ export default async function MyCoursesPage() {
   }
 
   return (
-    <div className="flex-1 p-5  backdrop-blur-xl border border-white/20 min-h-screen rounded-xl">
+<div className="flex-1 p-4 md:p-8  backdrop-blur-xl border  min-h-screen rounded-[2.5rem] transition-colors duration-500 shadow-sm">
       <div className="max-w-5xl mx-auto">
         <div className="flex-1">
-          <div className="mb-8">
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+          <div className="mb-10">
+            <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight transition-colors">
               My Learning
             </h1>
-            <p className="text-gray-500 font-medium">
-              Welcome back, {sessionUser.email}
+            <p className="text-foreground/50 font-bold mt-1 text-sm md:text-base">
+              Welcome back, <span className="text-brand-blue">{sessionUser.email}</span>
             </p>
           </div>
+          
           <CourseFilterList />
         </div>
       </div>

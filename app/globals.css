@@ -1,24 +1,211 @@
 @import "tailwindcss";
-
-
-
-
-/* 1. Add the Typography Plugin */
 @plugin "@tailwindcss/typography";
 
-/* 2. Customizing for your Article/Editor */
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
 @theme {
-  --color-brand-blue: #2563eb;
-  /* Add any other custom theme variables here */
+  /* --- Primitive Colors (Base Palette) --- */
+  --color-background: #fffbeb;      /* Amber-50 (Warm Light) */
+  --color-foreground: #111827;      /* Gray-900 */
+  
+  --color-card: #fef3c7;            /* White Card */
+  --color-card-muted: #f9fafb;      /* Gray-50 */
+  
+  --color-border: #e5e7eb;          /* Gray-200 */
+  --color-border-muted: #fde68a;    /* Gray-100 */
+  
+  --color-brand-blue: #2563eb;   /* Blue-600 */
+  --color-brand-muted: rgba(37, 99, 235, 0.1);
+  --color-brand-contrast: #ffffff;  /* Text on primary button */
+
+  /* --- Component Semantics --- */
+  --color-header-bg: rgba(255, 255, 255, 0.8);
+  --color-input-bg: #f9fafb;        /* Gray-50 */
+  
+  /* List Item Specifics */
+  --color-listitem-bg: #ffffff;
+  --color-listitem-border: #f3f4f6;
+  --color-listitem-hover: #fcfcfc;
+  --color-listitem-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  
+  /* Status Colors */
+  --color-status-unsaved-bg: #fff7ed; /* Orange-50 */
+  --color-status-unsaved-text: #c2410c; /* Orange-700 */
+  --color-status-unsaved-border: #ffedd5; /* Orange-100 */
+  --color-card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 
-/* app/globals.css */
+@layer base {
+  .dark {
+    /* --- Dark Mode Overrides (Zinc Palette) --- */
+    --color-background: #09090b;      /* Zinc-950 (Deep background) */
+    --color-foreground: #fde68a;      /* Zinc-200 (Soft white text) */
+    
+    --color-card: #18181b;            /* Zinc-900 (Card background) */
+    --color-card-muted: #1f1f22;      /* Slightly lighter for headers/sections */
+    
+    --color-border: #27272a;          /* Zinc-800 (Subtle borders) */
+    --color-border-muted: #27272a;    
+    
+    --color-brand-blue: #3b82f6;   /* Blue-500 (Lighter blue for contrast) */
+    --color-brand-muted: rgba(59, 130, 246, 0.15);
+    --color-brand-contrast: #ffffff;
 
-/* Target the Tiptap editor and the viewer specifically */
+    --color-header-bg: rgba(9, 9, 11, 0.8); /* Translucent dark header */
+    --color-input-bg: #27272a;        /* Zinc-800 */
+
+    /* List Item Specifics */
+    --color-listitem-bg: #18181b;
+    --color-listitem-border: #27272a;
+    --color-listitem-hover: #202023;
+    --color-listitem-shadow: none;
+
+    /* Status Colors (Dimmed for Dark Mode) */
+    --color-status-unsaved-bg: rgba(124, 45, 18, 0.2);
+    --color-status-unsaved-text: #fdba74; /* Orange-300 */
+    --color-status-unsaved-border: rgba(251, 146, 60, 0.2);
+    --color-card-shadow: 0 10px 25px -5px rgba(253, 230, 138, 0.15), 0 8px 10px -6px rgba(253, 230, 138, 0.1);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    /* Performance optimization: avoid transitioning everything */
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer components {
+  .listitem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem; /* p-5 */
+    border-radius: 1rem; /* rounded-2xl */
+    transition: all 0.5s ease;
+    
+    background-color: var(--color-listitem-bg);
+    border: 1px solid var(--color-listitem-border);
+    box-shadow: var(--color-card-shadow);
+  }
+
+  .listitem:hover {
+    background-color: var(--color-listitem-hover);
+    box-shadow: var(--color-listitem-shadow-hover);
+  }
+
+  .btn-secondary {
+    @apply cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 border rounded-xl text-sm font-bold transition-all shadow-sm;
+    background-color: var(--color-btn-secondary-bg);
+    border-color: var(--color-btn-secondary-border);
+    color: var(--color-btn-secondary-text);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--color-btn-secondary-hover-border);
+    color: var(--color-btn-secondary-hover-text);
+  }
+
+  .glass-header {
+    @apply sticky top-0 z-30 border-b backdrop-blur-md transition-colors duration-300;
+    background-color: var(--color-header-bg);
+    border-color: var(--color-border);
+  }
+
+  .card-base {
+    @apply rounded-2xl border overflow-hidden shadow-sm transition-colors duration-300;
+    background-color: var(--color-card);
+    border-color: var(--color-border);
+    box-shadow: var(--color-card-shadow);
+  }
+
+  .card-header {
+    @apply px-6 py-4 border-b flex items-center gap-2;
+    background-color: var(--color-card-muted);
+    border-color: var(--color-border-muted);
+  }
+
+  /* Ghost Button (Navigation/Actions) */
+  .btn-ghost {
+    @apply p-2 rounded-full transition-all cursor-pointer flex items-center justify-center;
+    color: var(--color-foreground);
+    opacity: 0.6;
+  }
+  .btn-ghost:hover {
+    opacity: 1;
+    background-color: var(--color-card-muted);
+  }
+
+  /* Primary Floating Action Button */
+  .btn-floating {
+    @apply flex items-center gap-3 pl-6 pr-8 py-3.5 rounded-full shadow-2xl transition-all font-bold border cursor-pointer;
+    background-color: var(--color-foreground); /* Black in Light, White/Zinc-200 in Dark */
+    color: var(--color-background);            /* White in Light, Black/Zinc-950 in Dark */
+    border-color: var(--color-border);
+  }
+  .btn-floating:hover {
+    @apply scale-105;
+    opacity: 0.95;
+  }
+
+  /* Status Badge */
+  .badge-unsaved {
+    @apply flex items-center gap-2 px-3 py-1.5 rounded-full border animate-pulse text-xs font-bold whitespace-nowrap;
+    background-color: var(--color-status-unsaved-bg);
+    color: var(--color-status-unsaved-text);
+    border-color: var(--color-status-unsaved-border);
+  }
+
+  .input-field {
+    /* Spacing & Sizing */
+    @apply w-full p-4 rounded-2xl outline-none transition-all font-medium text-base;
+    
+    /* Theme Mapping */
+    background-color: var(--color-input-bg);
+    border: 1px solid var(--color-border-muted);
+    color: var(--color-foreground);
+  }
+
+  .input-field:focus {
+    @apply ring-2;
+    border-color: var(--color-brand-blue);
+    --tw-ring-color: var(--color-brand-muted);
+  }
+
+  /* Refined Placeholder */
+  .input-field::placeholder {
+    color: var(--color-foreground);
+    opacity: 0.4;
+  }
+
+  .admin-card {
+    background-color: var(--color-card);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--color-card-shadow);
+    transition: all 0.3s ease;
+  }
+  
+  .admin-card-interactive:hover {
+    border-color: var(--color-brand-blue);
+    transform: translateY(-2px);
+  }
+}
+
+/* Your existing Tiptap and Animation code follows... */
 .tiptap p, .prose p {
-  margin-top: 0.25em !important;   /* Reduce top gap */
-  margin-bottom: 0.25em !important;/* Reduce bottom gap */
-  line-height: 1;                /* Standard readable line height */
+  margin-top: 0.25em !important;
+  margin-bottom: 0.25em !important;
+  line-height: 1.5;
+}
+
+.moving-grid {
+  background-image: radial-gradient(var(--color-foreground) 1.5px, transparent 1.5px);
+  background-size: 30px 30px;
+  animation: slide 3s linear infinite;
+  opacity: 0.05; 
 }
 
 /* Ensure lists don't have double gaps */
@@ -70,4 +257,8 @@
 
 .animate-blob {
   animation: float 10s ease-in-out infinite;
+}
+
+[data-sonner-toast] {
+  backdrop-filter: blur(8px);
 }

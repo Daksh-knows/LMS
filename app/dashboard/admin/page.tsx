@@ -37,13 +37,17 @@ export default async function AdminDashboardPage() {
       <div className="p-8">
         <header className="mb-8 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-gray-500 text-sm">
+            {/* 1. Changed text-gray-900 to use your --color-foreground variable */}
+            <h1 className="text-2xl font-bold" style={{ color: 'var(--color-foreground)' }}>
+              Admin Dashboard
+            </h1>
+            
+            {/* 2. Used opacity on the foreground color for the "muted" subtext look */}
+            <p className="text-sm" style={{ color: 'var(--color-foreground)', opacity: 0.6 }}>
               Managing courses for <span className="font-semibold">{user.name || user.email}</span>
             </p>
           </div>
         </header>
-
         {/* 4. Pass the real courses and admin ID to the list component */}
         <AdminCourseList 
           initialCourses={myCourses} 

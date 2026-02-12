@@ -21,7 +21,6 @@ interface Props {
   setLoadingBookmarks?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-// Define valid tab IDs for type safety
 type TabId = "overview" | "qa" | "bookmarks" | "reviews";
 
 const TabbedContent: React.FC<Props> = ({ 
@@ -42,7 +41,6 @@ const TabbedContent: React.FC<Props> = ({
   const { data: session } = useSession();
   const userId = session?.user?.id;
 
-  // 1. Determine active tab from URL (?tab=...) or default to 'overview'
   const activeTab = (searchParams.get("tab") as TabId) || "overview";
 
   const tabs = useMemo(() => [
@@ -50,66 +48,61 @@ const TabbedContent: React.FC<Props> = ({
     { id: "qa", label: "FAQ", icon: MessageSquare },
     ...(lecture.type === "VIDEO" || lecture.type === "LIVE" ? [{ id: "bookmarks", label: "Bookmarks", icon: BookmarkPlus }] : []),
     { id: "reviews", label: "Reviews", icon: Star },
-  ], []);
+  ], [lecture.type]);
 
-  // 2. Function to update URL without refreshing the page
   const handleTabChange = (tabId: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tabId);
-    
-    // Uses router.replace to update the URL bar without adding a million items to browser history
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   return (
-    <div className="mt-6 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-      {/* Tab Navigation */}
-      <div className="flex items-center border-b border-gray-100 bg-gray-50/50 px-2 pt-2">
+    <div className="mt-6 bg-white dark:bg-background rounded-[2.5rem] border border-border-muted shadow-sm overflow-hidden transition-all duration-500">
+      
+      {/* Tab Navigation Wrapper - Subtle frost background */}
+      <div className="flex items-center border-b border-border-muted bg-foreground/[0.02] px-2 pt-2 transition-colors duration-500">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           const Icon = tab.icon;
 
           return (
             <button
-  key={tab.id}
-  onClick={() => handleTabChange(tab.id)}
-  className={`
-    relative flex items-center gap-2 
-    /* Responsive Padding: Small on mobile, large on desktop */
-    px-4 md:px-3 lg:px-6 py-3.5 
-    /* Responsive Text: Extra small on mobile, small on desktop */
-    text-xs lg:text-sm font-semibold 
-    transition-all duration-200 rounded-t-lg
-    /* Prevent text wrapping on mobile */
-    whitespace-nowrap flex-1 md:flex-none justify-center
-    ${
-      isActive
-        ? "text-purple-700 bg-white shadow-[0_-1px_2px_rgba(0,0,0,0.03)] border border-b-0 border-gray-200 z-10"
-        : "text-gray-500 hover:text-gray-700 hover:bg-gray-100/50"
-    }
-  `}
->
-  {/* Icon hidden on mobile, shown on medium screens and up */}
-  <Icon
-    size={16}
-    className={`
-      hidden md:block shrink-0
-      ${isActive ? "text-purple-600" : "text-gray-400"}
-    `}
-  />
-  
-  <span>{tab.label}</span>
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={`
+                relative flex items-center gap-2 
+                px-4 md:px-6 py-5
+                text-[10px] md:text-xs font-black uppercase tracking-[0.2em]
+                transition-all duration-300 rounded-t-[1.5rem]
+                whitespace-nowrap flex-1 md:flex-none justify-center
+                ${
+                  isActive
+                    ? "text-purple-600 dark:text-purple-400 bg-white dark:bg-background border-x border-t border-border-muted z-10"
+                    : "text-foreground/30 hover:text-foreground/60 hover:bg-foreground/[0.03]"
+                }
+              `}
+            >
+              <Icon
+                size={16}
+                className={`
+                  hidden md:block shrink-0
+                  ${isActive ? "text-purple-600 dark:text-purple-400" : "opacity-30"}
+                `}
+              />
+              
+              <span>{tab.label}</span>
 
-  {isActive && (
-    <div className="absolute top-0 left-0 w-full h-[2px] bg-purple-600 rounded-t-full" />
-  )}
-</button>
+              {/* Purple Indicator Bar - Preserved */}
+              {isActive && (
+                <div className="absolute top-0 left-6 right-6 h-[3px] bg-purple-600 dark:bg-purple-500 rounded-full shadow-[0_2px_10px_rgba(147,51,234,0.3)]" />
+              )}
+            </button>
           );
         })}
       </div>
 
-      {/* Content Area */}
-      <div className="p-4  md:p-8 min-h-[400px]">
+      {/* Content Area - White in light mode, bg-background in dark */}
+      <div className="p-6 md:p-12 min-h-[400px] bg-white dark:bg-background text-foreground transition-colors duration-500">
         {activeTab === "overview" && <OverviewTab course={course} />}
         
         {activeTab === "qa" && (

@@ -32,36 +32,53 @@ export default function AddLectureForm({ courseId, sectionId, initialData, onSuc
   return (
     <div className="space-y-6">
       {/* --- HEADER --- */}
-      <div className="border-b border-gray-100 pb-6 space-y-4">
+      <div 
+        className="border-b pb-6 space-y-4"
+        style={{ borderColor: 'var(--color-border-muted)' }}
+      >
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold text-gray-900">
+          <h3 
+            className="text-xl font-bold"
+            style={{ color: 'var(--color-foreground)' }}
+          >
             {initialData ? "Edit Content" : "Add New Content"}
           </h3>
-          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">
+          <button 
+            onClick={onCancel} 
+            className="p-1 rounded-lg transition-colors hover:bg-red-500/10 hover:text-red-500"
+            style={{ color: 'var(--color-foreground)', opacity: 0.4 }}
+          >
             <X size={24} />
           </button>
         </div>
 
         {/* TYPE SWITCHER (Only show if creating new) */}
         {!initialData && (
-          <div className="grid grid-cols-4 gap-2 p-1 bg-gray-100 rounded-xl">
-            {(["VIDEO", "TEXT", "QUIZ", "ASSIGNMENT"] as ItemType[]).map((t) => (
-              <button
-                key={t}
-                onClick={() => setType(t)}
-                className={`py-2 text-xs font-bold rounded-lg transition-all ${
-                  type === t 
-                    ? "bg-white text-blue-600 shadow-sm" 
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                {t}
-              </button>
-            ))}
+          <div 
+            className="grid grid-cols-4 gap-2 p-1 rounded-xl transition-colors"
+            style={{ backgroundColor: 'var(--color-input-bg)' }}
+          >
+            {(["VIDEO", "TEXT", "QUIZ", "ASSIGNMENT"] as ItemType[]).map((t) => {
+              const isActive = type === t;
+              return (
+                <button
+                  key={t}
+                  onClick={() => setType(t)}
+                  className="py-2.5 text-xs font-bold rounded-lg transition-all duration-300"
+                  style={{
+                    backgroundColor: isActive ? 'var(--color-card)' : 'transparent',
+                    color: isActive ? 'var(--color-brand-blue)' : 'var(--color-foreground)',
+                    boxShadow: isActive ? 'var(--color-card-shadow)' : 'none',
+                    opacity: isActive ? 1 : 0.6
+                  }}
+                >
+                  {t}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
-
       {/* --- FORM RENDERER --- */}
       {/* You need to ensure AddVideoForm and AddTextForm exist similarly to the ones below */}
       

@@ -62,93 +62,157 @@ export const LectureItem = ({
 
   if (isProcessing) {
     return (
-      <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl mb-2 relative group">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-3">
-            <Loader2 className="animate-spin text-blue-600" size={18} />
-            <span className="text-sm font-bold text-blue-900">
-               {activeUpload?.currentTask || "Processing..."}
-            </span>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-bold text-blue-600">{progress}%</span>
-            
-            {/* CANCEL BUTTON */}
-            <button 
-              onClick={handleCancelUpload}
-              className="p-1 hover:bg-red-100 text-gray-400 hover:text-red-600 rounded-full transition-colors"
-              title="Cancel Upload"
-            >
-              <X size={16} /> {/* Make sure to import X from lucide-react */}
-            </button>
-          </div>
-        </div>
-        
-        <div className="h-1.5 w-full bg-blue-200 rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-blue-600 transition-all duration-300 ease-out" 
-            style={{ width: `${progress}%` }} 
-          />
-        </div>
-      </div>
+      <div 
+  className="p-4 rounded-2xl mb-2 relative group border animate-in fade-in duration-500"
+  style={{ 
+    backgroundColor: 'var(--color-brand-muted)', 
+    borderColor: 'rgba(59, 130, 246, 0.2)' // Subtle blue border
+  }}
+>
+  <div className="flex items-center justify-between mb-3">
+    <div className="flex items-center gap-3">
+      <Loader2 
+        className="animate-spin" 
+        size={18} 
+        style={{ color: 'var(--color-brand-blue)' }} 
+      />
+      <span 
+        className="text-sm font-bold"
+        style={{ color: 'var(--color-brand-blue)' }}
+      >
+         {activeUpload?.currentTask || "Processing..."}
+      </span>
+    </div>
+    
+    <div className="flex items-center gap-3">
+      <span 
+        className="text-xs font-black tracking-tighter"
+        style={{ color: 'var(--color-brand-blue)' }}
+      >
+        {progress}%
+      </span>
+      
+      {/* CANCEL BUTTON */}
+      <button 
+        onClick={handleCancelUpload}
+        className="p-1 rounded-full transition-all hover:bg-red-500/20 text-red-500/60 hover:text-red-500"
+        title="Cancel Upload"
+      >
+        <X size={16} />
+      </button>
+    </div>
+  </div>
+  
+  {/* Progress Track */}
+  <div 
+    className="h-1.5 w-full rounded-full overflow-hidden"
+    style={{ backgroundColor: 'rgba(59, 130, 246, 0.2)' }}
+  >
+    <div 
+      className="h-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(59,130,246,0.5)]" 
+      style={{ 
+        width: `${progress}%`,
+        backgroundColor: 'var(--color-brand-blue)' 
+      }} 
+    />
+  </div>
+</div>
     );
   }
 
   return (
     <div 
-      onClick={onSelect}
-      className={`group/lecture relative flex flex-col sm:flex-row sm:items-center justify-between p-4 cursor-pointer transition-colors duration-200 ${isSelected ? "bg-blue-50/60" : "bg-white hover:bg-gray-50/50"}`}
+  onClick={onSelect}
+  className={`group/lecture relative flex flex-col sm:flex-row sm:items-center justify-between p-4 cursor-pointer transition-all duration-300 border-b last:border-b-0`}
+  style={{ 
+    backgroundColor: isSelected ? 'var(--color-brand-muted)' : 'var(--color-listitem-bg)',
+    borderColor: 'var(--color-border-muted)'
+  }}
+>
+  {/* Icon & Title */}
+  <div className="flex items-start gap-4 flex-1">
+    <div 
+      className={`mt-1 p-2 rounded-lg shrink-0 transition-colors`}
+      style={{ 
+        backgroundColor: isSelected ? 'var(--color-brand-blue)' : 'var(--color-background)',
+        color: isSelected ? 'var(--color-brand-contrast)' : 'var(--color-brand-blue)'
+      }}
     >
-      {/* Icon & Title */}
-      <div className="flex items-start gap-4 flex-1">
-        <div className={`mt-1 p-2 rounded-lg ${style.color} shrink-0`}>
-           {style.icon}
-        </div>
-        <div className="flex flex-col gap-1">
-          <span className={`text-sm font-medium transition-colors ${isSelected ? "text-blue-900" : "text-gray-700"}`}>
-            {index + 1}. {lecture.title}
+       {style.icon}
+    </div>
+    <div className="flex flex-col gap-1">
+      <span 
+        className={`text-sm font-semibold transition-colors`}
+        style={{ color: isSelected ? 'var(--color-brand-blue)' : 'var(--color-foreground)' }}
+      >
+        {index + 1}. {lecture.title}
+      </span>
+      <div className="flex items-center gap-2">
+        {/* Style Label Badge */}
+        <span 
+          className="text-[10px] font-black px-1.5 py-0.5 rounded border uppercase tracking-wider transition-colors"
+          style={{ 
+            backgroundColor: 'var(--color-background)', 
+            borderColor: 'var(--color-border-muted)',
+            color: 'var(--color-foreground)',
+            opacity: 0.6
+          }}
+        >
+          {style.label}
+        </span>
+        {lecture.isFree && (
+          <span className="text-[10px] font-black text-green-600 bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">
+            Free Preview
           </span>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 uppercase tracking-wider">
-              {style.label}
-            </span>
-            {lecture.isFree && (
-              <span className="text-[10px] font-bold text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-100">
-                Free Preview
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className={`flex items-center gap-1 mt-3 sm:mt-0 self-end sm:self-auto transition-opacity duration-200 ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
-        {isSelected && (
-          <div className="flex items-center bg-white rounded-lg border border-gray-200 shadow-sm mr-2 overflow-hidden">
-            <button 
-              onClick={(e) => { e.stopPropagation(); onMove('up'); }} 
-              disabled={isFirst} 
-              className="p-1.5 hover:bg-gray-50 text-gray-500 hover:text-blue-600 disabled:opacity-30 border-r border-gray-100"
-            >
-              <ArrowUp size={14} />
-            </button>
-            <button 
-              onClick={(e) => { e.stopPropagation(); onMove('down'); }} 
-              disabled={isLast} 
-              className="p-1.5 hover:bg-gray-50 text-gray-500 hover:text-blue-600 disabled:opacity-30"
-            >
-              <ArrowDown size={14} />
-            </button>
-          </div>
         )}
-        <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-          <Edit size={16} />
-        </button>
-        <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-          <Trash2 size={16} />
-        </button>
       </div>
     </div>
+  </div>
+
+  {/* Actions */}
+  <div className={`flex items-center gap-1 mt-3 sm:mt-0 self-end sm:self-auto transition-opacity duration-300 ${isSelected ? "opacity-100" : "opacity-0 group-hover/lecture:opacity-100"}`}>
+    {isSelected && (
+      <div 
+        className="flex items-center rounded-lg border shadow-sm mr-2 overflow-hidden"
+        style={{ backgroundColor: 'var(--color-card)', borderColor: 'var(--color-border)' }}
+      >
+        <button 
+          onClick={(e) => { e.stopPropagation(); onMove('up'); }} 
+          disabled={isFirst} 
+          className="p-1.5 transition-colors disabled:opacity-20 border-r cursor-pointer"
+          style={{ borderColor: 'var(--color-border-muted)', color: 'var(--color-foreground)' }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-brand-blue)')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-foreground)')}
+        >
+          <ArrowUp size={14} />
+        </button>
+        <button 
+          onClick={(e) => { e.stopPropagation(); onMove('down'); }} 
+          disabled={isLast} 
+          className="p-1.5 transition-colors disabled:opacity-20 cursor-pointer"
+          style={{ color: 'var(--color-foreground)' }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-brand-blue)')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-foreground)')}
+        >
+          <ArrowDown size={14} />
+        </button>
+      </div>
+    )}
+    
+    {/* Edit & Delete: Using btn-ghost pattern */}
+    <button 
+      onClick={(e) => { e.stopPropagation(); onEdit(); }} 
+      className="btn-ghost"
+    >
+      <Edit size={16} />
+    </button>
+    <button 
+      onClick={(e) => { e.stopPropagation(); onDelete(); }} 
+      className="btn-ghost hover:!bg-red-500/10 hover:!text-red-500"
+    >
+      <Trash2 size={16} />
+    </button>
+  </div>
+</div>
   );
 };

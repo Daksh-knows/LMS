@@ -1,9 +1,8 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Loader2 } from "lucide-react";
-import { toast } from "react-hot-toast";
 import { getSession } from "next-auth/react";
 import { EditorToolbar } from "@/components/admin/EditorToolbar"; // Import the toolbar we made above
 import { showToast } from "@/utils/Toast";
@@ -11,7 +10,6 @@ import { showToast } from "@/utils/Toast";
 export default function AddTextForm({ courseId, sectionId, initialData, onSuccess, onCancel }: any) {
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState(initialData?.title || "");
-  const [isFree, setIsFree] = useState(initialData?.isFree || false);
 
   const editor = useEditor({
     extensions: [StarterKit],
@@ -19,7 +17,7 @@ export default function AddTextForm({ courseId, sectionId, initialData, onSucces
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl m-5 focus:outline-none min-h-[300px] max-w-none prose-p:my-1 prose-headings:mb-2 prose-headings:mt-4',
+        class: 'prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg max-w-none focus:outline-none min-h-[300px] p-6 transition-colors duration-500',
       },
     },
   });
@@ -66,33 +64,82 @@ export default function AddTextForm({ courseId, sectionId, initialData, onSucces
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 animate-in fade-in slide-in-from-top-2">
+  
+      {/* Title Input */}
       <div className="space-y-1">
-        <label className="text-xs font-bold text-gray-400 uppercase">Title</label>
+        <label 
+          className="text-xs font-bold uppercase ml-1"
+          style={{ color: 'var(--color-foreground)', opacity: 0.8 }}
+        >
+          Title
+        </label>
         <input 
           required 
           value={title} 
           onChange={(e) => setTitle(e.target.value)} 
-          className="w-full p-3 border rounded-xl outline-none focus:border-blue-500 transition-all" 
+          className="input-field font-bold" 
           placeholder="Chapter Title" 
         />
       </div>
 
+      {/* Content Editor */}
       <div className="space-y-1">
-        <label className="text-xs font-bold text-gray-400 uppercase">Content</label>
-        <div className="border rounded-xl overflow-hidden focus-within:border-blue-500 transition-all">
+        <label 
+          className="text-xs font-bold uppercase ml-1"
+          style={{ color: 'var(--color-foreground)', opacity: 0.8 }}
+        >
+          Content
+        </label>
+        <div 
+          className="rounded-xl overflow-hidden border transition-all focus-within:ring-2 shadow-sm"
+          style={{ 
+            borderColor: 'var(--color-border-muted)',
+            backgroundColor: 'var(--color-input-bg)', // Adapts to Zinc-800/Gray-50
+          }}
+        >
           <EditorToolbar editor={editor} />
-          <div className="bg-white scrollbar-hide overflow-y-auto max-h-125">
+          
+          {/* Editor Content Area */}
+          <div 
+            className="scrollbar-hide overflow-y-auto max-h-125"
+            style={{ 
+              backgroundColor: 'var(--color-card)', // White in light, Zinc-900 in dark
+              color: 'var(--color-foreground)'      // Ensures text is visible
+            }}
+          >
             <EditorContent editor={editor} />
           </div>
         </div>
       </div>
 
-      <div className="flex gap-3 pt-4 border-t">
-        <button type="button" onClick={onCancel} className="flex-1 p-3 border rounded-xl font-bold text-gray-600 hover:bg-gray-50 transition">
+      {/* Action Buttons */}
+      <div 
+        className="flex gap-3 pt-4 border-t"
+        style={{ borderColor: 'var(--color-border-muted)' }}
+      >
+        <button 
+          type="button" 
+          onClick={onCancel} 
+          className="flex-1 p-3 border rounded-xl font-bold transition-all hover:brightness-95 active:scale-95"
+          style={{ 
+            borderColor: 'var(--color-border)',
+            color: 'var(--color-foreground)',
+            opacity: 0.7 
+          }}
+        >
           Cancel
         </button>
-        <button type="submit" disabled={loading} className="flex-2 bg-blue-600 text-white p-3 rounded-xl font-bold hover:bg-blue-700 transition flex items-center justify-center">
+        <button 
+          type="submit" 
+          disabled={loading} 
+          className="flex-2 p-3 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-70 active:scale-95"
+          style={{ 
+            backgroundColor: 'var(--color-foreground)', // Black (Light) / White (Dark)
+            color: 'var(--color-background)',           // White (Light) / Black (Dark)
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+          }}
+        >
           {loading ? <Loader2 className="animate-spin" /> : "Save Article"}
         </button>
       </div>

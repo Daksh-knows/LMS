@@ -4,7 +4,6 @@ import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, Sparkles, Upload, X, ImageIcon, Globe, Clock } from "lucide-react";
 import Link from "next/link";
-import toast from "react-hot-toast";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { EditorToolbar } from "@/components/admin/EditorToolbar"; 
@@ -113,46 +112,63 @@ export default function AddCoursePageClient({ user }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-6 md:p-12">
+    <div className="min-h-screen p-6 md:p-12 transition-colors duration-500" style={{ backgroundColor: 'var(--color-background)' }}>
       <div className="max-w-4xl mx-auto">
         {/* Navigation */}
-        <Link href="/dashboard/admin" className="inline-flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-all mb-8 group">
+        <Link 
+          href="/dashboard/admin" 
+          className="inline-flex items-center gap-2 mb-8 group transition-all"
+          style={{ color: 'var(--color-foreground)', opacity: 0.6 }}
+        >
           <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
           <span className="font-medium text-sm">Cancel and Return</span>
         </Link>
 
         {/* Header */}
         <div className="flex items-center gap-4 mb-10">
-          <div className="bg-blue-600 p-3 rounded-2xl shadow-xl shadow-blue-100">
+          <div 
+            className="p-3 rounded-2xl shadow-xl"
+            style={{ 
+              backgroundColor: 'var(--color-brand-blue)', 
+              boxShadow: '0 20px 25px -5px var(--color-brand-muted)' 
+            }}
+          >
             <Sparkles className="text-white" size={24} />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight">Create New Course</h1>
-            <p className="text-gray-500 text-sm">Draft your course content and metadata.</p>
+            <h1 
+              className="text-3xl font-black tracking-tight"
+              style={{ color: 'var(--color-foreground)' }}
+            >
+              Create New Course
+            </h1>
+            <p style={{ color: 'var(--color-foreground)', opacity: 0.6 }} className="text-sm">
+              Draft your course content and metadata.
+            </p>
           </div>
         </div>
 
-        <form onSubmit={handleFormSubmit} className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
+        <form onSubmit={handleFormSubmit} className="form-card">
           <div className="p-8 md:p-10 space-y-8">
             
             {/* 1. Title & Subtitle */}
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Course Title</label>
+                <label className="input-label">Course Title</label>
                 <input 
                   required 
                   name="title" 
-                  className="w-full p-4 bg-gray-50/50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold text-lg" 
+                  className="input-field text-lg font-semibold" 
                   placeholder="e.g. Master the Art of Pose Estimation" 
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Subtitle</label>
+                <label className="input-label">Subtitle</label>
                 <input 
                   required 
                   name="subtitle" 
-                  className="w-full p-4 bg-gray-50/50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-gray-700" 
+                  className="input-field" 
                   placeholder="A one-sentence summary for the course card" 
                 />
               </div>
@@ -160,10 +176,16 @@ export default function AddCoursePageClient({ user }: Props) {
 
             {/* 2. TipTap Description */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Full Course Description</label>
-              <div className="border border-gray-200 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
-                <EditorToolbar editor={editor} />
-                <div className="bg-white min-h-[250px]">
+              <label className="input-label">Full Course Description</label>
+              <div 
+                className="border rounded-2xl overflow-hidden focus-within:ring-2 transition-all"
+                style={{ 
+                  borderColor: 'var(--color-border-muted)',
+                  backgroundColor: 'var(--color-background)' // Editor background
+                }}
+              >
+                <EditorToolbar editor={editor} /> {/* Ensure Toolbar is also themed if needed */}
+                <div className="min-h-[250px] p-4 text-[var(--color-foreground)]">
                   <EditorContent editor={editor} />
                 </div>
               </div>
@@ -172,63 +194,87 @@ export default function AddCoursePageClient({ user }: Props) {
             {/* 3. Metadata Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
               <div className="space-y-2">
-                <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">
+                <label className="input-label flex items-center gap-2">
                   <Globe size={14} /> Language
                 </label>
-                <select 
-                  name="language" 
-                  className="w-full p-4 bg-gray-50/50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-medium text-gray-700"
-                >
+                <select name="language" className="input-field appearance-none cursor-pointer">
                   {LANGUAGES.map(lang => <option key={lang} value={lang}>{lang}</option>)}
                 </select>
               </div>
 
               <div className="space-y-2">
-                <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">
+                <label className="input-label flex items-center gap-2">
                   <Clock size={14} /> Estimated Duration
                 </label>
                 <input 
                   name="duration" 
-                  className="w-full p-4 bg-gray-50/50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" 
+                  className="input-field" 
                   placeholder="e.g. 12 Hours 45 Mins" 
                 />
               </div>
             </div>
 
-            {/* 4. Compact Image Upload */}
-            <div className="pt-6 border-t border-gray-50">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-4 ml-1">Course Thumbnail</label>
+            {/* 4. Image Upload */}
+            <div className="pt-6 border-t" style={{ borderColor: 'var(--color-border-muted)' }}>
+              <label className="input-label mb-4 block">Course Thumbnail</label>
               <div className="flex items-center gap-6">
-                <div className="relative w-28 h-28 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden shrink-0 group">
+                
+                {/* Image Preview Box */}
+                <div 
+                  className="relative w-28 h-28 rounded-2xl border flex items-center justify-center overflow-hidden shrink-0 group"
+                  style={{ 
+                    backgroundColor: 'var(--color-input-bg)',
+                    borderColor: 'var(--color-border-muted)'
+                  }}
+                >
                   {previewUrl ? (
                     <img src={previewUrl} className="w-full h-full object-cover" alt="Preview" />
                   ) : (
-                    <ImageIcon size={32} className="text-gray-300" />
+                    <ImageIcon size={32} style={{ color: 'var(--color-foreground)', opacity: 0.3 }} />
                   )}
                   {previewUrl && (
-                    <button type="button" onClick={handleClearImage} className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                    <button type="button" onClick={handleClearImage} className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
                       <X size={20} />
                     </button>
                   )}
                 </div>
 
                 <div className="space-y-3">
-                  <label className="cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm">
+                  <label className="btn-secondary">
                     <Upload size={18} />
                     {previewUrl ? "Change Image" : "Choose Image"}
-                    <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} ref={fileInputRef} />
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={handleImageChange} 
+                      ref={fileInputRef} 
+                    />
                   </label>
-                  <p className="text-[11px] text-gray-400 font-medium">JPG, PNG or WebP. Recommended: 1280x720px.</p>
+                  <p style={{ color: 'var(--color-foreground)', opacity: 0.4 }} className="text-[11px] font-medium">
+                    JPG, PNG or WebP. Recommended: 1280x720px.
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-50 p-8 border-t border-gray-100 flex justify-end">
+          {/* Footer Actions */}
+          <div 
+            className="p-8 border-t flex justify-end"
+            style={{ 
+              backgroundColor: 'var(--color-card-background)', 
+              borderColor: 'var(--color-border-muted)' 
+            }}
+          >
             <button 
               type="submit" 
               disabled={isSubmitting}
-              className="w-full md:w-auto min-w-50 bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all active:scale-95 disabled:bg-gray-300 shadow-xl shadow-blue-100"
+              className="w-full md:w-auto min-w-50 text-white px-10 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl"
+              style={{ 
+                backgroundColor: 'var(--color-brand-blue)',
+                boxShadow: '0 10px 15px -3px var(--color-brand-muted)'
+              }}
             >
               {isSubmitting ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

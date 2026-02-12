@@ -90,44 +90,44 @@ export default function AdminAssignmentsOverview() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-12">
+<div className="max-w-6xl mx-auto p-4 md:p-8 space-y-8 md:space-y-12">
       
-      {/* STATS HEADER - Updated Grid to 3 columns to fit Refunds */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* STATS HEADER - Fully Responsive Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <StatCard 
           title="Pending Reviews" 
           value={totalPending} 
-          icon={<AlertCircle size={28} strokeWidth={2.5} />}
+          icon={<AlertCircle size={24} />}
           showBadge={totalPending > 0}
           badgeText="Needs Action"
-          footer="Submissions waiting for your feedback"
+          statusType="warning"
+          footer="Submissions waiting for feedback"
         />
         
-        {/* NEW REFUND CARD */}
         <Link href="/dashboard/admin/refunds" className="block h-full">
           <StatCard 
             title="Refund Requests" 
             value={refundCount} 
-            icon={<CreditCard size={28} strokeWidth={2.5} />}
+            icon={<CreditCard size={24} />}
             showBadge={refundCount > 0}
             badgeText="Urgent"
-            badgeColor="red" // Custom color prop support
-            footer="Students requesting money back"
-            isInteractive={true} // Add hover effect
+            statusType="urgent"
+            footer="Requests for money back"
+            isInteractive={true}
           />
         </Link>
 
         <StatCard 
           title="Total Received" 
           value={totalReceived} 
-          icon={<FileText size={28} />}
-          footer={`Across ${assignments.length} active assignments`}
+          icon={<FileText size={24} />}
+          footer={`Across ${assignments.length} assignments`}
         />
       </div>
 
-      {/* GROUPED COLLAPSIBLE LIST (Kept exactly same) */}
+      {/* ASSIGNMENT QUEUE */}
       <div className="space-y-6">
-        <h3 className="text-2xl font-black text-gray-900">Assignment Queue</h3>
+        <h3 className="text-xl md:text-2xl font-black text-foreground">Assignment Queue</h3>
         
         {Object.keys(groupedData).length === 0 ? (
           <EmptyState />
@@ -136,39 +136,38 @@ export default function AdminAssignmentsOverview() {
             {Object.entries(groupedData).map(([courseName, group]) => {
               const isExpanded = expandedCourses[courseName];
               return (
-                <div key={courseName} className="border border-gray-100 rounded-3xl overflow-hidden bg-white shadow-sm">
+                <div key={courseName} className="admin-card rounded-2xl md:rounded-[2rem] overflow-hidden">
                   <button 
                     onClick={() => toggleCourse(courseName)}
-                    className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors text-left"
+                    className="w-full flex items-center justify-between p-4 md:p-6 hover:bg-card-muted transition-colors text-left"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className={`p-2 rounded-xl ${group.coursePending > 0 ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                    <div className="flex items-center gap-3 md:gap-4">
+                      <div className={`p-2 rounded-xl ${group.coursePending > 0 ? 'bg-brand-blue text-white' : 'bg-card-muted text-foreground/40'}`}>
                         <BookOpen size={20} />
                       </div>
                       <div>
-                        <h4 className="font-extrabold text-gray-900 tracking-tight">{courseName}</h4>
-                        <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">
-                           Total Assignments = {group.items.length}
+                        <h4 className="font-bold text-foreground text-sm md:text-base leading-tight">{courseName}</h4>
+                        <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-wider">
+                           {group.items.length} Assignments
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-4">
                       {group.coursePending > 0 && (
-                        <div className="flex flex-col items-end">
-                          <span className="text-xl font-black text-blue-600">{group.coursePending}</span>
-                          <span className="text-[10px] font-black text-blue-400 uppercase tracking-tighter">To Check</span>
+                        <div className="text-right">
+                          <span className="text-lg font-black text-brand-blue">{group.coursePending}</span>
                         </div>
                       )}
-                      <div className="text-gray-300">
-                        {isExpanded ? <ChevronDown size={24} /> : <ChevronRight size={24} />}
+                      <div className="text-foreground/20">
+                        {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
                       </div>
                     </div>
                   </button>
 
                   {isExpanded && (
-                    <div className="p-6 pt-0 space-y-3 animate-in slide-in-from-top-2 duration-300">
-                      <div className="h-px bg-gray-100 mb-4" />
+                    <div className="p-4 md:p-6 pt-0 space-y-3 animate-in fade-in slide-in-from-top-2">
+                      <div className="h-px bg-border mb-4" />
                       {group.items.map((assignment) => (
                         <AssignmentRow key={assignment.id} assignment={assignment} />
                       ))}
@@ -185,26 +184,31 @@ export default function AdminAssignmentsOverview() {
 }
 
 // Updated StatCard to handle different colors and interactivity
-function StatCard({ title, value, icon, showBadge, badgeText, badgeColor = "amber", footer, isInteractive }: any) {
-  const badgeClasses = badgeColor === "red" 
-    ? "bg-red-50 text-red-700 border-red-100" 
-    : "bg-amber-50 text-amber-700 border-amber-100";
+function StatCard({ title, value, icon, showBadge, badgeText, statusType = "neutral", footer, isInteractive }: any) {
+  // Logic to pick colors based on theme variables
+  const colorStyles = {
+    urgent: "text-urgent bg-urgent-muted border-urgent/20",
+    warning: "text-warning bg-warning-muted border-warning/20",
+    neutral: "text-brand-blue bg-brand-muted border-border"
+  }[statusType as 'urgent' | 'warning' | 'neutral'];
 
   return (
-    <div className={`h-full bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden group transition-all ${isInteractive ? 'hover:border-blue-300 hover:shadow-md cursor-pointer' : 'hover:border-indigo-100'}`}>
-      <div className="flex items-center justify-between mb-8">
-        <div className={`p-3 rounded-2xl ${badgeColor === 'red' ? 'bg-red-50 text-red-600' : 'bg-indigo-50 text-indigo-600'}`}>{icon}</div>
-        {showBadge && (
-          <span className={`${badgeClasses} text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border`}>
-            {badgeText}
-          </span>
-        )}
+    <div className={`admin-card rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 flex flex-col justify-between h-full ${isInteractive ? 'admin-card-interactive' : ''}`}>
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <div className={`p-2.5 rounded-xl ${colorStyles.split(' ').slice(0,2).join(' ')}`}>{icon}</div>
+          {showBadge && (
+            <span className={`${colorStyles} text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border`}>
+              {badgeText}
+            </span>
+          )}
+        </div>
+        <div className="space-y-1">
+          <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground">{value}</h2>
+          <p className="text-sm md:text-base font-bold text-foreground/60">{title}</p>
+        </div>
       </div>
-      <div className="space-y-1">
-        <h2 className="text-5xl font-black tracking-tighter text-slate-900">{value}</h2>
-        <p className="text-lg font-bold text-slate-600">{title}</p>
-      </div>
-      <div className="mt-6 pt-6 border-t border-slate-50 text-xs font-medium text-slate-400 italic">
+      <div className="mt-6 pt-6 border-t border-border text-[10px] font-medium text-foreground/40 italic">
         {footer}
       </div>
     </div>
@@ -215,27 +219,24 @@ function StatCard({ title, value, icon, showBadge, badgeText, badgeColor = "ambe
 function AssignmentRow({ assignment }: { assignment: AssignmentSummary }) {
   const hasPending = assignment.pendingReviews > 0;
   return (
-    <div className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
-      hasPending ? "bg-white border-blue-50 shadow-sm" : "bg-gray-50/50 border-transparent opacity-60"
+    <div className={`flex items-center justify-between p-3 md:p-4 rounded-xl border transition-all ${
+      hasPending ? "bg-card border-brand-blue/20" : "bg-card-muted/50 border-transparent opacity-50"
     }`}>
-      <div className="flex items-center gap-4">
-        <FileText size={18} className={hasPending ? "text-blue-500" : "text-gray-400"} />
-        <span className="font-bold text-gray-800 text-sm">{assignment.title}</span>
+      <div className="flex items-center gap-3 overflow-hidden">
+        <FileText size={16} className={hasPending ? "text-brand-blue" : "text-foreground/30"} />
+        <span className="font-bold text-foreground text-xs md:text-sm truncate">{assignment.title}</span>
       </div>
-      <div className="flex items-center gap-6">
-        <div className="text-right">
-          <span className={`font-black text-sm ${hasPending ? 'text-blue-600' : 'text-gray-400'}`}>
-            {assignment.pendingReviews}
-          </span>
-          <p className="text-[8px] uppercase font-black text-gray-300">Pending</p>
-        </div>
+      <div className="flex items-center gap-4 shrink-0">
+        <span className={`font-black text-xs md:text-sm ${hasPending ? 'text-brand-blue' : 'text-foreground/30'}`}>
+          {assignment.pendingReviews}
+        </span>
         <Link 
           href={`/dashboard/admin-overview/${assignment.id}`}
-          className={`p-2 rounded-xl transition-all ${
-            hasPending ? "bg-blue-600 text-white shadow-md hover:bg-blue-700" : "bg-gray-200 text-gray-500 hover:bg-gray-300"
+          className={`p-1.5 rounded-lg transition-all ${
+            hasPending ? "bg-brand-blue text-white" : "bg-foreground/10 text-foreground/40"
           }`}
         >
-          <ArrowRight size={16} />
+          <ArrowRight size={14} />
         </Link>
       </div>
     </div>

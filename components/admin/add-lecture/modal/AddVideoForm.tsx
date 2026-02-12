@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { Loader2, Type, Video, MonitorPlay } from "lucide-react";
-import toast from "react-hot-toast";
 import { getSession } from "next-auth/react";
 import { useBackgroundUpload } from "@/context/BackgroundUploadContext";
 
@@ -187,27 +186,34 @@ export default function AddVideoForm({
       onSubmit={handleSubmit}
       className="space-y-6 animate-in fade-in duration-300 max-w-4xl mx-auto"
     >
-      {/* --- Lecture Type Toggle --- */}
-      <div className="flex p-1 bg-gray-100 rounded-xl mb-6">
+      {/* --- Lecture Type Toggle (Segmented Control) --- */}
+      <div 
+        className="flex p-1 rounded-xl mb-6 transition-colors"
+        style={{ backgroundColor: 'var(--color-input-bg)' }}
+      >
         <button
           type="button"
           onClick={() => setLectureType("VIDEO")}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${
-            lectureType === "VIDEO"
-              ? "bg-white text-blue-600 shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all duration-300"
+          style={{
+            backgroundColor: lectureType === "VIDEO" ? 'var(--color-card)' : 'transparent',
+            color: lectureType === "VIDEO" ? 'var(--color-brand-blue)' : 'var(--color-foreground)',
+            boxShadow: lectureType === "VIDEO" ? 'var(--color-card-shadow)' : 'none',
+            opacity: lectureType === "VIDEO" ? 1 : 0.6
+          }}
         >
           <Video size={16} /> Recorded Video
         </button>
         <button
           type="button"
           onClick={() => setLectureType("LIVE")}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${
-            lectureType === "LIVE"
-              ? "bg-white text-blue-600 shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all duration-300"
+          style={{
+            backgroundColor: lectureType === "LIVE" ? 'var(--color-card)' : 'transparent',
+            color: lectureType === "LIVE" ? 'var(--color-brand-blue)' : 'var(--color-foreground)',
+            boxShadow: lectureType === "LIVE" ? 'var(--color-card-shadow)' : 'none',
+            opacity: lectureType === "LIVE" ? 1 : 0.6
+          }}
         >
           <MonitorPlay size={16} /> Live Session
         </button>
@@ -215,7 +221,10 @@ export default function AddVideoForm({
 
       {/* --- Title Input --- */}
       <div className="space-y-1">
-        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
+        <label 
+          className="text-xs font-bold uppercase tracking-wider ml-1"
+          style={{ color: 'var(--color-foreground)', opacity: 0.5 }}
+        >
           Lecture Title
         </label>
         <div className="relative group">
@@ -228,12 +237,15 @@ export default function AddVideoForm({
                 ? "e.g. Live Q&A Session"
                 : "e.g. 1. Introduction to Hooks"
             }
-            className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all outline-none"
+            // Utilizing .input-field from globals.css + overrides for icon spacing
+            className="input-field !pl-10 !py-3"
           />
-          <Type
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500"
-            size={18}
-          />
+          <div 
+            className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-300 group-focus-within:!text-[var(--color-brand-blue)]"
+            style={{ color: 'var(--color-foreground)', opacity: 0.4 }}
+          >
+            <Type size={18} />
+          </div>
         </div>
       </div>
 
@@ -271,18 +283,39 @@ export default function AddVideoForm({
       />
 
       {/* --- Footer Actions --- */}
-      <div className="flex flex-col-reverse sm:flex-row gap-3 pt-6 border-t border-gray-100">
+      <div 
+        className="flex gap-3 pt-4 border-t"
+        style={{ borderColor: 'var(--color-border-muted)' }}
+      >
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 p-4 border border-gray-200 rounded-2xl font-bold text-gray-500 hover:bg-gray-50 transition-all active:scale-95"
+          className="flex-1 p-3 border rounded-xl font-bold transition-colors hover:brightness-95"
+          style={{ 
+            borderColor: 'var(--color-border)',
+            color: 'var(--color-foreground)',
+            opacity: 0.7 
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--color-card-muted)';
+            e.currentTarget.style.opacity = '1';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.opacity = '0.7';
+          }}
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="flex-2 bg-blue-600 text-white p-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+          className="flex-2 p-3 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-70 active:scale-95"
+          style={{ 
+            backgroundColor: 'var(--color-foreground)', // Black (Light) / White (Dark)
+            color: 'var(--color-background)',           // White (Light) / Black (Dark)
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+          }}
         >
           {loading ? (
             <Loader2 className="animate-spin" size={20} />

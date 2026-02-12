@@ -5,56 +5,40 @@ interface ToastProps {
   message: string;
 }
 
-// 1. Success Toast: Uses a soft emerald gradient
+const toastBase = "flex items-center gap-3 border p-4 rounded-2xl shadow-xl min-w-[320px] animate-in fade-in slide-in-from-bottom-2 transition-all duration-500 backdrop-blur-md";
+
 const SuccessToast = ({ message }: ToastProps) => (
-  <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 p-4 rounded-2xl shadow-lg min-w-[320px] animate-in fade-in slide-in-from-bottom-2">
-    <div className="w-12 h-12 shrink-0 bg-white rounded-xl shadow-sm overflow-hidden flex items-center justify-center">
-      <DotLottieReact
-        src="/icons/success.lottie" 
-        autoplay
-        loop={false}
-        style={{ width: '80%', height: '80%' }}
-      />
+  <div className={`${toastBase} bg-emerald-500/10 border-emerald-500/20`}>
+    <div className="w-12 h-12 shrink-0 bg-background rounded-xl shadow-sm overflow-hidden flex items-center justify-center border border-border-muted">
+      <DotLottieReact src="/icons/success.lottie" autoplay loop={false} style={{ width: '80%', height: '80%' }} />
     </div>
     <div className="flex flex-col">
-      <span className="text-sm font-bold text-emerald-900">Success!</span>
-      <span className="text-xs text-emerald-700 font-medium leading-tight">{message}</span>
+      <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-tight">Success</span>
+      <span className="text-xs text-foreground/70 font-bold leading-tight">{message}</span>
     </div>
   </div>
 );
 
-// 2. Error Toast: Uses a soft red/rose tinted background
 const ErrorToast = ({ message }: ToastProps) => (
-  <div className="flex items-center gap-3 bg-red-50 border border-red-200 p-4 rounded-2xl shadow-lg min-w-[320px]">
-    <div className="w-12 h-12 shrink-0 bg-white rounded-xl shadow-sm overflow-hidden flex items-center justify-center">
-      <DotLottieReact
-        src="/icons/error.lottie" 
-        autoplay
-        loop={false}
-        style={{ width: '80%', height: '80%' }}
-      />
+  <div className={`${toastBase} bg-red-500/10 border-red-500/20`}>
+    <div className="w-12 h-12 shrink-0 bg-background rounded-xl shadow-sm overflow-hidden flex items-center justify-center border border-border-muted">
+      <DotLottieReact src="/icons/error.lottie" autoplay loop={false} style={{ width: '80%', height: '80%' }} />
     </div>
     <div className="flex flex-col">
-      <span className="text-sm font-bold text-red-900">Oh no!</span>
-      <span className="text-xs text-red-700 font-medium leading-tight">{message}</span>
+      <span className="text-sm font-black text-red-600 dark:text-red-400 uppercase tracking-tight">Error</span>
+      <span className="text-xs text-foreground/70 font-bold leading-tight">{message}</span>
     </div>
   </div>
 );
 
-// 3. Delete/Warning Toast: Using your Brand Yellow (#FFCC59)
 const DeleteToast = ({ message }: ToastProps) => (
-  <div className="flex items-center gap-3 bg-[#FFF9EB] border border-[#FFCC59]/30 p-4 rounded-2xl shadow-lg min-w-[320px]">
-    <div className="w-12 h-12 shrink-0 bg-white rounded-xl shadow-sm overflow-hidden flex items-center justify-center">
-      <DotLottieReact
-        src="/icons/delete.lottie"
-        autoplay
-        loop={false}
-        style={{ width: '80%', height: '80%' }}
-      />
+  <div className={`${toastBase} bg-[#FFCC59]/10 border-[#FFCC59]/30`}>
+    <div className="w-12 h-12 shrink-0 bg-background rounded-xl shadow-sm overflow-hidden flex items-center justify-center border border-border-muted">
+      <DotLottieReact src="/icons/delete.lottie" autoplay loop={false} style={{ width: '80%', height: '80%' }} />
     </div>
     <div className="flex flex-col">
-      <span className="text-sm font-bold text-[#855d00]">Item Removed</span>
-      <span className="text-xs text-[#a37a1a] font-medium leading-tight">{message}</span>
+      <span className="text-sm font-black text-[#855d00] dark:text-[#FFCC59] uppercase tracking-tight">Removed</span>
+      <span className="text-xs text-foreground/70 font-bold leading-tight">{message}</span>
     </div>
   </div>
 );

@@ -9,16 +9,17 @@ import { useRouter, useSearchParams } from "next/navigation";
 import VideoPlayer from "../../components/VideoPlayer";
 import CourseSidebar from "../../components/CourseSidebar";
 import TabbedContent from "../../components/TabbedContent";
-import QuizComponent from "@/components/QuizComponent";
+import QuizComponent from "@/components/Quiz/QuizComponent";
 import AssignmentComponent from "@/components/AssignmentComponent";
 import ArticleComponent from "../../components/ArticleComponent";
 import LiveSessionComponent from "../../components/LiveSessionComponent";
 import Footer from "@/components/Footer";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 interface LearningClientProps {
   course: any;
   lectureId: string;
-  user: any ;
+  user: any;
 }
 
 interface Bookmark {
@@ -28,24 +29,28 @@ interface Bookmark {
   type: "BOOKMARK" | "IMPORTANT" | "QUESTION";
 }
 
-export default function LearningClient({ course, lectureId , user }: LearningClientProps) {
+export default function LearningClient({
+  course,
+  lectureId,
+  user,
+}: LearningClientProps) {
   const [currentLecture, setCurrentLecture] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [seekTo, setSeekTo] = useState<string | null>(null);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [loadingBookmarks, setLoadingBookmarks] = useState(false);
-  const searchParams = useSearchParams();
-// Create a handler to clear the seek value after the player reacts
-  const handleSeekComplete = () => setSeekTo(null);
+
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const oneCourse = process.env.NEXT_PUBLIC_ONE_COURSE === "true";
+
+  const handleSeekComplete = () => setSeekTo(null);
 
   const handleAddBookmark = (newBookmark: Bookmark) => {
     setBookmarks((prev) => [newBookmark, ...prev]);
   };
-  
-  const oneCourse = process.env.NEXT_PUBLIC_ONE_COURSE === "true";
 
-
+  /* ---------------------- UPDATE PROGRESS ---------------------- */
   useEffect(() => {
     const updateProgress = async () => {
       try {
@@ -53,30 +58,38 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            lectureId: lectureId,
-            courseId: course.id
+            lectureId,
+            courseId: course.id,
           }),
         });
       } catch (error) {
-        console.error("Failed to update last viewed pulse:", error);
+        console.error("Failed to update progress:", error);
       }
     };
 
-    if (lectureId) {
-      updateProgress();
-    } 
-    console.log("Updating progress for lectureId:", lectureId);
-  }, [lectureId]);
+    if (lectureId) updateProgress();
+  }, [lectureId, course.id]);
 
+  /* ---------------------- FETCH DATA ---------------------- */
   useEffect(() => {
-    const fetchLecture = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`/api/lecture/${lectureId}`);
-        if (!response.ok) throw new Error("Failed to fetch lecture");
-        const data = await response.json();
-        setCurrentLecture(data);
-        // console.log("Fetched lecture data:", data);
+
+        const [lecRes, bookmarkRes] = await Promise.all([
+          fetch(`/api/lecture/${lectureId}`),
+          fetch(`/api/lecture/bookmark?lectureId=${lectureId}`),
+        ]);
+
+        if (lecRes.ok) {
+          const lectureData = await lecRes.json();
+          setCurrentLecture(lectureData);
+        }
+
+        if (bookmarkRes.ok) {
+          const bookmarkData = await bookmarkRes.json();
+          setBookmarks(bookmarkData);
+        }
       } catch (error) {
         console.error("Error loading lecture:", error);
       } finally {
@@ -84,35 +97,14 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
       }
     };
 
-    const fetchBookmarks = async () => {
-      setLoadingBookmarks(true);
-      try {
-        const response = await fetch(`/api/lecture/bookmark?lectureId=${lectureId}`);
-        if (!response.ok) throw new Error("Failed to fetch");
-        const data = await response.json();
-        setBookmarks(data);
-      } catch (error) {
-        console.error("Error fetching bookmarks:", error);
-      } finally {
-        setLoadingBookmarks(false);
-      }
-    };
-    if (lectureId) {
-      fetchLecture();
-      fetchBookmarks() ;
-    }
-
-    // console.log("FL" , currentLecture) ; 
+    if (lectureId) fetchData();
   }, [lectureId]);
 
-  const handleSelectLecture = (selectedLecture: any) => {
-    const currentTab = searchParams.get("tab") || "overview";
-    router.push(`/learning/${course.id}/${selectedLecture.id}?tab=${currentTab}`);
-  };
-
-  // --- Helper to parse Quiz Metadata ---
+  /* ---------------------- QUIZ METADATA ---------------------- */
   const getQuizData = () => {
-    if (currentLecture?.type !== "QUIZ" || !currentLecture?.description) return null;
+    if (currentLecture?.type !== "QUIZ" || !currentLecture?.description)
+      return null;
+
     try {
       return JSON.parse(currentLecture.description);
     } catch (e) {
@@ -122,135 +114,148 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
   };
 
   const quizData = getQuizData();
-  // console.log("Course Data:", course);
+
+  /* ---------------------- NAVIGATION ---------------------- */
+  const handleSelectLecture = (selectedLecture: any) => {
+    const currentTab = searchParams.get("tab") || "overview";
+    router.push(
+      `/learning/${course.id}/${selectedLecture.id}?tab=${currentTab}`
+    );
+  };
+
+  /* ========================================================== */
+  /* ======================== UI ============================== */
+  /* ========================================================== */
 
   return (
-    <div className="">
-      <div className="flex flex-col h-screen overflow-hidden bg-white">
-        {/* Navbar */}
-        <nav className="h-14 bg-amber-100 text-white flex items-center justify-between px-4 shadow-md z-10 shrink-0">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-500">
+      <div className="flex flex-col h-screen overflow-hidden">
+
+        {/* ================= NAVBAR ================= */}
+        <nav className="h-16 bg-card/80 backdrop-blur-md border-b border-border-muted flex items-center justify-between px-6 shadow-sm z-30 shrink-0 transition-all duration-500">
           <div className="flex items-center gap-4 min-w-0">
             <Link
-              href={ oneCourse ? "/dashboard" : "/dashboard/my-courses"}
-              className="flex items-center gap-1 text-gray-300 hover:text-white transition-colors group shrink-0"
+              href={oneCourse ? "/dashboard" : "/dashboard/my-courses"}
+              className="flex items-center gap-2 text-foreground/60 hover:text-brand-blue transition-all group"
             >
-              <div className="p-1 rounded-full bg-gray-700 group-hover:bg-gray-800">
-                <ChevronLeft size={20} />
+              <div className="p-1.5 rounded-xl bg-background border border-border-muted group-hover:border-brand-blue/50 group-hover:shadow-lg transition-all">
+                <ChevronLeft size={18} strokeWidth={3} />
               </div>
-              <span className="text-sm text-gray-700 font-medium hidden sm:inline">Back</span>
+              <span className="text-xs font-black tracking-widest hidden sm:inline">
+                Back
+              </span>
             </Link>
-            <div className="h-6 w-[1px] bg-gray-700 mx-2 hidden sm:block shrink-0"></div>
-            <div className="font-bold text-sm md:text-base truncate text-gray-900">
+
+            <div className="h-6 w-[1px] bg-border-muted mx-2 hidden sm:block"></div>
+
+            <div className="font-black text-sm md:text-base truncate tracking-tighter">
               {course.title}
             </div>
           </div>
+
+          <ThemeToggle />
         </nav>
 
-          {/* Main Content Area */}
-          <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
-            <main className="flex-1 overflow-y-auto bg-gray-50 relative h-full">
-              {isLoading ? (
-                <div className="flex flex-col items-center justify-center h-full">
-                  <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-                </div>
-              ) : currentLecture ? (
-                <>
-                  {/* --- THE STAGE (Video/Quiz Parent) --- */}
-                  <div className="w-full  flex justify-center items-center min-h-[45vh] md:min-h-[55vh] lg:min-h-[65vh] overflow-hidden shadow-inner">
-                    <div className="w-full flex justify-center items-center h-full  mx-auto">
-                      {/* --- lecture UI --- */}
-                      {currentLecture.type === 'VIDEO' && (
-                        <div id="video-stage" className="flex justify-center aspect-video max-h-[90vh] md:max-h-[75vh] w-full h-full">
-                          <VideoPlayer  
-                             videoUrl={currentLecture.videoUrl} 
-                             lectureId={currentLecture.id} 
-                             seekTo={seekTo} 
-                             onSeekComplete={handleSeekComplete}
-                             onBookmarkAdded={handleAddBookmark}
-                          />
-                        </div>
-                      )}
+        {/* ================= MAIN BODY ================= */}
+        <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
 
-                      {/* --- LIVE UI --- */}
-                      {currentLecture.type === 'LIVE' && currentLecture.description && (
-                        <div className="h-full w-full">
-                          <LiveSessionComponent
-                            data={currentLecture.description} 
-                            lectureTitle={currentLecture.title} 
-                          />
-                        </div>
-                      )}
+          {/* ================= MAIN CONTENT ================= */}
+          <main className="flex-1 overflow-y-auto bg-background relative h-full scroll-smooth no-scrollbar transition-colors duration-500">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="w-10 h-10 text-brand-blue animate-spin" />
+              </div>
+            ) : currentLecture ? (
+              <div className="flex flex-col min-h-full">
 
-                        {/* --- QUIZ UI --- */}
-                        {currentLecture.type === 'QUIZ' && quizData && (
-                          <div className="h-full w-full bg-white overflow-y-auto">
-                            <QuizComponent lecture={currentLecture} courseId={course.id} />
-                          </div>
-                        )}
+                {/* ================= STAGE ================= */}
+                <div
+                  className={`w-full flex justify-center items-center min-h-[45vh] md:min-h-[55vh] lg:min-h-[65vh] transition-all duration-700 ${
+                    ["VIDEO", "LIVE"].includes(currentLecture.type)
+                      ? "bg-black shadow-[inset_0_-20px_50px_rgba(0,0,0,0.5)]"
+                      : "bg-background"
+                  }`}
+                >
+                  <div className="w-full h-full max-w-[1600px] mx-auto">
 
-
-                        {/* ASSIGNMENT UI */}
-                        {currentLecture.type === 'ASSIGNMENT' && (
-                          <div className="h-full w-full bg-white overflow-y-auto overflow-x-auto no-scrollbar">
-                            <AssignmentComponent lecture={currentLecture} />
-                          </div>
-                        )}
-
-
-                        {/* TEXT / ARTICLE UI */}
-                        {currentLecture.type === 'TEXT' && (
-                          <div className="h-full w-full bg-white overflow-y-auto scrollbar-hide">
-                            <ArticleComponent lecture={currentLecture} />
-                          </div>
-                        )}
-                        
-                      </div>
-                    </div>
-
-                    {/* Lecture Info and Tabs - Now more visible on page load */}
-                    <div className="w-full p-5 bg-white border-t border-gray-200">
-                      <div className="max-w-5xl mx-auto">
-                        <div className="mt-4 mb-4">
-                          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-                            {currentLecture.title}
-                          </h1>
-                        </div>
-                        <TabbedContent 
-                          lecture={currentLecture} 
-                          courseId={course.id} 
-                          adminId={course.adminId} 
-                          onBookmarkClick={(time) => setSeekTo(time)}
-                          bookmarks={bookmarks}
-                          loadingBookmarks={loadingBookmarks}
-                          setBookmarks={setBookmarks}
-                          setLoadingBookmarks={setLoadingBookmarks}
-                          course={course}
+                    {currentLecture.type === "VIDEO" && (
+                      <div className="aspect-video w-full h-full shadow-2xl">
+                        <VideoPlayer
+                          videoUrl={currentLecture.videoUrl}
+                          lectureId={currentLecture.id}
+                          seekTo={seekTo}
+                          onSeekComplete={handleSeekComplete}
+                          onBookmarkAdded={handleAddBookmark}
                         />
                       </div>
-                    </div>
-                  </>
+                    )}
+
+                    {currentLecture.type === "LIVE" &&
+                      currentLecture.description && (
+                        <LiveSessionComponent
+                          data={currentLecture.description}
+                          lectureTitle={currentLecture.title}
+                        />
+                      )}
+
+                    {currentLecture.type === "QUIZ" && quizData && (
+                      <div className="bg-card p-6 transition-colors">
+                        <QuizComponent
+                          lecture={currentLecture}
+                          courseId={course.id}
+                        />
+                      </div>
+                    )}
+
+                    {currentLecture.type === "ASSIGNMENT" && (
+                      <div className="bg-card p-6 transition-colors">
+                        <AssignmentComponent lecture={currentLecture} />
+                      </div>
+                    )}
+
+                    {currentLecture.type === "TEXT" && (
+                      <div className="max-w-4xl mx-auto p-8 md:p-16">
+                        <ArticleComponent lecture={currentLecture} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* ================= INFO + TABS ================= */}
+                <div className="flex-1 bg-card border-t border-border-muted transition-colors duration-500 pb-20">
+                  <div className="max-w-6xl mx-auto p-6 md:p-10">
+                    <h1 className="text-3xl md:text-4xl font-black tracking-tighter mb-6">
+                      {currentLecture.title}
+                    </h1>
+
+                    <TabbedContent
+                      lecture={currentLecture}
+                      courseId={course.id}
+                      adminId={course.adminId}
+                      onBookmarkClick={(time) => setSeekTo(time)}
+                      bookmarks={bookmarks}
+                      loadingBookmarks={loadingBookmarks}
+                      setBookmarks={setBookmarks}
+                      setLoadingBookmarks={setLoadingBookmarks}
+                      course={course}
+                    />
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center p-10">
-                <div className="bg-gray-50 p-6 rounded-full mb-4">
-                  <VideoOff size={48} className="text-gray-300" />
-                </div>
-                <h2 className="text-xl font-semibold text-gray-700">No lectures found</h2>
-                <p className="text-gray-500 max-w-xs mt-2">Content hasn't been uploaded yet.</p>
+                <VideoOff size={64} className="text-foreground/20 mb-4" />
+                <h2 className="text-2xl font-black tracking-tight">
+                  Lecture not found
+                </h2>
               </div>
             )}
 
-            <div className="md:hidden border-t border-gray-200">
-              <CourseSidebar
-                sections={course.modules || []}
-                currentLectureId={lectureId}
-                onSelectLecture={handleSelectLecture}
-              />
-            </div>
             <Footer />
           </main>
-          
-          {/* Course Sidebar */}
-          <aside className="hidden md:block w-[220px] md:w-[260px] xl:w-[350px] shrink-0 border-l border-gray-200 h-full">
+
+          {/* ================= SIDEBAR ================= */}
+          <aside className="hidden lg:block w-[350px] xl:w-[420px] shrink-0 border-l border-border-muted h-full bg-card transition-all duration-500 overflow-hidden">
             <CourseSidebar
               sections={course.modules || []}
               currentLectureId={lectureId}

@@ -80,19 +80,6 @@ export default function AddQuizForm({
     return await res.json();
   };
 
-  // 2. Execute with Toast feedback
-  // toast.promise(generateQuizPromise(), {
-  //   loading: "AI is crafting your quiz questions...",
-  //   success: () => {
-  //     onSuccess(); // Close the modal/form
-  //     return "Quiz generation started! Check back in a moment. ✨";
-  //   },
-  //   error: (err) => {
-  //     // The button becomes clickable again if it fails
-  //     setSubmitting(false); 
-  //     return `Error: ${err.message}`;
-  //   },
-  // });
   try{
     toast.loading("AI is crafting your quiz questions...");
     await generateQuizPromise();
@@ -108,39 +95,58 @@ export default function AddQuizForm({
 };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 animate-in fade-in slide-in-from-top-2">
+    <form 
+      onSubmit={handleSubmit} 
+      className="space-y-6 animate-in fade-in slide-in-from-top-2"
+    >
       
       {/* --- TITLE --- */}
       <div className="space-y-1">
-        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
+        <label 
+          className="text-xs font-bold uppercase tracking-wider ml-1"
+          style={{ color: 'var(--color-foreground)', opacity: 0.8 }}
+        >
           Quiz Title
         </label>
-        <div className="relative">
+        <div className="relative group">
           <input
             required
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+            className="input-field !pl-10"
             placeholder="e.g. Chapter 1 Knowledge Check"
           />
-          <FileQuestion className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <div 
+            className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-300 group-focus-within:!text-[var(--color-brand-blue)]"
+            style={{ color: 'var(--color-foreground)', opacity: 0.4 }}
+          >
+            <FileQuestion size={18} />
+          </div>
         </div>
       </div>
 
       {/* --- CONTEXT (TOPIC) --- */}
       <div className="space-y-1">
-        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
+        <label 
+          className="text-xs font-bold uppercase tracking-wider ml-1"
+          style={{ color: 'var(--color-foreground)', opacity: 0.8 }}
+        >
           What is this quiz about?
         </label>
-        <div className="relative">
+        <div className="relative group">
           <textarea
             required
             value={context}
             onChange={(e) => setContext(e.target.value)}
-            className="w-full h-32 p-3 pl-10 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
+            className="input-field !pl-10 min-h-[128px] resize-none leading-relaxed"
             placeholder="Paste lecture notes, summary, or specific topics the AI should focus on..."
           />
-          <AlignLeft className="absolute left-3 top-4 text-gray-400" size={18} />
+          <div 
+            className="absolute left-3 top-4 pointer-events-none transition-colors duration-300 group-focus-within:!text-[var(--color-brand-blue)]"
+            style={{ color: 'var(--color-foreground)', opacity: 0.4 }}
+          >
+            <AlignLeft size={18} />
+          </div>
         </div>
       </div>
 
@@ -149,60 +155,104 @@ export default function AddQuizForm({
         
         {/* Difficulty */}
         <div className="space-y-1">
-          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
+          <label 
+            className="text-xs font-bold uppercase tracking-wider ml-1"
+            style={{ color: 'var(--color-foreground)', opacity: 0.8 }}
+          >
             Difficulty
           </label>
-          <div className="relative">
+          <div className="relative group">
             <select
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value)}
-              className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer"
+              className="input-field !pl-10 appearance-none cursor-pointer"
             >
               <option value="EASY">Easy</option>
               <option value="MEDIUM">Medium</option>
               <option value="HARD">Hard</option>
             </select>
-            <BarChart className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-               <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 1L5 5L9 1"/></svg>
+            
+            {/* Left Icon */}
+            <div 
+              className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-300 group-focus-within:!text-[var(--color-brand-blue)]"
+              style={{ color: 'var(--color-foreground)', opacity: 0.4 }}
+            >
+              <BarChart size={18} />
+            </div>
+
+            {/* Custom Chevron for Select */}
+            <div 
+              className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ color: 'var(--color-foreground)', opacity: 0.4 }}
+            >
+              <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 1L5 5L9 1"/></svg>
             </div>
           </div>
         </div>
 
         {/* Question Count */}
         <div className="space-y-1">
-          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
+          <label 
+            className="text-xs font-bold uppercase tracking-wider ml-1"
+            style={{ color: 'var(--color-foreground)', opacity: 0.8 }}
+          >
             Question Count
           </label>
-          <div className="relative">
+          <div className="relative group">
             <input
               type="number"
               min={1}
               max={20}
               value={questionCount}
               onChange={(e) => setQuestionCount(Number(e.target.value))}
-              className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+              className="input-field !pl-10"
               placeholder="5"
             />
-            <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <div 
+              className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-300 group-focus-within:!text-[var(--color-brand-blue)]"
+              style={{ color: 'var(--color-foreground)', opacity: 0.4 }}
+            >
+              <Hash size={18} />
+            </div>
           </div>
         </div>
       </div>
 
       {/* --- ACTION BUTTONS --- */}
-      <div className="flex gap-3 pt-4 border-t border-gray-100">
+      <div 
+        className="flex gap-3 pt-4 border-t"
+        style={{ borderColor: 'var(--color-border-muted)' }}
+      >
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 p-3 border border-gray-200 rounded-xl font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+          className="flex-1 p-3 border rounded-xl font-bold transition-all active:scale-95"
+          style={{ 
+            borderColor: 'var(--color-border)',
+            color: 'var(--color-foreground)',
+            opacity: 0.7 
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--color-card-muted)';
+            e.currentTarget.style.opacity = '1';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.opacity = '0.7';
+          }}
         >
           Cancel
         </button>
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="flex-2 bg-blue-600 text-white p-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
+        <button 
+          type="submit" 
+          disabled={submitting} 
+          className="flex-2 p-3 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-70 active:scale-95"
+          style={{ 
+            backgroundColor: 'var(--color-foreground)', // Black (Light) / White (Dark)
+            color: 'var(--color-background)',           // White (Light) / Black (Dark)
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+          }}
         >
           {submitting ? (
             <>
@@ -216,7 +266,10 @@ export default function AddQuizForm({
         </button>
       </div>
 
-      <p className="text-[10px] text-gray-400 text-center">
+      <p 
+        className="text-[10px] text-center"
+        style={{ color: 'var(--color-foreground)', opacity: 0.4 }}
+      >
         The AI will generate questions in the background. You can continue editing.
       </p>
     </form>

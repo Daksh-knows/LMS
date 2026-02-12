@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Star, Loader2, Edit2, UserCircle } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { showToast } from "@/utils/Toast";
 
 interface Review {
@@ -29,13 +28,10 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const router = useRouter();
-
-  // --- NEW STATE: Reviews are now internal ---
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // --- 1. Fetch Reviews on Mount ---
+  // --- Data Fetching ---
   useEffect(() => {
     const fetchReviews = async () => {
       try {
@@ -51,17 +47,9 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
       }
     };
 
-    if (lectureId) {
-      fetchReviews();
-    }
+    if (lectureId) fetchReviews();
   }, [lectureId]);
 
-  useEffect(() => {
-    console.log("Reviews state updated:", reviews);
-  }, [reviews]);
-
-
-  // Identify the user's review and other students' reviews
   const myReview = reviews.find((r) => r.userId === currentUserId);
   const otherReviews = reviews.filter((r) => r.userId !== currentUserId);
 
@@ -74,8 +62,8 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
       setComment(myReview.comment || "");
       setIsEditing(false);
     } else {
-        setRating(0);
-        setComment("");
+      setRating(0);
+      setComment("");
     }
   }, [myReview]);
 
@@ -86,48 +74,29 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      toast.error("Please select a rating before submitting.");
+      toast.error("Please select a rating.");
       return;
     }
     setIsSubmitting(true);
     
-    const reviewPromise = async () => {
+    try {
       const response = await fetch(`/api/lecture/${lectureId}/review`, { 
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          rating,
-          comment,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating, comment }),
       });
 
       const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || "Failed to save review");
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || "Failed to save review");
-      }
-
-      // Instead of router.refresh(), we manually update local state for instant feedback
-      // Or you can re-fetch. Here we re-fetch to be safe.
       const refreshRes = await fetch(`/api/lecture/${lectureId}/review`);
       const newData = await refreshRes.json();
       setReviews(newData.reviews || []);
-
-      return result;
-    };
-
-    try{
-      toast.loading("Saving your review...");
-      await reviewPromise();
-      toast.dismiss();
-      showToast.success("Review submitted successfully!");
-    }catch(err: any){
-      toast.dismiss();
-      showToast.error(err.message || "Failed to submit review.");
       
-    }finally{
+      showToast.success("Review updated!");
+    } catch(err: any){
+      showToast.error(err.message || "Failed to submit review.");
+    } finally {
       setIsSubmitting(false);
       setIsEditing(false);
     }
@@ -135,79 +104,82 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
 
   if (isLoading) {
     return (
-        <div className="flex justify-center items-center h-40">
-            <Loader2 className="animate-spin text-gray-400" size={32} />
-        </div>
+      <div className="flex justify-center items-center h-40">
+        <Loader2 className="animate-spin text-purple-500" size={32} />
+      </div>
     );
   }
+
   return (
-    <div className="py-6 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* 1. Header Stats */}
-      <section className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 border border-gray-100 flex flex-col items-center shadow-sm">
-        <span className="text-sm font-bold text-purple-600 uppercase tracking-widest mb-2">
+    <div className="py-6 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 text-foreground">
+      
+      {/* 1. Header Stats - Clean Gradient */}
+      <section className="bg-foreground/[0.02] dark:bg-white/[0.02] rounded-[2rem] p-8 border border-border-muted flex flex-col items-center shadow-sm">
+        <span className="text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-[0.2em] mb-3">
           Average Rating
         </span>
-        <div className="text-6xl font-black text-gray-900 mb-3">
+        <div className="text-7xl font-black tracking-tighter mb-4">
           {averageRating.toFixed(1)}
         </div>
-        <div className="flex gap-1.5 text-yellow-400 mb-3">
+        <div className="flex gap-2 text-yellow-400 mb-4">
           {[1, 2, 3, 4, 5].map((s) => (
             <Star
               key={s}
               size={24}
               fill={s <= Math.round(averageRating) ? "currentColor" : "none"}
-              strokeWidth={2}
+              className="drop-shadow-[0_0_8px_rgba(250,204,21,0.3)]"
             />
           ))}
         </div>
-        <p className="text-gray-500 font-medium">
-          Based on {reviews.length} learner reviews
+        <p className="text-foreground/40 text-xs font-bold uppercase tracking-widest">
+          {reviews.length} learner reviews
         </p>
       </section>
 
       {/* 2. My Review Section */}
       <section className="space-y-4">
-        <h3 className="text-lg font-bold text-gray-900 px-1">Your Feedback</h3>
+        <h3 className="text-lg font-black tracking-tight px-1">Your Feedback</h3>
         {myReview && !isEditing ? (
-          <div className="bg-purple-50/50 border border-purple-100 rounded-2xl p-6 relative group">
+          <div className="bg-purple-500/5 dark:bg-purple-500/10 border border-purple-500/20 rounded-[1.5rem] p-6 relative group transition-all hover:bg-purple-500/[0.08]">
             <div className="flex justify-between items-start">
-              <div className="flex flex-col gap-2">
-                <div className="flex text-yellow-400">
+              <div className="flex flex-col gap-3">
+                <div className="flex gap-1 text-yellow-400">
                   {[1, 2, 3, 4, 5].map((s) => (
                     <Star
                       key={s}
-                      size={16}
+                      size={14}
                       fill={s <= myReview.rating ? "currentColor" : "none"}
                     />
                   ))}
                 </div>
-                <p className="text-gray-700 leading-relaxed italic">
+                <p className="text-foreground/80 leading-relaxed font-medium italic pr-8">
                   "{myReview.comment || "No comment left."}"
                 </p>
               </div>
               <button
                 onClick={() => setIsEditing(true)}
-                className="p-2 hover:bg-purple-100 rounded-full transition-colors text-purple-600"
+                className="p-2.5 hover:bg-purple-500/10 rounded-xl transition-colors text-purple-600 dark:text-purple-400"
               >
                 <Edit2 size={18} />
               </button>
             </div>
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-4">
-            <div className="flex flex-col items-center gap-3">
+          <div className="bg-white dark:bg-background border border-border-muted rounded-[2rem] p-6 shadow-xl shadow-black/5 space-y-6">
+            <div className="flex flex-col items-center gap-4">
               <div className="flex gap-2">
                 {[1, 2, 3, 4, 5].map((s) => (
                   <button
                     key={s}
                     onClick={() => setRating(s)}
-                    className={`p-1 transition-transform hover:scale-125 ${
-                      rating >= s ? "text-yellow-400" : "text-gray-200"
+                    className={`p-1 transition-all hover:scale-125 ${
+                      rating >= s ? "text-yellow-400" : "text-foreground/10"
                     }`}
                   >
                     <Star
-                      size={32}
+                      size={36}
                       fill={rating >= s ? "currentColor" : "none"}
+                      strokeWidth={2.5}
                     />
                   </button>
                 ))}
@@ -216,34 +188,26 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Tell other students what you thought of this lecture..."
-              className="w-full p-4 text-sm bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-purple-500 outline-none min-h-[120px] transition-all"
+              placeholder="What did you think of this lecture?"
+              className="w-full p-5 text-sm bg-foreground/[0.03] dark:bg-white/5 border border-border-muted rounded-2xl focus:ring-2 focus:ring-purple-500/50 outline-none min-h-[140px] transition-all font-medium placeholder:text-foreground/20"
             />
             <div className="flex justify-end gap-3">
               {isEditing && (
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-colors"
+                  className="px-6 py-2.5 text-xs font-black uppercase tracking-widest text-foreground/40 hover:text-foreground transition-colors"
                 >
                   Cancel
                 </button>
               )}
               <button
                 onClick={handleSubmit}
-                // 'isSubmitting' is your local useState(false)
                 disabled={rating === 0 || isSubmitting}
-                className="px-8 py-2.5 bg-purple-600 text-white rounded-xl font-bold text-sm hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-purple-200 transition-all active:scale-95"
+                className="px-8 py-3.5 bg-purple-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-purple-500/20 transition-all active:scale-95"
               >
                 {isSubmitting ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    <span>Saving...</span>
-                  </>
-                ) : myReview ? (
-                  "Update Review"
-                ) : (
-                  "Post Review"
-                )}
+                  <Loader2 size={16} className="animate-spin" />
+                ) : myReview ? "Update Review" : "Post Review"}
               </button>
             </div>
           </div>
@@ -251,14 +215,14 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
       </section>
 
       {/* 3. Community Reviews List */}
-      <section className="space-y-4 pt-4">
-        <h3 className="text-lg font-bold text-gray-900 px-1">
-          What others are saying
+      <section className="space-y-6 pt-4">
+        <h3 className="text-lg font-black tracking-tight px-1">
+          Community Feedback
         </h3>
         {otherReviews.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-            <p className="text-gray-400 text-sm">
-              Be the first to leave a community review!
+          <div className="text-center py-16 bg-foreground/[0.02] rounded-[2rem] border-2 border-dashed border-border-muted">
+            <p className="text-foreground/30 text-xs font-bold uppercase tracking-widest">
+              Be the first to review
             </p>
           </div>
         ) : (
@@ -266,35 +230,37 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
             {otherReviews.map((rev, idx) => (
               <div
                 key={rev.id || idx}
-                className="bg-white border border-gray-100 rounded-2xl p-5 flex gap-4 shadow-sm hover:shadow-md transition-shadow"
+                className="bg-white dark:bg-background border border-border-muted rounded-[1.5rem] p-5 flex gap-5 shadow-sm hover:shadow-md transition-all group"
               >
                 <div className="shrink-0">
                   {rev.user?.image ? (
                     <img
                       src={rev.user.image}
-                      alt={rev.user.name || "User avatar"}
-                      className="w-10 h-10 rounded-full object-cover"
+                      alt={rev.user.name || "User"}
+                      className="w-12 h-12 rounded-2xl object-cover ring-2 ring-purple-500/10"
                     />
                   ) : (
-                    <UserCircle size={40} className="text-gray-300" />
+                    <div className="w-12 h-12 rounded-2xl bg-foreground/5 flex items-center justify-center text-foreground/20">
+                      <UserCircle size={32} />
+                    </div>
                   )}
                 </div>
-                <div className="space-y-1 flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-gray-900">
-                      {rev.user?.name || "Anonymous"}
+                <div className="space-y-2 flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-black tracking-tight truncate">
+                      {rev.user?.name || "Anonymous Learner"}
                     </span>
-                    <div className="flex text-yellow-400">
+                    <div className="flex gap-0.5 text-yellow-400 shrink-0">
                       {[1, 2, 3, 4, 5].map((s) => (
                         <Star
                           key={s}
-                          size={12}
+                          size={10}
                           fill={s <= rev.rating ? "currentColor" : "none"}
                         />
                       ))}
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600 leading-relaxed">
+                  <p className="text-sm text-foreground/60 leading-relaxed font-medium">
                     {rev.comment || "Rated this lecture."}
                   </p>
                 </div>
