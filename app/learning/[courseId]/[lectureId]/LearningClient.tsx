@@ -14,6 +14,7 @@ import AssignmentComponent from "@/components/AssignmentComponent";
 import ArticleComponent from "../../components/ArticleComponent";
 import LiveSessionComponent from "../../components/LiveSessionComponent";
 import Footer from "@/components/Footer";
+import { useBookmarks } from "@/context/BookmarkContext";
 
 interface LearningClientProps {
   course: any;
@@ -39,9 +40,7 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
   const handleSeekComplete = () => setSeekTo(null);
   const router = useRouter();
 
-  const handleAddBookmark = (newBookmark: Bookmark) => {
-    setBookmarks((prev) => [newBookmark, ...prev]);
-  };
+
   
   const oneCourse = process.env.NEXT_PUBLIC_ONE_COURSE === "true";
 
@@ -69,6 +68,7 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
   }, [lectureId]);
 
   useEffect(() => {
+    if (!lectureId) return;
     const fetchLecture = async () => {
       try {
         setIsLoading(true);
@@ -84,22 +84,8 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
       }
     };
 
-    const fetchBookmarks = async () => {
-      setLoadingBookmarks(true);
-      try {
-        const response = await fetch(`/api/lecture/bookmark?lectureId=${lectureId}`);
-        if (!response.ok) throw new Error("Failed to fetch");
-        const data = await response.json();
-        setBookmarks(data);
-      } catch (error) {
-        console.error("Error fetching bookmarks:", error);
-      } finally {
-        setLoadingBookmarks(false);
-      }
-    };
     if (lectureId) {
       fetchLecture();
-      fetchBookmarks() ;
     }
 
     // console.log("FL" , currentLecture) ; 
@@ -166,7 +152,6 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
                              lectureId={currentLecture.id} 
                              seekTo={seekTo} 
                              onSeekComplete={handleSeekComplete}
-                             onBookmarkAdded={handleAddBookmark}
                           />
                         </div>
                       )}
@@ -220,10 +205,6 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
                           courseId={course.id} 
                           adminId={course.adminId} 
                           onBookmarkClick={(time) => setSeekTo(time)}
-                          bookmarks={bookmarks}
-                          loadingBookmarks={loadingBookmarks}
-                          setBookmarks={setBookmarks}
-                          setLoadingBookmarks={setLoadingBookmarks}
                           course={course}
                         />
                       </div>

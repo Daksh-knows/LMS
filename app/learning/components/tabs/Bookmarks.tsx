@@ -13,6 +13,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { useConfirm } from "@/context/ConfirmContext";
+import { useBookmarks } from "@/context/BookmarkContext";
 
 // --- Types ---
 interface Bookmark {
@@ -42,34 +43,31 @@ export const BookmarksTab: React.FC<BookmarksProps> = ({
   const router = useRouter();
   const params = useParams();
   const { confirm } = useConfirm();
-  
-  // 1. Get IDs directly from URL
-  // Route: /learning/[courseId]/[lectureId]
+
+  const { bookmarks, setInitialBookmarks, deleteBookmark } = useBookmarks();
+
   const courseId = params?.courseId as string; 
 
-  // --- State ---
   const [allBookmarks, setAllBookmarks] = useState<Bookmark[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // --- UI Filters ---
   const [scope, setScope] = useState<"CURRENT" | "ALL">("CURRENT");
   const [sortBy, setSortBy] = useState<"TIME" | "RECENT">("TIME");
 
-  // --- 2. Fetch Logic (Once per Course) ---
   useEffect(() => {
+    if(!courseId) return ;
     const fetchAllCourseBookmarks = async () => {
       if (!courseId) return;
       
       setLoading(true);
       try {
-        // We fetch ALL bookmarks for this course regardless of the current view
-        // This allows instant toggling later
         const response = await fetch(`/api/lecture/bookmark?courseId=${courseId}`);
         
         if (!response.ok) throw new Error("Failed to fetch");
         
         const data = await response.json();
-        setAllBookmarks(data);
+        console.log("B " , data) ; 
+        setInitialBookmarks(data);
       } catch (error) {
         console.error("Error fetching bookmarks:", error);
         showToast.error("Could not load bookmarks");
@@ -83,7 +81,7 @@ export const BookmarksTab: React.FC<BookmarksProps> = ({
 
   // --- 3. Client-Side Filtering & Sorting ---
   const visibleBookmarks = useMemo(() => {
-    let filtered = [...allBookmarks];
+    let filtered = [...bookmarks];
 
     // Filter A: Scope (Current Lecture vs All)
     if (scope === "CURRENT") {
@@ -108,7 +106,7 @@ export const BookmarksTab: React.FC<BookmarksProps> = ({
     }
 
     return filtered;
-  }, [allBookmarks, scope, sortBy, lecture.id]);
+  }, [bookmarks, scope, sortBy, lecture.id]);
 
   // --- Helpers ---
   const formatTime = (seconds: number) => {
@@ -137,6 +135,7 @@ export const BookmarksTab: React.FC<BookmarksProps> = ({
       "Are you sure? This cannot be undone.",
       async () => {
         try {
+          deleteBookmark(bookmarkId);
           const response = await fetch(`/api/lecture/bookmark?bookmarkId=${bookmarkId}`, { method: "DELETE" });
           if (!response.ok) throw new Error("Failed");
           showToast.delete("Bookmark removed.");

@@ -30,10 +30,6 @@ const TabbedContent: React.FC<Props> = ({
   courseId, 
   adminId, 
   onBookmarkClick, 
-  bookmarks, 
-  loadingBookmarks, 
-  setBookmarks, 
-  setLoadingBookmarks 
 }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -125,10 +121,6 @@ const TabbedContent: React.FC<Props> = ({
             lecture={lecture} 
             currentUserId={userId || ""} 
             onBookmarkClick={onBookmarkClick}
-            bookmarks={bookmarks || []}
-            loadingBookmarks={loadingBookmarks}
-            setBookmarks={setBookmarks}
-            setLoadingBookmarks={setLoadingBookmarks}
           />
         )}
         
