@@ -83,6 +83,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.role = (user as any).role;
         token.hasPremium = (user as any).hasPremium;
         token.hasRegistered = (user as any).hasRegistered;
+        token.isTempPassword = (user as any).isTempPassword;
       }
 
       // Update session trigger (e.g. after Buying Premium)
@@ -113,6 +114,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.hasRegistered = (token as any).hasRegistered as boolean;
         session.user.image = token.picture as string;
         session.user.name = token.name as string;
+        session.user.isTempPassword = (token as any).isTempPassword as boolean;
       }
       return session;
     },

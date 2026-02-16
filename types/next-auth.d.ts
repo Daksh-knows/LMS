@@ -10,6 +10,7 @@ declare module "next-auth" {
       role: string;
       hasPremium: boolean;
       hasRegistered: boolean;
+      isTempPassword: boolean;
     } & DefaultSession["user"];
   }
 
@@ -18,6 +19,7 @@ declare module "next-auth" {
     role: string;
     hasPremium: boolean;
     hasRegistered: boolean;
+    isTempPassword: boolean;
   }
 }
 
@@ -37,5 +39,6 @@ declare module "@auth/core/adapters" {
     role: string;
     hasPremium: boolean;
     hasRegistered: boolean;
+    isTempPassword: boolean;
   }
 }
