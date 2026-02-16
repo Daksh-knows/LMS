@@ -133,7 +133,7 @@ export default function StudentSupportPage() {
             {tickets.length === 0 ? (
               <div className="text-center py-20 bg-card-muted rounded-[2rem] border border-dashed border-border-muted">
                 <MessageCircle size={48} className="mx-auto text-foreground/10 mb-4" />
-                <p className="text-foreground/30 font-bold uppercase tracking-widest text-xs">No tickets yet.</p>
+                <p className="text-foreground/30 font-bold  tracking-widest text-xs">No tickets yet.</p>
               </div>
             ) : (
               tickets.map((ticket) => (
@@ -147,7 +147,7 @@ export default function StudentSupportPage() {
                       <h3 className="text-base md:text-lg font-bold text-foreground group-hover:text-brand-blue transition-colors">
                         {ticket.subject}
                       </h3>
-                      <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-2 text-[10px] font-black uppercase tracking-widest text-foreground/30">
+                      <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-2 text-[10px] font-black  tracking-widest text-foreground/30">
                          <span>{new Date(ticket.createdAt).toLocaleDateString()}</span>
                          <span className="hidden sm:inline">•</span>
                          <span className={ticket.priority === 'HIGH' ? 'text-red-500' : ''}>{ticket.priority} Priority</span>
@@ -171,7 +171,7 @@ export default function StudentSupportPage() {
             <h2 className="text-xl font-black text-foreground mb-6">Create New Ticket</h2>
             <div className="space-y-6">
               <div>
-                <label className="text-xs font-bold text-foreground/40 uppercase tracking-widest ml-1">Subject</label>
+                <label className="text-xs font-bold text-foreground/40  tracking-widest ml-1">Subject</label>
                 <input 
                   value={subject} 
                   onChange={(e) => setSubject(e.target.value)}
@@ -180,7 +180,7 @@ export default function StudentSupportPage() {
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-foreground/40 uppercase tracking-widest ml-1">Priority</label>
+                <label className="text-xs font-bold text-foreground/40  tracking-widest ml-1">Priority</label>
                 <select 
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
@@ -192,7 +192,7 @@ export default function StudentSupportPage() {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-bold text-foreground/40 uppercase tracking-widest ml-1">Description</label>
+                <label className="text-xs font-bold text-foreground/40  tracking-widest ml-1">Description</label>
                 <textarea 
                   value={message} 
                   onChange={(e) => setMessage(e.target.value)}
@@ -221,7 +221,7 @@ export default function StudentSupportPage() {
               <div>
                 <h2 className="font-black text-foreground text-base md:text-lg line-clamp-1">{activeTicket.subject}</h2>
                 <div className="flex items-center gap-3 mt-1">
-                   <span className="text-[10px] font-mono text-foreground/40 uppercase tracking-wider">#{activeTicket.id.slice(-6)}</span>
+                   <span className="text-[10px] font-mono text-foreground/40  tracking-wider">#{activeTicket.id.slice(-6)}</span>
                    <TicketStatusBadge status={activeTicket.status} />
                 </div>
               </div>
@@ -236,7 +236,7 @@ export default function StudentSupportPage() {
                   <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[90%] sm:max-w-[80%]`}>
                        <div className={`flex items-center gap-2 mb-1.5 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                          <span className="text-[10px] font-black text-foreground/30 uppercase tracking-tighter">
+                          <span className="text-[10px] font-black text-foreground/30  tracking-tighter">
                             {isAdmin ? 'Support Team' : msg.sender.name}
                           </span>
                           {isAdmin && <CheckCircle2 size={12} className="text-brand-blue" />}
@@ -260,7 +260,7 @@ export default function StudentSupportPage() {
 
             <div className="p-4 bg-card-muted border-t border-border-muted">
                {activeTicket.status === 'CLOSED' ? (
-                 <div className="text-center py-3 bg-background/50 rounded-xl text-foreground/40 font-black text-[10px] uppercase tracking-widest border border-dashed border-border-muted">
+                 <div className="text-center py-3 bg-background/50 rounded-xl text-foreground/40 font-black text-[10px]  tracking-widest border border-dashed border-border-muted">
                    This ticket has been resolved and closed.
                  </div>
                ) : (
@@ -301,7 +301,7 @@ function TicketStatusBadge({ status }: { status: string }) {
   };
   
   return (
-    <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase border shrink-0 ${styles[status as keyof typeof styles]}`}>
+    <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black  border shrink-0 ${styles[status as keyof typeof styles]}`}>
       {icons[status as keyof typeof icons]} {status.replace('_', ' ')}
     </div>
   )
