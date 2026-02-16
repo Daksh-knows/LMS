@@ -33,6 +33,9 @@ model User {
   image                String?
   bio                  String?                @db.Text
   emailVerified        DateTime?
+  isTempPassword       Boolean                @default(true)
+  resetToken           String?  
+  resetTokenExpiry     DateTime?
   otp                  String?                @default("123456")
   otpExpires           DateTime?
   isVerified           Boolean                @default(false)

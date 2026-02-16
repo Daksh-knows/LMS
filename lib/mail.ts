@@ -23,6 +23,21 @@ export async function sendOtpEmailInternal(email: string, otp: string) {
   });
 }
 
+export async function sendForgotPasswordLink(email: string, resetUrl: string) {
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "Reset Password Link",
+    html: `
+      <div style="font-family: sans-serif; padding: 20px;">
+        <h2>Your Academy Verification</h2>
+        <p>Your code is: <strong style="font-size: 24px; letter-spacing: 2px;">${resetUrl}</strong></p>
+        <p>This code expires in 10 minutes.</p>
+      </div>
+    `,
+  });
+}
+
 export async function sendRefundStatusEmail(
   email: string, 
   name: string, 
