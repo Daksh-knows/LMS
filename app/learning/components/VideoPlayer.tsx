@@ -21,16 +21,16 @@ import {
 import { useSession } from 'next-auth/react';
 import YoutubeVideoPlayer from '@/components/lecture/YoutubeVideoPlayer';
 import BookmarkForm from '@/components/lecture/BookmarkForm';
+import { useBookmarks } from '@/context/BookmarkContext';
 
 interface Props {
   videoUrl: string;
   lectureId: string;
   seekTo: string | null;
   onSeekComplete: () => void;
-  onBookmarkAdded: (bookmark: any) => void;
 }
 
-const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekComplete, onBookmarkAdded }) => {
+const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekComplete}) => {
   const { data: session, status } = useSession();
   const userId = session?.user?.id;
   const searchParams = useSearchParams();
@@ -38,7 +38,6 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
   
   console.log("VideoURL :" , videoUrl)
   const controllerRef = useRef<any>(null);
-  const watchStartTime = useRef<number | null>(null);
   const totalSecondsWatched = useRef<number>(0);
   const [showTooltip, setShowTooltip] = useState(false);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
@@ -54,6 +53,8 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasCompleted, setHasCompleted] = useState(false);
   const [urlSeekProcessed, setUrlSeekProcessed] = useState(false);
+  const { addBookmark } = useBookmarks();
+
 
   const storageKey = `watch-progress-${userId}-${lectureId}`;
   
@@ -325,7 +326,7 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
         if (!response.ok) throw new Error("Failed to save");
 
         const data = await response.json();
-        onBookmarkAdded(data);
+        addBookmark(data);
 
         showToast.success(`Bookmark saved at ${Math.floor(bookmark.time)}s`);
 

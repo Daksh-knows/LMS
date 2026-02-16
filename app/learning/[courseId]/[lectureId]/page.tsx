@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@/lib/auth-utils';
 import LearningClient from './LearningClient';
 import { notFound } from "next/navigation";
+import { BookmarkProvider } from '@/context/BookmarkContext';
 
 interface PageProps {
   params: Promise<{
@@ -39,11 +40,13 @@ async function Page({ params }: PageProps) {
   return (
     <div>
       {/* 4. Pass the fetched data to your Client Component */}
-      <LearningClient 
-        course={course} 
-        lectureId={lectureId} 
-        user={user}
-      />
+      <BookmarkProvider>
+        <LearningClient 
+          course={course} 
+          lectureId={lectureId} 
+          user={user}
+        />
+      </BookmarkProvider>
     </div>
   );
 }

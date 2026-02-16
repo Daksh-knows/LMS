@@ -13,7 +13,7 @@ interface UploadState {
 interface ContextType {
   uploads: Record<string, UploadState>;
   startUpload: (lectureId: string, videoFile: File | null, attachments: any[]) => Promise<void>;
-  cancelUpload: (lectureId: string) => void; // <--- New Function
+  cancelUpload: (lectureId: string) => void; 
 }
 
 const BackgroundUploadContext = createContext<ContextType | undefined>(undefined);
