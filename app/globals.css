@@ -1,9 +1,6 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-@import "tailwindcss";
-@plugin "@tailwindcss/typography";
-
 @theme {
   /* --- Primitive Colors (Base Palette) --- */
   --color-background: #fffbeb;      /* Amber-50 (Warm Light) */
