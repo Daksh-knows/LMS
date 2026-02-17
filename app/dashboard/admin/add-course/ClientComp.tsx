@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Sparkles, Upload, X, ImageIcon, Globe, Clock } from "lucide-react";
+import { ArrowLeft, Save, Sparkles, Upload, X, ImageIcon, Globe, Clock, Crown, Zap, DollarSign, IndianRupee } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -19,6 +19,7 @@ const LANGUAGES = ["English", "Spanish", "French", "German", "Hindi", "Chinese",
 export default function AddCoursePageClient({ user }: Props) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [courseType, setCourseType] = useState<"CRASH" | "PREMIUM">("PREMIUM");
   
   // --- Image Upload State ---
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -87,6 +88,8 @@ export default function AddCoursePageClient({ user }: Props) {
         language: formData.get("language") as string,
         estimatedDuration: formData.get("duration") as string,
         adminId: user.id,
+        type: courseType ,
+        price: courseType === "PREMIUM" ? parseFloat(formData.get("price") as string || "0") : 0
       };
 
       // 3. POST to API
@@ -134,6 +137,47 @@ export default function AddCoursePageClient({ user }: Props) {
 
         <form onSubmit={handleFormSubmit} className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
           <div className="p-8 md:p-10 space-y-8">
+
+            <div className="space-y-4">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Access Type</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setCourseType("CRASH")}
+                  className={`p-5 rounded-2xl border-2 transition-all flex items-start gap-4 text-left ${
+                    courseType === "CRASH" 
+                    ? "border-amber-500 bg-amber-50/50 shadow-inner" 
+                    : "border-gray-100 hover:border-gray-200"
+                  }`}
+                >
+                  <div className={`p-3 rounded-xl ${courseType === "CRASH" ? "bg-amber-500 text-white" : "bg-gray-100 text-gray-400"}`}>
+                    <Zap size={20} />
+                  </div>
+                  <div>
+                    <h4 className={`font-bold ${courseType === "CRASH" ? "text-amber-900" : "text-gray-600"}`}>Crash Course</h4>
+                    <p className="text-xs text-gray-500 mt-1">Free access for all students, anytime.</p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCourseType("PREMIUM")}
+                  className={`p-5 rounded-2xl border-2 transition-all flex items-start gap-4 text-left ${
+                    courseType === "PREMIUM" 
+                    ? "border-indigo-600 bg-indigo-50/50 shadow-inner" 
+                    : "border-gray-100 hover:border-gray-200"
+                  }`}
+                >
+                  <div className={`p-3 rounded-xl ${courseType === "PREMIUM" ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-400"}`}>
+                    <Crown size={20} />
+                  </div>
+                  <div>
+                    <h4 className={`font-bold ${courseType === "PREMIUM" ? "text-indigo-900" : "text-gray-600"}`}>Premium Course</h4>
+                    <p className="text-xs text-gray-500 mt-1">Requires purchase on Ladder1 to unlock.</p>
+                  </div>
+                </button>
+              </div>
+            </div>
             
             {/* 1. Title & Subtitle */}
             <div className="space-y-6">
@@ -193,7 +237,23 @@ export default function AddCoursePageClient({ user }: Props) {
                   placeholder="e.g. 12 Hours 45 Mins" 
                 />
               </div>
+
+              <div className={`space-y-2 transition-all duration-300 ${courseType === "PREMIUM" ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
+                <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">
+                  <IndianRupee size={14} /> Price (INR)
+                </label>
+                <input 
+                  name="price" 
+                  type="number"
+                  step="1"
+                  required={courseType === "PREMIUM"}
+                  className="w-full p-4 bg-gray-50/50 border border-gray-100 rounded-2xl outline-none focus:border-indigo-500" 
+                  placeholder="2000" 
+                />
+              </div>
             </div>
+
+            
 
             {/* 4. Compact Image Upload */}
             <div className="pt-6 border-t border-gray-50">
