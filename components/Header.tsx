@@ -31,7 +31,7 @@ export default function Header({ user, onMenuClick, isSidebarOpen }: { user: any
   }, [user?.id]);
 
   const handleLogout = () => {
-    signOut({ callbackUrl: "/landingpage" });
+    signOut({ callbackUrl: "/" });
   };
 
   const initials = user?.name

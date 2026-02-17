@@ -215,7 +215,7 @@ const handleSave = async () => {
                  <ShieldCheck size={16} /> Request Refund
                </button>
              )}
-             <button onClick={() => signOut({ callbackUrl: "/login" })} className="flex items-center gap-2 bg-[#c66a6a] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#b05a5a] transition-all">
+             <button onClick={() => signOut({ callbackUrl: "/signin" })} className="flex items-center gap-2 bg-[#c66a6a] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#b05a5a] transition-all">
                <LogOut size={18} /> Logout
              </button>
           </div>
