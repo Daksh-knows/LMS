@@ -9,20 +9,28 @@ declare global {
   var prisma: PrismaClient | undefined;
 }
 
-// 1. Don't throw at the top level. Just store the string.
 const connectionString = process.env.DATABASE_URL;
 
 const createPrismaClient = () => {
-  // 2. Only throw if we are actually calling this function (i.e., at runtime)
-  if (!connectionString) {
-    throw new Error("DATABASE_URL is not defined in environment variables.");
+  const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
+
+  // If we have no connection string and it's NOT the build phase, crash.
+  if (!connectionString && !isBuildPhase) {
+    throw new Error("DATABASE_URL is not defined.");
   }
 
-  const adapter = new PrismaNeon({ connectionString });
-  return new PrismaClient({ adapter });
+  // If we have a connection string, use the Neon Adapter
+  if (connectionString) {
+    const adapter = new PrismaNeon({ connectionString });
+    return new PrismaClient({ adapter });
+  }
+
+  // Fallback for Build Phase: 
+  // We cast to 'any' or provide a dummy object to satisfy the constructor requirements
+  // since this instance will never actually be used to query data during build.
+  return new PrismaClient({} as any);
 };
 
-// 3. Singleton pattern that works with Next.js HMR
 export const db = globalThis.prisma || createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
