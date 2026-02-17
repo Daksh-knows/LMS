@@ -16,7 +16,7 @@ export async function POST(
     }
 
     // 2. Create Enrollment
-    await db.enrollment.create({
+    await db.myEnrollment.create({
       data: {
         userId: user.id,
         courseId: courseId,
