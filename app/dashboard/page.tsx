@@ -5,32 +5,28 @@ import OverviewClient from "./ClientComp";
 import { redirect } from "next/navigation";
 
 export default async function OverviewPage() {
-  // 1. Identify the user from the session
   const user = await getCurrentUser();
   
   if (!user) return redirect("/login");
 
-  // 2. Fetch real stats from the database
   const stats = await db.userStats.findUnique({
     where: { userId: user.id },
   });
 
-  // 3. Fetch real courses from the database
-  // We include 'category' to dynamically generate the 'tags' used in your UI
+
   const coursesDb = await db.course.findMany({
     where: {
       isPublished: true,
     },
     include: {
-      category: true, // Assumes you have a Category relation
+      category: true,
     },
     orderBy: {
       createdAt: "desc",
     },
-    take: 6, // Limit to 6 recent courses
+    take: 6, 
   });
 
-  // 4. Transform DB data to match the UI component's expected shape
   const formattedCourses = coursesDb.map((course) => ({
     id: course.id,
     title: course.title,
