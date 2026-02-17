@@ -117,7 +117,7 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
         <nav className="h-14 bg-amber-100 text-white flex items-center justify-between px-4 shadow-md z-10 shrink-0">
           <div className="flex items-center gap-4 min-w-0">
             <Link
-              href={ oneCourse ? "/dashboard" : "/dashboard/my-courses"}
+              href="/dashboard"
               className="flex items-center gap-1 text-gray-300 hover:text-white transition-colors group shrink-0"
             >
               <div className="p-1 rounded-full bg-gray-700 group-hover:bg-gray-800">
