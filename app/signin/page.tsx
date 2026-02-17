@@ -136,7 +136,7 @@ export default function SignInPage() {
             </button>
           </form>
 
-          <div className="relative my-6 flex justify-center items-center">
+          {/* <div className="relative my-6 flex justify-center items-center">
             <div className="absolute w-full border-t border-amber-100"></div>
             <span className="px-4 bg-white text-[10px] uppercase tracking-widest font-bold text-amber-900/40 z-10">
               Or continue with
@@ -159,8 +159,8 @@ export default function SignInPage() {
                 Sign up
               </Link>
             </p>
-          </div>
-        </div>
+          </div>*/}        
+        </div> 
       </div>
     </div>
   );
