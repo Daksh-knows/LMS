@@ -20,9 +20,7 @@ export default auth((req) => {
   if (isProtectedRoute && !isLoggedIn) {
     return NextResponse.redirect(new URL("/signin", nextUrl));
   }
-  if (isLoggedIn && !req.auth?.user?.hasPremium) {
-    return NextResponse.redirect(new URL("/enrollment", nextUrl));
-  }
+
   // 4. (Optional) Premium Check
   // You can now access custom fields because we typed them in next-auth.d.ts
   // if (isLoggedIn && nextUrl.pathname.startsWith("/learning/premium") && !req.auth?.user?.hasPremium) {

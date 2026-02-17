@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import  { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import ProgressSection from "@/components/dashboard/ProgressSection";
 import CourseList from "@/components/dashboard/CourseList";
