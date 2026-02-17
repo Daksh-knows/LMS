@@ -31,11 +31,7 @@ model User {
   password             String                 @default("helloworld")
   name                 String?
   image                String?
-  bio                  String?                @db.Text
   emailVerified        DateTime?
-  isTempPassword       Boolean                @default(true)
-  resetToken           String?  
-  resetTokenExpiry     DateTime?
   otp                  String?                @default("123456")
   otpExpires           DateTime?
   isVerified           Boolean                @default(false)
@@ -45,6 +41,10 @@ model User {
   updatedAt            DateTime               @updatedAt
   hasRegistered        Boolean                @default(false)
   batch                String?                @default("Batch 1")
+  bio                  String?
+  isTempPassword       Boolean                @default(true)
+  resetToken           String?
+  resetTokenExpiry     DateTime?
   accounts             Account[]
   AssignmentSubmission AssignmentSubmission[]
   bookmarks            Bookmark[]
@@ -85,20 +85,19 @@ model UserStats {
 model Course {
   id                String         @id @default(cuid())
   title             String         @db.VarChar(255)
-  subtitle          String?        @db.Text    // Added for the one-line summary
-  description       String?        @db.Text    // Use @db.Text for Tiptap HTML content
-  imageUrl          String?        @db.Text    // Cloudinary URLs can be long
-  language          String?        @default("English") // Added for language selection
-  estimatedDuration String?                    // Added for course length display
+  description       String?
+  imageUrl          String?
   price             Float?
   isPublished       Boolean        @default(false)
-  isCompleted       Boolean        @default(false)
   adminId           String
   categoryId        String?
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
-  
-  // Relations
+  estimatedDuration String?
+  language          String?        @default("English")
+  subtitle          String?
+  isCompleted       Boolean        @default(false)
+  type              CourseType     @default(PREMIUM)
   admin             User           @relation("CourseAuthor", fields: [adminId], references: [id])
   category          Category?      @relation(fields: [categoryId], references: [id])
   students          Enrollment[]
@@ -114,9 +113,9 @@ model Enrollment {
   courseId         String
   currentLectureId String?
   enrolledAt       DateTime @default(now())
-  course           Course   @relation(fields: [courseId], references: [id])
-  currentLecture   Lecture? @relation(fields: [currentLectureId], references: [id])
-  user             User     @relation(fields: [userId], references: [id])
+  course           Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  currentLecture   Lecture? @relation(fields: [currentLectureId], references: [id], onDelete: Cascade)
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
 }
@@ -211,8 +210,8 @@ model Note {
   lectureId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  lecture   Lecture  @relation(fields: [lectureId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  lecture   Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Review {
@@ -222,8 +221,8 @@ model Review {
   userId    String
   lectureId String
   createdAt DateTime @default(now())
-  lecture   Lecture  @relation(fields: [lectureId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  lecture   Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lectureId])
 }
@@ -279,17 +278,17 @@ model AnswerOption {
 }
 
 model AssignmentSubmission {
-  id        String   @id @default(cuid())
+  id        String           @id @default(cuid())
   fileUrl   String
   lectureId String
   studentId String
   grade     Float?
   feedback  String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
   status    AssignmentStatus @default(NOT_SUBMITTED)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  lecture   Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
-  User      User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  lecture   Lecture          @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  User      User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, lectureId])
 }
@@ -348,8 +347,8 @@ model RefundRequest {
   paymentId String?      @unique
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
-  payment   Payment?     @relation(fields: [paymentId], references: [id])
-  user      User         @relation(fields: [userId], references: [id])
+  payment   Payment?     @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SupportTicket {
@@ -361,7 +360,7 @@ model SupportTicket {
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
   messages  SupportMessage[]
-  user      User             @relation(fields: [userId], references: [id])
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SupportMessage {
@@ -427,4 +426,9 @@ enum ActivityType {
   VIDEO_WATCH
   QUIZ_ATTEMPT
   ASSIGNMENT_SUBMISSION
+}
+
+enum CourseType {
+  CRASH
+  PREMIUM
 }
