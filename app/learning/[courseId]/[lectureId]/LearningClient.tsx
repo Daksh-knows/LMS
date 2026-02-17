@@ -225,6 +225,7 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
                 sections={course.modules || []}
                 currentLectureId={lectureId}
                 onSelectLecture={handleSelectLecture}
+                courseId={course.id}
               />
             </div>
             <Footer />
@@ -236,6 +237,7 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
               sections={course.modules || []}
               currentLectureId={lectureId}
               onSelectLecture={handleSelectLecture}
+              courseId={course.id}
             />
           </aside>
         </div>
