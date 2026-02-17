@@ -37,20 +37,54 @@ interface Props {
   currentLectureId: string;
   onSelectLecture: (lecture: CourseItem) => void;
   isEnrolled?: boolean;
+  courseId: string
 }
 
 const CourseSidebar: React.FC<Props> = ({
   sections,
   currentLectureId,
   onSelectLecture,
-  isEnrolled = true,
+  isEnrolled = true ,
+  courseId
 }) => {
   const [openSections, setOpenSections] = useState<string[]>([]);
+  const [courseType, setCourseType] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = sessionStorage.getItem("sidebar_state");
     if (saved) setOpenSections(JSON.parse(saved));
   }, []);
+
+  useEffect(() => {
+    const fetchType = async () => {
+      try {
+        const response = await fetch(`/api/course/${courseId}/type`);
+        const data = await response.json();
+        setCourseType(data.type);
+      } catch (error) {
+        console.error("Error fetching course type:", error);
+      }
+    };
+    fetchType();
+  }, [courseId]);
+
+  useEffect(() => {
+    if (courseType === "CRASH") {
+      // For crash courses, always keep all section IDs in the open state
+      setOpenSections(sections.map((s) => s.id));
+    } else {
+      // Existing logic for Premium courses
+      const saved = sessionStorage.getItem("sidebar_state");
+      if (saved) {
+        setOpenSections(JSON.parse(saved));
+      } else if (currentLectureId) {
+        const activeSection = sections.find((s) =>
+          s.lectures.some((l) => l.id === currentLectureId)
+        );
+        if (activeSection) setOpenSections([activeSection.id]);
+      }
+    }
+  }, [courseType, sections, currentLectureId]);
 
   useEffect(() => {
     if (currentLectureId) {
@@ -64,6 +98,8 @@ const CourseSidebar: React.FC<Props> = ({
   }, [currentLectureId, sections]);
 
   const toggleSection = (id: string) => {
+    if (courseType === "CRASH") return;
+
     setOpenSections((prev) => {
       const newState = prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id];
       sessionStorage.setItem("sidebar_state", JSON.stringify(newState));
@@ -112,9 +148,16 @@ const CourseSidebar: React.FC<Props> = ({
       <div className="p-5 border-b-2 border-gray-200 shrink-0 bg-gray-50/50 backdrop-blur-md sticky top-0 z-20">
         <h2 className="font-black text-gray-900 text-lg tracking-tight flex items-center justify-between">
           Course Content
-          <span className="text-[10px] bg-gray-800 text-white px-2 py-1 rounded-md uppercase tracking-widest font-bold">
-            {sections.length} Module{sections.length > 1 ? "s" : ""}
-          </span>
+          <div className="flex gap-2">
+            {courseType === "CRASH" && (
+              <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-1 rounded-md uppercase tracking-widest font-bold border border-amber-200">
+                Crash
+              </span>
+            )}
+            <span className="text-[10px] bg-gray-800 text-white px-2 py-1 rounded-md uppercase tracking-widest font-bold">
+              {sections.length} Module{sections.length > 1 ? "s" : ""}
+            </span>
+          </div>
         </h2>
       </div>
 
@@ -127,13 +170,14 @@ const CourseSidebar: React.FC<Props> = ({
               {/* Module Header */}
               <button
                 onClick={() => toggleSection(section.id)}
+                // 4. Update cursor and hover effect based on courseType
                 className={`w-full flex items-center gap-3 px-5 py-5 transition-all duration-200 text-left group ${
                   isOpen ? "bg-white" : "hover:bg-gray-100/50"
-                }`}
+                } ${courseType === "CRASH" ? "cursor-default" : "cursor-pointer"}`}
               >
                 <motion.div
                   animate={{ rotate: isOpen ? 180 : 0 }}
-                  className={`${isOpen ? "text-indigo-600" : "text-gray-500"}`}
+                  className={`${isOpen ? "text-indigo-600" : "text-gray-500"} ${courseType === "CRASH" ? "opacity-0" : "opacity-100"}`}
                 >
                   <ChevronDown size={20} strokeWidth={3} />
                 </motion.div>

@@ -18,6 +18,7 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
   const [isLoading, setIsLoading] = useState(true);
   const [courseTitle, setCourseTitle] = useState("");
   const {confirm} = useConfirm();
+  const [courseType, setCourseType] = useState<string | null>(null);
   // UI State
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const [selectedLectureId, setSelectedLectureId] = useState<string | null>(null);
@@ -53,16 +54,21 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
       const adminId = user?.user?.id;
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
       
-      const response = await fetch(`${baseUrl}/api/course/${courseId}/content?adminId=${adminId}`);
-      if (!response.ok) throw new Error("Failed to fetch curriculum");
-      
-      const data = await response.json();
+      // Fetch Course Type and Content
+      const [contentRes, typeRes] = await Promise.all([
+        fetch(`${baseUrl}/api/course/${courseId}/content?adminId=${adminId}`),
+        fetch(`${baseUrl}/api/course/${courseId}/type`) 
+      ]);
+
+      const data = await contentRes.json();
+      const typeData = await typeRes.json();
+
       if (data.success) {
         setSections(data.sections || []);
         setCourseTitle(data.courseTitle);
-      } else {
-        showToast.error(data.error);
       }
+      setCourseType(typeData.type); // Store the type (CRASH or PREMIUM)
+
     } catch (error) {
       console.error("Error loading curriculum:", error);
       showToast.error("Failed to load content");
@@ -219,12 +225,33 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
           
           {/* Quick Add Module */}
           <section className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
-              <PlusCircle size={18} className="text-gray-500" />
-              <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">Quick Add Module</h2>
+            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <PlusCircle size={18} className="text-gray-500" />
+                <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                  {courseType === "CRASH" ? "Crash Course Modules (Max 2)" : "Quick Add Module"}
+                </h2>
+              </div>
+              {courseType === "CRASH" && (
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${sections.length >= 2 ? "bg-red-100 text-red-600" : "bg-blue-100 text-blue-600"}`}>
+                  {sections.length} / 2 Used
+                </span>
+              )}
             </div>
+            
             <div className="p-6">
-              <AddModuleForm courseId={id} refreshData={() => loadContent(id)} />
+              {courseType === "CRASH" && sections.length >= 2 ? (
+                <div className="flex flex-col items-center justify-center py-4 px-6 bg-amber-50 border border-amber-100 rounded-xl text-center">
+                  <p className="text-sm text-amber-800 font-medium">
+                    Module limit reached for Crash Course.
+                  </p>
+                  <p className="text-xs text-amber-600 mt-1">
+                    Crash courses are designed to be concise and are limited to 2 modules only.
+                  </p>
+                </div>
+              ) : (
+                <AddModuleForm courseId={id} refreshData={() => loadContent(id)} />
+              )}
             </div>
           </section>
 
