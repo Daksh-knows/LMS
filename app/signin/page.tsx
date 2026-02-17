@@ -136,7 +136,7 @@ export default function SignInPage() {
             </button>
           </form>
 
-          {/* <div className="relative my-6 flex justify-center items-center">
+          <div className="relative my-6 flex justify-center items-center">
             <div className="absolute w-full border-t border-amber-100"></div>
             <span className="px-4 bg-white text-[10px] uppercase tracking-widest font-bold text-amber-900/40 z-10">
               Or continue with
@@ -152,7 +152,7 @@ export default function SignInPage() {
             </button>
           </div>
 
-          <div className="pt-8 mt-6 border-t border-amber-100 text-center">
+          {/*<div className="pt-8 mt-6 border-t border-amber-100 text-center">
             <p className="text-sm font-medium text-amber-900/70">
               Don't have an account?{' '}
               <Link href="/signup" className="text-amber-600 font-bold hover:underline decoration-2 underline-offset-4">
