@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     }
 
     // 1. Fetch Enrollments
-    const enrollments = await db.enrollment.findMany({
+    const enrollments = await db.myEnrollment.findMany({
       where: { userId: sessionUser.id },
       include: {
         course: {
