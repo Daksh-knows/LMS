@@ -49,7 +49,7 @@ model User {
   AssignmentSubmission AssignmentSubmission[]
   bookmarks            Bookmark[]
   createdCourses       Course[]               @relation("CourseAuthor")
-  enrollments          Enrollment[]
+  enrollments          MyEnrollment[]
   notes                Note[]
   payments             Payment[]
   questions            Question[]
@@ -100,14 +100,14 @@ model Course {
   type              CourseType     @default(PREMIUM)
   admin             User           @relation("CourseAuthor", fields: [adminId], references: [id])
   category          Category?      @relation(fields: [categoryId], references: [id])
-  students          Enrollment[]
+  students          MyEnrollment[]
   modules           Module[]
   userProgress      UserProgress[]
 
   @@index([title])
 }
 
-model Enrollment {
+model MyEnrollment {
   id               String   @id @default(cuid())
   userId           String
   courseId         String
@@ -118,6 +118,7 @@ model Enrollment {
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
+  @@map("Enrollment")
 }
 
 model Module {
@@ -152,7 +153,7 @@ model Lecture {
   submissions   AssignmentSubmission[]
   resources     Attachment[]
   bookmarks     Bookmark[]
-  enrollments   Enrollment[]
+  enrollments   MyEnrollment[]
   faqs          FAQ[]
   module        Module                 @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   notes         Note[]
