@@ -5,22 +5,20 @@ import { CheckCircle, Loader2, BookOpenCheck, PartyPopper } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useParams } from "next/navigation";
 import { showToast } from "@/utils/Toast";
+import { useLecture } from "@/context/LectureContext";
+import Loader from "@/utils/Loader";
 
-interface ArticleProps {
-  lecture: {
-    id: string;
-    title: string;
-    textContent: string;
-    courseId: string; 
-  };
-}
 
-const ArticleComponent: React.FC<ArticleProps> = ({ lecture }) => {
+const ArticleComponent: React.FC = () => {
+  const {lecture} = useLecture() ;
+  if(!lecture) return <Loader message="Loading article details" />
+
   const [isCompleted, setIsCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const params = useParams();
   const courseId = params.courseId as string;
+  
   useEffect(() => {
     const fetchStatus = async () => {
       try {
