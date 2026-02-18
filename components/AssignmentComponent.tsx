@@ -6,6 +6,8 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { showToast } from "@/utils/Toast";
+import { useLecture } from "@/context/LectureContext";
+import Loader from "@/utils/Loader";
 
 interface Resource {
   id: string;
@@ -14,16 +16,10 @@ interface Resource {
   type: string;
 }
 
-interface AssignmentProps {
-  lecture: {
-    id: string;
-    title: string;
-    description: string;
-    resources: Resource[];
-  };
-}
 
-const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
+const AssignmentComponent: React.FC  = () => {
+  const {lecture} = useLecture() ;
+  if(!lecture) return <Loader message="Loading assignment details" />
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -170,8 +166,6 @@ const AssignmentComponent: React.FC<AssignmentProps> = ({ lecture }) => {
           </div>
         </div>
       )}
-
-      {/* Removed the <hr /> to reduce visual noise and gap */}
 
       {/* --- COLLAPSIBLE SUBMISSION CARD --- */}
       <div className={`overflow-hidden rounded-xl border transition-all duration-300 ${
