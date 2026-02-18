@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { courseId: string } }
+  { params }: { params: Promise<{ courseId: string }> }
 ) {
   try {
     const { courseId } = await params;
