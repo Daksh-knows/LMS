@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCourse } from "@/context/CourseContext";
+import Loader from "@/utils/Loader";
 
 // --- Types ---
 export type ItemType = "VIDEO" | "TEXT" | "QUIZ" | "ASSIGNMENT" | "LIVE";
@@ -115,7 +116,7 @@ const CourseSidebar: React.FC<Props> = ({
   }, [currentLectureId, course?.modules]);
 
   // --- ALL HOOKS ARE DONE. NOW YOU CAN RETURN EARLY ---
-  if (!course) return <div>Loading course details...</div>;
+  if (!course) return <Loader message="Loading lectures" />;
 
   const courseId = course.id;
   const sections = course.modules;

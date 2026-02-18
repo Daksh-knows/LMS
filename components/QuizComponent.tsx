@@ -8,6 +8,8 @@ import QuizIntro from './Quiz/QuizIntro';
 import QuizActive from './Quiz/QuizActive';
 import QuizResult from './Quiz/QuizResult';
 import QuizSubmitted from './Quiz/QuizSubmitted';
+import { useLecture } from '@/context/LectureContext';
+import Loader from '@/utils/Loader';
 
 interface Option {
   id: string;
@@ -15,23 +17,15 @@ interface Option {
   isCorrect: boolean;
 }
 
-interface QuizQuestion {
-  id: string;
-  text: string;
-  options: Option[];
-}
 
 interface QuizUIProps {
-  lecture: {
-    id: string;
-    title: string;
-    description: string;
-    quizQuestions: QuizQuestion[];
-  } ,
   courseId: string;
 }
 
-const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
+const QuizUI: React.FC<QuizUIProps> = ({ courseId }) => {
+  const {lecture} = useLecture() ;
+  if(!lecture) return <Loader message="Loading Quiz details" />
+  
   const router = useRouter();
   const [quizState, setQuizState] = useState<'intro' | 'active' | 'result' | 'already-submitted'>('intro');
   const [prevSubmission, setPrevSubmission] = useState<{score: number, date: string} | null>(null);
@@ -46,7 +40,7 @@ const QuizUI: React.FC<QuizUIProps> = ({ lecture , courseId }) => {
 
     const metadata = React.useMemo(() => {
     try {
-      return JSON.parse(lecture.description);
+      return JSON.parse(lecture.description ? lecture.description : "");
     } catch (e) {
       return { context: "Test your knowledge", difficulty: "MEDIUM" };
     }
@@ -190,7 +184,6 @@ const handleRetake = () => {
 
   // Intro View
 return (<QuizIntro 
-          lecture={lecture} 
           questions={questions}  
           metadata={metadata} 
           setQuizState={setQuizState}
