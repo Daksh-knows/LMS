@@ -52,7 +52,7 @@ const AssignmentComponent: React.FC  = () => {
         setLoading(false);
       }
     };
-    if (lecture.id) fetchStatus();
+    if (lecture?.id) fetchStatus();
   }, [lecture?.id]);
 
   

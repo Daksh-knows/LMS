@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { ChevronLeft, VideoOff, Loader2 } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -104,6 +104,10 @@ export default function LearningClient({ course  , user }: LearningClientProps) 
 
     // console.log("FL" , currentLecture) ; 
   }, [lectureId]);
+
+  const handleBookmarkClick = useCallback((time: string) => {
+    setSeekTo(time);
+  }, []);
 
   const handleSelectLecture = (selectedLecture: any) => {
     const currentTab = searchParams.get("tab") || "overview";
@@ -215,7 +219,7 @@ export default function LearningClient({ course  , user }: LearningClientProps) 
                                 </h1>
                               </div>
                               <TabbedContent 
-                                onBookmarkClick={(time) => setSeekTo(time)}
+                                onBookmarkClick={handleBookmarkClick}
                               />
                             </div>
                           </div>
