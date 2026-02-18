@@ -19,7 +19,6 @@ interface Resource {
 
 const AssignmentComponent: React.FC  = () => {
   const {lecture} = useLecture() ;
-  if(!lecture) return <Loader message="Loading assignment details" />
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -54,7 +53,10 @@ const AssignmentComponent: React.FC  = () => {
       }
     };
     if (lecture.id) fetchStatus();
-  }, [lecture.id]);
+  }, [lecture?.id]);
+
+  
+  if(!lecture) return <Loader message="Loading assignment details" />
 
   // --- Handlers ---
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
