@@ -37,7 +37,7 @@ const AssignmentComponent: React.FC  = () => {
     const fetchStatus = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/lecture/${lecture.id}/assignment-status`);
+        const res = await fetch(`/api/lecture/${lecture?.id}/assignment-status`);
         const data = await res.json();
         if (data) {
           setStatus(data.status);
