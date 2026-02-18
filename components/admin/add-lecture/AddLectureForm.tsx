@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import { ItemType } from "@/app/generated/prisma/enums"; 
+import { ItemType } from "@prisma/client"; 
 
 // Import sub-forms
 import AddVideoForm from "./modal/AddVideoForm";

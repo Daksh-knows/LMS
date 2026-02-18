@@ -7,7 +7,7 @@ import {
   Review,
   Note,
   UserProgress,
-} from "../generated/prisma/client";
+} from "@prisma/client";
 
 export interface Lecture extends PrismaLecture {
   resources: Attachment[];
