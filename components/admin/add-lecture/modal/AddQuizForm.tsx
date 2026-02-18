@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Loader2, Sparkles, FileQuestion, AlignLeft, BarChart, Hash } from "lucide-react";
-import { Lecture } from "@/app/generated/prisma/client";
+import { Lecture } from "@prisma/client";
 import toast from "react-hot-toast";
 import { showToast } from "@/utils/Toast";
 
