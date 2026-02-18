@@ -7,130 +7,103 @@ import Github from "next-auth/providers/github";
 import bcrypt from "bcryptjs";
 import { Adapter } from "next-auth/adapters";
 
-function requiredEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing environment variable: ${name}`);
-  }
-  return value;
+const providers: any[] = [];
+
+/* ---------------- Credentials Provider ---------------- */
+providers.push(
+  Credentials({
+    name: "credentials",
+    credentials: {
+      email: { label: "Email", type: "email" },
+      password: { label: "Password", type: "password" },
+    },
+    async authorize(credentials) {
+      const email = credentials?.email as string | undefined;
+      const password = credentials?.password as string | undefined;
+
+      if (!email || !password) return null;
+
+      const user = await db.user.findUnique({
+        where: { email },
+      });
+
+      if (!user || !user.password) return null;
+
+      const passwordsMatch = await bcrypt.compare(
+        password,
+        user.password
+      );
+
+      if (!passwordsMatch) return null;
+
+      if (!user.isVerified) {
+        throw new Error("Email not verified. Please verify your OTP.");
+      }
+
+      return user;
+    },
+  })
+);
+
+/* ---------------- Google OAuth ---------------- */
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  providers.push(
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true,
+    })
+  );
 }
 
+/* ---------------- GitHub OAuth ---------------- */
+if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
+  providers.push(
+    Github({
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true,
+    })
+  );
+}
+
+/* ---------------- NextAuth ---------------- */
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(db) as Adapter,
-  session: { strategy: "jwt" }, // We use JWT to avoid database hits on every request
-  pages: {
-    signIn: "/signin", // Redirect here if auth fails
-  },
-  providers: [
-    // 1. Google Provider
-    Google({
-      clientId: requiredEnv("GOOGLE_CLIENT_ID"),
-      clientSecret: requiredEnv("GOOGLE_CLIENT_SECRET"),
-      allowDangerousEmailAccountLinking: true,
-    }),
+  session: { strategy: "jwt" },
+  pages: { signIn: "/signin" },
+  providers,
 
-    Github({
-      clientId: requiredEnv("GITHUB_CLIENT_ID"),
-      clientSecret: requiredEnv("GITHUB_CLIENT_SECRET"),
-      allowDangerousEmailAccountLinking: true,
-    }),
-    // 3. Email/Password Provider
-    Credentials({
-      name: "credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
-
-        const email = credentials.email as string;
-
-        const user = await db.user.findUnique({
-          where: { email },
-        });
-
-        // Check if user exists and has a password (OAuth users might not)
-        if (!user || !user.password) {
-          return null;
-        }
-
-        // Verify Password
-        const passwordsMatch = await bcrypt.compare(
-          credentials.password as string,
-          user.password
-        );
-
-        if (!passwordsMatch) return null;
-
-        // Check your custom Verification logic
-        if (!user.isVerified) {
-          throw new Error("Email not verified. Please verify your OTP.");
-        }
-
-        return user;
-      },
-    }),
-  ],
   callbacks: {
-    // 1. JWT Callback: Called whenever a token is created/updated
     async jwt({ token, user, trigger, session }) {
       if (user) {
-        // Initial sign in: add custom fields to token
-        token.id = user.id!;
+        token.id = user.id;
         token.role = (user as any).role;
         token.hasPremium = (user as any).hasPremium;
         token.hasRegistered = (user as any).hasRegistered;
         token.isTempPassword = (user as any).isTempPassword;
       }
 
-      // Update session trigger (e.g. after Buying Premium)
       if (trigger === "update" && session) {
-        if (session.hasPremium !== undefined) {
-           token.hasPremium = session.hasPremium;
-        }
-        if (session.hasRegistered !== undefined) {
-           token.hasRegistered = session.hasRegistered;
-        }
+        if (session.hasPremium !== undefined)
+          token.hasPremium = session.hasPremium;
 
-        if (session.image) {
-          token.picture = session.image;
-        }
-        if (session.name) {
-          token.name = session.name;
-        }
+        if (session.hasRegistered !== undefined)
+          token.hasRegistered = session.hasRegistered;
       }
-      
+
       return token;
     },
-    // 2. Session Callback: Called whenever useSession/auth() is used
+
     async session({ session, token }) {
-      if (token && session.user) {
+      if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
         session.user.hasPremium = token.hasPremium as boolean;
-        session.user.hasRegistered = (token as any).hasRegistered as boolean;
-        session.user.image = token.picture as string;
-        session.user.name = token.name as string;
-        session.user.isTempPassword = (token as any).isTempPassword as boolean;
+        session.user.hasRegistered = token.hasRegistered as boolean;
+        session.user.isTempPassword = token.isTempPassword as boolean;
       }
       return session;
-    },
-  },
-  // ADD THIS: Events handle side-effects like "verify email" safely
-  events: {
-    async linkAccount({ user }) {
-      // This runs when a Google/GitHub account is linked to a user.
-      // We trust social providers, so we mark the email as verified.
-      await db.user.update({
-        where: { id: user.id },
-        data: { 
-            isVerified: true,
-            emailVerified: new Date() 
-        },
-      });
     },
   },
 });
