@@ -9,9 +9,10 @@ import { ReviewsTab } from "./tabs/ReviewsTab";
 import { BookOpen, MessageSquare, BookmarkPlus, Star } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useCourse } from "@/context/CourseContext";
+import { useLecture } from "@/context/LectureContext";
+import Loader from "@/utils/Loader";
 
 interface Props {
-  lecture: any;   
   onBookmarkClick: (time: string) => void;
 }
 
@@ -19,9 +20,10 @@ interface Props {
 type TabId = "overview" | "qa" | "bookmarks" | "reviews";
 
 const TabbedContent: React.FC<Props> = ({ 
-  lecture, 
   onBookmarkClick, 
 }) => {
+  const {lecture} = useLecture() ;
+  if(!lecture) return <Loader message="Loading tab details" />
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -103,7 +105,6 @@ const TabbedContent: React.FC<Props> = ({
         
         {activeTab === "qa" && (
           <QnaTab 
-            lectureId={lecture.id} 
             courseId={courseId} 
             adminId={adminId} 
           />
@@ -111,7 +112,6 @@ const TabbedContent: React.FC<Props> = ({
         
         {activeTab === "bookmarks" && (
           <BookmarksTab 
-            lecture={lecture} 
             currentUserId={userId || ""} 
             onBookmarkClick={onBookmarkClick}
           />
