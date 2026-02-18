@@ -5,16 +5,15 @@ import bcrypt from "bcryptjs";
 export async function POST(req: NextRequest) {
   try {
     const { user_email, temp_password, courseId } = await req.json();
-
-    if (!user_email || !temp_password) {
-      return NextResponse.json({ error: "Missing credentials" }, { status: 400 });
+    
+    if (!user_email) {
+      return NextResponse.json({ error: "Missing credentials - email id" }, { status: 400 });
     }
-
     // 1. Check if user already exists
     const existingUser = await db.user.findUnique({
       where: { email: user_email },
     });
-
+    
     if (existingUser) {
       if(courseId){
         const checkEnrollment = await db.myEnrollment.findFirst({
@@ -31,10 +30,14 @@ export async function POST(req: NextRequest) {
       }
       return NextResponse.json({message: "User already exists."}, { status : 409})
     }
-
+    if(!temp_password){
+      return NextResponse.json({ error: "Missing credentials - password" }, { status: 400 });
+    }
+    
     // 2. Hash the temporary password
     const hashedPassword = await bcrypt.hash(temp_password, 10);
-
+    
+    
     // 3. Create the new user with the flag set to true
     const user = await db.$transaction ( async (tx) => {
       const newUser = await tx.user.create({
@@ -56,7 +59,6 @@ export async function POST(req: NextRequest) {
       }
       return newUser;
     });
-    
 
 
     return NextResponse.json({ 
