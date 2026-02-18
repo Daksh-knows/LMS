@@ -57,11 +57,11 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 }
 
 /* ---------------- GitHub OAuth ---------------- */
-if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
+if (process.env._GITHUB_CLIENT_ID && process.env._GITHUB_CLIENT_SECRET) {
   providers.push(
     Github({
-      clientId: process.env.GITHUB_CLIENT_ID,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      clientId: process.env._GITHUB_CLIENT_ID,
+      clientSecret: process.env._GITHUB_CLIENT_SECRET,
       allowDangerousEmailAccountLinking: true,
     })
   );
