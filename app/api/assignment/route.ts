@@ -3,16 +3,27 @@ import { Storage } from "@google-cloud/storage";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 
-const storage = new Storage({
-  projectId: process.env.GCS_PROJECT_ID,
-  credentials: {
-    client_email: process.env.GCS_CLIENT_EMAIL,
-    // Replace literal newlines in the private key string
-    private_key: process.env.GCS_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-  },
-});
 
-const bucket = storage.bucket(process.env.GCS_BUCKET_NAME!);
+function getGCSBucket() {
+  const projectId = process.env.GCS_PROJECT_ID;
+  const clientEmail = process.env.GCS_CLIENT_EMAIL;
+  const privateKey = process.env.GCS_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  const bucketName = process.env.GCS_BUCKET_NAME;
+
+  if (!projectId || !clientEmail || !privateKey || !bucketName) {
+    throw new Error("Google Cloud Storage is not configured");
+  }
+
+  const storage = new Storage({
+    projectId,
+    credentials: {
+      client_email: clientEmail,
+      private_key: privateKey,
+    },
+  });
+
+  return storage.bucket(bucketName);
+}
 
 // export async function POST(req: NextRequest) {
 //   try {
@@ -77,6 +88,7 @@ const bucket = storage.bucket(process.env.GCS_BUCKET_NAME!);
 
 export async function POST(req: NextRequest) {
   try {
+    const bucket = getGCSBucket();
     const session = await auth();
     const userId = session?.user?.id;
 
