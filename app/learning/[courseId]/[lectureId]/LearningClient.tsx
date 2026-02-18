@@ -15,11 +15,12 @@ import ArticleComponent from "../../components/ArticleComponent";
 import LiveSessionComponent from "../../components/LiveSessionComponent";
 import Footer from "@/components/Footer";
 import { useBookmarks } from "@/context/BookmarkContext";
+import { useCourse } from "@/context/CourseContext";
 
 interface LearningClientProps {
-  course: any;
   lectureId: string;
   user: any ;
+  course: any;
 }
 
 interface Bookmark {
@@ -39,7 +40,15 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
 // Create a handler to clear the seek value after the player reacts
   const handleSeekComplete = () => setSeekTo(null);
   const router = useRouter();
+  
+  const { course: contextCourse, setCourse } = useCourse();
+  
+  useEffect(() => {
+    if (course) {
+      setCourse(course);
+    }
 
+  }, [course, setCourse]); 
 
   
   const oneCourse = process.env.NEXT_PUBLIC_ONE_COURSE === "true";
@@ -202,10 +211,7 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
                         </div>
                         <TabbedContent 
                           lecture={currentLecture} 
-                          courseId={course.id} 
-                          adminId={course.adminId} 
                           onBookmarkClick={(time) => setSeekTo(time)}
-                          course={course}
                         />
                       </div>
                     </div>
@@ -222,10 +228,8 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
 
             <div className="md:hidden border-t border-gray-200">
               <CourseSidebar
-                sections={course.modules || []}
                 currentLectureId={lectureId}
                 onSelectLecture={handleSelectLecture}
-                courseId={course.id}
               />
             </div>
             <Footer />
@@ -234,10 +238,8 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
           {/* Course Sidebar */}
           <aside className="hidden md:block w-[220px] md:w-[260px] xl:w-[350px] shrink-0 border-l border-gray-200 h-full">
             <CourseSidebar
-              sections={course.modules || []}
               currentLectureId={lectureId}
               onSelectLecture={handleSelectLecture}
-              courseId={course.id}
             />
           </aside>
         </div>

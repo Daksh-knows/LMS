@@ -2,6 +2,7 @@ import { getCurrentUser } from '@/lib/auth-utils';
 import LearningClient from './LearningClient';
 import { notFound } from "next/navigation";
 import { BookmarkProvider } from '@/context/BookmarkContext';
+import { CourseProvider, useCourse } from '@/context/CourseContext';
 
 interface PageProps {
   params: Promise<{
@@ -28,7 +29,7 @@ async function Page({ params }: PageProps) {
     }
 
     course = await response.json();
-    // console.log("Fetched course data:", course);
+    console.log("Fetched course data:", course);
   } catch (error) {
     console.error("Error fetching course in Server Component:", error);
   }
@@ -38,16 +39,15 @@ async function Page({ params }: PageProps) {
   }
 
   return (
-    <div>
-      {/* 4. Pass the fetched data to your Client Component */}
+    <CourseProvider>
       <BookmarkProvider>
         <LearningClient 
-          course={course} 
+          course={course}
           lectureId={lectureId} 
           user={user}
         />
       </BookmarkProvider>
-    </div>
+    </CourseProvider>
   );
 }
 

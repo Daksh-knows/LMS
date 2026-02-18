@@ -14,6 +14,7 @@ import {
   PlayCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCourse } from "@/context/CourseContext";
 
 // --- Types ---
 export type ItemType = "VIDEO" | "TEXT" | "QUIZ" | "ASSIGNMENT" | "LIVE";
@@ -30,35 +31,38 @@ export interface CourseItem {
 export interface Section {
   id: string;
   title: string;
-  lectures: CourseItem[];
+  lectures: any[];
 }
 interface Props {
-  sections: Section[];
   currentLectureId: string;
-  onSelectLecture: (lecture: CourseItem) => void;
+  onSelectLecture: (lecture: any) => void;
   isEnrolled?: boolean;
-  courseId: string
 }
 
 const CourseSidebar: React.FC<Props> = ({
-  sections,
   currentLectureId,
   onSelectLecture,
   isEnrolled = true ,
-  courseId
 }) => {
   const [openSections, setOpenSections] = useState<string[]>([]);
   const [courseType, setCourseType] = useState<string | null>(null);
 
+  const {course} = useCourse();
+
+  // 1. Initial Session Storage Load
   useEffect(() => {
     const saved = sessionStorage.getItem("sidebar_state");
     if (saved) setOpenSections(JSON.parse(saved));
   }, []);
 
+  // 2. Fetch Course Type
   useEffect(() => {
+    // Exit early inside the effect if course is not loaded yet
+    if (!course?.id) return; 
+
     const fetchType = async () => {
       try {
-        const response = await fetch(`/api/course/${courseId}/type`);
+        const response = await fetch(`/api/course/${course.id}/type`);
         const data = await response.json();
         setCourseType(data.type);
       } catch (error) {
@@ -66,9 +70,13 @@ const CourseSidebar: React.FC<Props> = ({
       }
     };
     fetchType();
-  }, [courseId]);
+  }, [course?.id]); // Safely depend on course?.id
 
+  // 3. Handle Sidebar State based on Type
   useEffect(() => {
+    if (!course?.modules) return;
+    const sections = course.modules;
+
     if (courseType === "CRASH") {
       // For crash courses, always keep all section IDs in the open state
       setOpenSections(sections.map((s) => s.id));
@@ -84,18 +92,33 @@ const CourseSidebar: React.FC<Props> = ({
         if (activeSection) setOpenSections([activeSection.id]);
       }
     }
-  }, [courseType, sections, currentLectureId]);
+  }, [courseType, course?.modules, currentLectureId]);
 
+  // 4. Auto-expand section on lecture change
   useEffect(() => {
-    if (currentLectureId) {
-      const activeSection = sections.find((s) =>
-        s.lectures.some((l) => l.id === currentLectureId)
-      );
-      if (activeSection && !openSections.includes(activeSection.id)) {
-        setOpenSections((prev) => [...prev, activeSection.id]);
-      }
+    if (!course?.modules || !currentLectureId) return;
+    const sections = course.modules;
+
+    const activeSection = sections.find((s) =>
+      s.lectures.some((l) => l.id === currentLectureId)
+    );
+    
+    // Using the functional state update avoids needing to add `openSections` to the dependency array
+    if (activeSection) {
+      setOpenSections((prev) => {
+        if (!prev.includes(activeSection.id)) {
+          return [...prev, activeSection.id];
+        }
+        return prev;
+      });
     }
-  }, [currentLectureId, sections]);
+  }, [currentLectureId, course?.modules]);
+
+  // --- ALL HOOKS ARE DONE. NOW YOU CAN RETURN EARLY ---
+  if (!course) return <div>Loading course details...</div>;
+
+  const courseId = course.id;
+  const sections = course.modules;
 
   const toggleSection = (id: string) => {
     if (courseType === "CRASH") return;
@@ -107,7 +130,7 @@ const CourseSidebar: React.FC<Props> = ({
     });
   };
 
-  const getStatusIndicator = (item: CourseItem, isActive: boolean) => {
+  const getStatusIndicator = (item: any, isActive: boolean) => {
     const isCompleted = item.userProgress?.[0]?.isCompleted;
     if (!isEnrolled && !item.isFree) return <Lock size={16} className="text-gray-400" />;
     
