@@ -23,35 +23,35 @@ const TabbedContent: React.FC<Props> = ({
   onBookmarkClick, 
 }) => {
   const {lecture} = useLecture() ;
-  if(!lecture) return <Loader message="Loading tab details" />
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   
   const { data: session } = useSession();
-
+  
   const {course} = useCourse();
   if(!course) return <div>Loading course details...</div> ;
   const adminId = course.adminId ;
   const courseId = course.id ;
-
+  
   const userId = session?.user?.id;
-
+  
   const activeTab = (searchParams.get("tab") as TabId) || "overview";
-
+  
   const tabs = useMemo(() => [
     { id: "overview", label: "Overview", icon: BookOpen },
     { id: "qa", label: "FAQ", icon: MessageSquare },
-    ...(lecture.type === "VIDEO" || lecture.type === "LIVE" ? [{ id: "bookmarks", label: "Bookmarks", icon: BookmarkPlus }] : []),
+    ...(lecture?.type === "VIDEO" || lecture?.type === "LIVE" ? [{ id: "bookmarks", label: "Bookmarks", icon: BookmarkPlus }] : []),
     { id: "reviews", label: "Reviews", icon: Star },
   ], []);
-
+  
   const handleTabChange = (tabId: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tabId);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
-
+  
+  if(!lecture) return <Loader message="Loading tab details" />
   return (
     <div className="mt-6 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
       {/* Tab Navigation */}
