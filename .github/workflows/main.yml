@@ -46,8 +46,8 @@ jobs:
       - name: Create .env file for Docker Build
         run: |
           echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
-          echo "NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}" >> .env
-          echo "NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}" >> .env
+          echo "AUTH_SECRET=${{ secrets.AUTH_SECRET }}" >> .env
+          echo "AUTH_URL=${{ secrets.AUTH_URL }}" >> .env
           echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env
           echo "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}" >> .env
           echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" >> .env
@@ -55,7 +55,12 @@ jobs:
           echo "RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }}" >> .env
           echo "NEXT_PUBLIC_RAZORPAY_KEY_ID=${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID}}" >> .env
           echo "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}" >> .env
+          echo "CLOUDINARY_CLOUD_NAME=${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}" >> .env
           echo "APP_URL=${{ secrets.APP_URL }}" >> .env
+          echo "GCS_PROJECT_ID=${{secrets.GCS_PROJECT_ID}}" >> .env
+          echo "GCS_CLIENT_EMAIL=${{secrets.GCS_CLIENT_EMAIL}}" >> .env
+          echo "GCS_PRIVATE_KEY=${{secrets.GCS_PRIVATE_KEY}}" >> .env
+          echo "GCS_BUCKET_NAME=${{secrets.GCS_BUCKET_NAME}}" >> .env
 
       - name: Build and Push Container Image
         uses: docker/build-push-action@v5
@@ -76,8 +81,8 @@ jobs:
           
           env_vars: |-
             DATABASE_URL=${{ secrets.DATABASE_URL }}
-            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-            NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
+            AUTH_SECRET=${{ secrets.AUTH_SECRET }}
+            AUTH_URL=${{ secrets.AUTH_URL }}
             CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
             CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
@@ -89,6 +94,11 @@ jobs:
             EMAIL_PORT=${{ secrets.EMAIL_PORT }}
             NEXT_PUBLIC_RAZORPAY_KEY_ID=${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID}}
             NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
+            CLOUDINARY_CLOUD_NAME=${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
+            GCS_PROJECT_ID=${{secrets.GCS_PROJECT_ID}}
+            GCS_CLIENT_EMAIL=${{secrets.GCS_CLIENT_EMAIL}}
+            GCS_PRIVATE_KEY=${{secrets.GCS_PRIVATE_KEY}}
+            GCS_BUCKET_NAME=${{secrets.GCS_BUCKET_NAME}}
 
           flags: |-
             --allow-unauthenticated
