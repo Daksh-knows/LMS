@@ -6,6 +6,7 @@ import Link from "next/link";
 import { signOut } from "next-auth/react";
 import {motion } from "framer-motion";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import ThemeSwitcher from "@/components/Theme/ThemeSwitcher"
 
 export default function Header({ user, onMenuClick, isSidebarOpen }: { user: any, onMenuClick: () => void, isSidebarOpen: boolean }) {
   const [streak, setStreak] = useState<number | null>(null);
@@ -110,6 +111,7 @@ export default function Header({ user, onMenuClick, isSidebarOpen }: { user: any
       </div>
 
       <div className="flex items-center gap-4">
+        <ThemeSwitcher />
         <Link
           className="w-10 h-10 rounded-full bg-red-700 flex items-center justify-center text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity overflow-hidden border-2 border-white shadow-sm"
           href="/dashboard/profile"

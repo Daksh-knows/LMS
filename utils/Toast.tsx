@@ -5,10 +5,17 @@ interface ToastProps {
   message: string;
 }
 
-// 1. Success Toast: Uses a soft emerald gradient
+// Helper for shared styling to keep it clean
+const toastBaseClasses = "flex items-center gap-3 p-4 rounded-2xl shadow-[var(--box-shadow)] min-w-[320px] border theme-transition animate-in fade-in slide-in-from-bottom-2";
+const iconContainerClasses = "w-12 h-12 shrink-0 bg-white/10 dark:bg-white/5 rounded-xl backdrop-blur-md overflow-hidden flex items-center justify-center border border-white/10";
+
+// 1. Success Toast
 const SuccessToast = ({ message }: ToastProps) => (
-  <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 p-4 rounded-2xl shadow-lg min-w-[320px] animate-in fade-in slide-in-from-bottom-2">
-    <div className="w-12 h-12 shrink-0 bg-white rounded-xl shadow-sm overflow-hidden flex items-center justify-center">
+  <div 
+    className={`${toastBaseClasses} bg-[var(--background)] border-emerald-500/30`}
+    style={{ backgroundColor: 'var(--background)', color: 'var(--text-color)' }}
+  >
+    <div className={iconContainerClasses}>
       <DotLottieReact
         src="/icons/success.lottie" 
         autoplay
@@ -17,16 +24,19 @@ const SuccessToast = ({ message }: ToastProps) => (
       />
     </div>
     <div className="flex flex-col">
-      <span className="text-sm font-bold text-emerald-900">Success!</span>
-      <span className="text-xs text-emerald-700 font-medium leading-tight">{message}</span>
+      <span className="text-sm font-bold text-emerald-500">Success!</span>
+      <span className="text-xs opacity-70 leading-tight" style={{ color: 'var(--text-color)' }}>{message}</span>
     </div>
   </div>
 );
 
-// 2. Error Toast: Uses a soft red/rose tinted background
+// 2. Error Toast
 const ErrorToast = ({ message }: ToastProps) => (
-  <div className="flex items-center gap-3 bg-red-50 border border-red-200 p-4 rounded-2xl shadow-lg min-w-[320px]">
-    <div className="w-12 h-12 shrink-0 bg-white rounded-xl shadow-sm overflow-hidden flex items-center justify-center">
+  <div 
+    className={`${toastBaseClasses} bg-[var(--background)] border-red-500/30`}
+    style={{ backgroundColor: 'var(--background)', color: 'var(--text-color)' }}
+  >
+    <div className={iconContainerClasses}>
       <DotLottieReact
         src="/icons/error.lottie" 
         autoplay
@@ -35,16 +45,19 @@ const ErrorToast = ({ message }: ToastProps) => (
       />
     </div>
     <div className="flex flex-col">
-      <span className="text-sm font-bold text-red-900">Oh no!</span>
-      <span className="text-xs text-red-700 font-medium leading-tight">{message}</span>
+      <span className="text-sm font-bold text-red-500">Oh no!</span>
+      <span className="text-xs opacity-70 leading-tight" style={{ color: 'var(--text-color)' }}>{message}</span>
     </div>
   </div>
 );
 
-// 3. Delete/Warning Toast: Using your Brand Yellow (#FFCC59)
+// 3. Delete/Warning Toast
 const DeleteToast = ({ message }: ToastProps) => (
-  <div className="flex items-center gap-3 bg-[#FFF9EB] border border-[#FFCC59]/30 p-4 rounded-2xl shadow-lg min-w-[320px]">
-    <div className="w-12 h-12 shrink-0 bg-white rounded-xl shadow-sm overflow-hidden flex items-center justify-center">
+  <div 
+    className={`${toastBaseClasses} bg-[var(--background)] border-[var(--banner-border)]`}
+    style={{ backgroundColor: 'var(--background)', color: 'var(--text-color)' }}
+  >
+    <div className={iconContainerClasses}>
       <DotLottieReact
         src="/icons/delete.lottie"
         autoplay
@@ -53,8 +66,8 @@ const DeleteToast = ({ message }: ToastProps) => (
       />
     </div>
     <div className="flex flex-col">
-      <span className="text-sm font-bold text-[#855d00]">Item Removed</span>
-      <span className="text-xs text-[#a37a1a] font-medium leading-tight">{message}</span>
+      <span className="text-sm font-bold text-[#FFCC59]">Item Removed</span>
+      <span className="text-xs opacity-70 leading-tight" style={{ color: 'var(--text-color)' }}>{message}</span>
     </div>
   </div>
 );
