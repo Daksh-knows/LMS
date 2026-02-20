@@ -14,6 +14,8 @@ import {
   PlayCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCourse } from "@/context/CourseContext";
+import Loader from "@/utils/Loader";
 
 // --- Types ---
 export type ItemType = "VIDEO" | "TEXT" | "QUIZ" | "ASSIGNMENT" | "LIVE";
@@ -30,40 +32,98 @@ export interface CourseItem {
 export interface Section {
   id: string;
   title: string;
-  lectures: CourseItem[];
+  lectures: any[];
 }
 interface Props {
-  sections: Section[];
   currentLectureId: string;
-  onSelectLecture: (lecture: CourseItem) => void;
+  onSelectLecture: (lecture: any) => void;
   isEnrolled?: boolean;
 }
 
 const CourseSidebar: React.FC<Props> = ({
-  sections,
   currentLectureId,
   onSelectLecture,
-  isEnrolled = true,
+  isEnrolled = true ,
 }) => {
   const [openSections, setOpenSections] = useState<string[]>([]);
+  const [courseType, setCourseType] = useState<string | null>(null);
 
+  const {course} = useCourse();
+
+  // 1. Initial Session Storage Load
   useEffect(() => {
     const saved = sessionStorage.getItem("sidebar_state");
     if (saved) setOpenSections(JSON.parse(saved));
   }, []);
 
+  // 2. Fetch Course Type
   useEffect(() => {
-    if (currentLectureId) {
-      const activeSection = sections.find((s) =>
-        s.lectures.some((l) => l.id === currentLectureId)
-      );
-      if (activeSection && !openSections.includes(activeSection.id)) {
-        setOpenSections((prev) => [...prev, activeSection.id]);
+    // Exit early inside the effect if course is not loaded yet
+    if (!course?.id) return; 
+
+    const fetchType = async () => {
+      try {
+        const response = await fetch(`/api/course/${course.id}/type`);
+        const data = await response.json();
+        setCourseType(data.type);
+      } catch (error) {
+        console.error("Error fetching course type:", error);
+      }
+    };
+    fetchType();
+  }, [course?.id]); // Safely depend on course?.id
+
+  // 3. Handle Sidebar State based on Type
+  useEffect(() => {
+    if (!course?.modules) return;
+    const sections = course.modules;
+
+    if (courseType === "CRASH") {
+      // For crash courses, always keep all section IDs in the open state
+      setOpenSections(sections.map((s) => s.id));
+    } else {
+      // Existing logic for Premium courses
+      const saved = sessionStorage.getItem("sidebar_state");
+      if (saved) {
+        setOpenSections(JSON.parse(saved));
+      } else if (currentLectureId) {
+        const activeSection = sections.find((s) =>
+          s.lectures.some((l) => l.id === currentLectureId)
+        );
+        if (activeSection) setOpenSections([activeSection.id]);
       }
     }
-  }, [currentLectureId, sections]);
+  }, [courseType, course?.modules, currentLectureId]);
+
+  // 4. Auto-expand section on lecture change
+  useEffect(() => {
+    if (!course?.modules || !currentLectureId) return;
+    const sections = course.modules;
+
+    const activeSection = sections.find((s) =>
+      s.lectures.some((l) => l.id === currentLectureId)
+    );
+    
+    // Using the functional state update avoids needing to add `openSections` to the dependency array
+    if (activeSection) {
+      setOpenSections((prev) => {
+        if (!prev.includes(activeSection.id)) {
+          return [...prev, activeSection.id];
+        }
+        return prev;
+      });
+    }
+  }, [currentLectureId, course?.modules]);
+
+  // --- ALL HOOKS ARE DONE. NOW YOU CAN RETURN EARLY ---
+  if (!course) return <Loader message="Loading lectures" />;
+
+  const courseId = course.id;
+  const sections = course.modules;
 
   const toggleSection = (id: string) => {
+    if (courseType === "CRASH") return;
+
     setOpenSections((prev) => {
       const newState = prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id];
       sessionStorage.setItem("sidebar_state", JSON.stringify(newState));
@@ -71,7 +131,7 @@ const CourseSidebar: React.FC<Props> = ({
     });
   };
 
-  const getStatusIndicator = (item: CourseItem, isActive: boolean) => {
+  const getStatusIndicator = (item: any, isActive: boolean) => {
     const isCompleted = item.userProgress?.[0]?.isCompleted;
     if (!isEnrolled && !item.isFree) return <Lock size={16} className="text-gray-400" />;
     
@@ -112,9 +172,16 @@ const CourseSidebar: React.FC<Props> = ({
       <div className="p-5 border-b-2 border-gray-200 shrink-0 bg-gray-50/50 backdrop-blur-md sticky top-0 z-20">
         <h2 className="font-black text-gray-900 text-lg tracking-tight flex items-center justify-between">
           Course Content
-          <span className="text-[10px] bg-gray-800 text-white px-2 py-1 rounded-md uppercase tracking-widest font-bold">
-            {sections.length} Module{sections.length > 1 ? "s" : ""}
-          </span>
+          <div className="flex gap-2">
+            {courseType === "CRASH" && (
+              <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-1 rounded-md uppercase tracking-widest font-bold border border-amber-200">
+                Crash
+              </span>
+            )}
+            <span className="text-[10px] bg-gray-800 text-white px-2 py-1 rounded-md uppercase tracking-widest font-bold">
+              {sections.length} Module{sections.length > 1 ? "s" : ""}
+            </span>
+          </div>
         </h2>
       </div>
 
@@ -127,13 +194,14 @@ const CourseSidebar: React.FC<Props> = ({
               {/* Module Header */}
               <button
                 onClick={() => toggleSection(section.id)}
+                // 4. Update cursor and hover effect based on courseType
                 className={`w-full flex items-center gap-3 px-5 py-5 transition-all duration-200 text-left group ${
                   isOpen ? "bg-white" : "hover:bg-gray-100/50"
-                }`}
+                } ${courseType === "CRASH" ? "cursor-default" : "cursor-pointer"}`}
               >
                 <motion.div
                   animate={{ rotate: isOpen ? 180 : 0 }}
-                  className={`${isOpen ? "text-indigo-600" : "text-gray-500"}`}
+                  className={`${isOpen ? "text-indigo-600" : "text-gray-500"} ${courseType === "CRASH" ? "opacity-0" : "opacity-100"}`}
                 >
                   <ChevronDown size={20} strokeWidth={3} />
                 </motion.div>

@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { useConfirm } from "@/context/ConfirmContext";
 import { useBookmarks } from "@/context/BookmarkContext";
+import { useLecture } from "@/context/LectureContext";
+import Loader from "@/utils/Loader";
 
 // --- Types ---
 interface Bookmark {
@@ -31,15 +33,15 @@ interface Bookmark {
 }
 
 interface BookmarksProps {
-  lecture: Lecture; // The current lecture object
   onBookmarkClick: (time: string) => void;
   currentUserId?: string; // Optional if not used directly
 }
 
 export const BookmarksTab: React.FC<BookmarksProps> = ({
-  lecture,
   onBookmarkClick,
 }) => {
+  const {lecture} = useLecture() ;
+  if(!lecture) return <Loader message="Loading bookmarks" />
   const router = useRouter();
   const params = useParams();
   const { confirm } = useConfirm();

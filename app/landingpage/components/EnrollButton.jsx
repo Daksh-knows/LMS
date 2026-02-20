@@ -19,7 +19,7 @@ export default function EnrollButton({user}) {
         {user ?
           helperBtn({text: "Go to Dashboard", route: "dashboard", router})
           :
-          helperBtn({text: "Enroll Now", route: "signup", router})
+          helperBtn({text: "Enroll Now", route: "signin", router})
         }
       </div>
 

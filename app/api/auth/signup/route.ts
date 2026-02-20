@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { sendOtpEmailInternal } from "@/lib/mail";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const { email, password, fullName } = await req.json();
 
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
         role: "STUDENT",
         hasPremium: false,
         isVerified: false,
-        otp,           // Store OTP
+        otp,         
         otpExpires: expires,
         stats: { create: { videoWatchedMins: 0, questionsSolved: 0 } },
         profile: { create: { fullName: fullName || "User" } }
