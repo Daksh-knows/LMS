@@ -26,12 +26,11 @@ export default function AdminAssignmentsOverview() {
   useEffect(() => {
     async function load() {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "";
         
         // Parallel Fetch: Assignments + Refund Stats
         const [assignRes, refundRes] = await Promise.all([
-          fetch(`${baseUrl}/api/admin/assignments`),
-          fetch(`${baseUrl}/api/admin/refund/stats`) // New Endpoint
+          fetch(`/api/admin/assignments`),
+          fetch(`/api/admin/refund/stats`) // New Endpoint
         ]);
 
         const assignResult = await assignRes.json();
@@ -211,7 +210,6 @@ function StatCard({ title, value, icon, showBadge, badgeText, badgeColor = "ambe
   );
 }
 
-// ... [Keep AssignmentRow and EmptyState exactly as they were] ...
 function AssignmentRow({ assignment }: { assignment: AssignmentSummary }) {
   const hasPending = assignment.pendingReviews > 0;
   return (

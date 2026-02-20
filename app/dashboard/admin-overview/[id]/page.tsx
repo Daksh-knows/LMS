@@ -64,8 +64,7 @@ export default function AssignmentGradingPage({ params }: { params: Promise<{ id
     setSavingId(submissionId);
 
     const gradePromise = async () => {
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "";
-        const res = await fetch(`${baseUrl}/api/admin/assignments/grade`, {
+        const res = await fetch(`/api/admin/assignments/grade`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ submissionId, grade, feedback }),

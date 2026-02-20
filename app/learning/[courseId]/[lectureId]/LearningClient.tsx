@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronLeft, VideoOff, Loader2 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { notFound, useRouter, useSearchParams } from "next/navigation";
 
 // Components
 import VideoPlayer from "../../components/VideoPlayer";
@@ -15,11 +15,12 @@ import ArticleComponent from "../../components/ArticleComponent";
 import LiveSessionComponent from "../../components/LiveSessionComponent";
 import Footer from "@/components/Footer";
 import { useBookmarks } from "@/context/BookmarkContext";
+import Loader from "@/utils/Loader";
 
 interface LearningClientProps {
-  course: any;
   lectureId: string;
   user: any ;
+  courseId: string
 }
 
 interface Bookmark {
@@ -29,12 +30,11 @@ interface Bookmark {
   type: "BOOKMARK" | "IMPORTANT" | "QUESTION";
 }
 
-export default function LearningClient({ course, lectureId , user }: LearningClientProps) {
+export default function LearningClient({ lectureId , user ,courseId}: LearningClientProps) {
   const [currentLecture, setCurrentLecture] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [seekTo, setSeekTo] = useState<string | null>(null);
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
-  const [loadingBookmarks, setLoadingBookmarks] = useState(false);
+  const [course,setCourse] = useState<any>() ;
   const searchParams = useSearchParams();
 // Create a handler to clear the seek value after the player reacts
   const handleSeekComplete = () => setSeekTo(null);
@@ -43,6 +43,29 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
 
   
   const oneCourse = process.env.NEXT_PUBLIC_ONE_COURSE === "true";
+
+  
+  useEffect(() => {
+    async function fetchCourse(){
+        try {
+          const response = await fetch(`/api/course/${courseId}?userId=${user?.id}`, {
+            cache: 'no-store', 
+          });
+          // console.log("Fetch response status:", response);
+          if (!response.ok) {
+            if (response.status === 404) return notFound();
+            throw new Error("Failed to fetch course");
+          }
+      
+          const newCourse = await response.json();
+          setCourse(newCourse) ;
+        } catch (error) {
+          console.error("Error fetching course in Server Component:", error);
+        }
+
+    }
+    fetchCourse() ;
+  },[courseId]) ;
 
 
   useEffect(() => {
@@ -53,7 +76,7 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             lectureId: lectureId,
-            courseId: course.id
+            courseId: courseId
           }),
         });
       } catch (error) {
@@ -109,7 +132,8 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
 
   const quizData = getQuizData();
   // console.log("Course Data:", course);
-
+  
+  if(!course) return <Loader message="Loading course details" />
   return (
     <div className="">
       <div className="flex flex-col h-screen overflow-hidden bg-white">

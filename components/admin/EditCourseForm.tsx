@@ -85,8 +85,7 @@ export default function EditCourseForm({ course, adminId }: { course: any, admin
       };
 
       // 3. Patch Request
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-      const response = await fetch(`${baseUrl}/api/course/${course.id}?adminId=${adminId}`, {
+      const response = await fetch(`/api/course/${course.id}?adminId=${adminId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedData),

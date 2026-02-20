@@ -39,8 +39,7 @@ export default function OverviewClient({ data }: { data: any }) {
   useEffect(() => {
     async function loadCourses() {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-        const response = await fetch(`${baseUrl}/api/course/all`);
+        const response = await fetch(`/api/course/all`);
         if (!response.ok) throw new Error(`Error ${response.status}`);
         const result = await response.json();
 

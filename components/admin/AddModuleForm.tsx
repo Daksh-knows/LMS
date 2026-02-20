@@ -25,9 +25,8 @@ export default function AddModuleForm({ courseId, refreshData}: { courseId: stri
       if (!adminId) {
         throw new Error("Unauthorized: Admin ID required");
       }
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
       
-      const response = await fetch(`${baseUrl}/api/course/${courseId}/module?adminId=${adminId}`, {
+      const response = await fetch(`/api/course/${courseId}/module?adminId=${adminId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sectionTitle: title }),
