@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Trash2, Edit, Plus, Loader2, Award } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/utils/Toast";
 import { useConfirm } from "@/context/ConfirmContext";
+import Loader from "@/utils/Loader";
 
 interface Course {
   id: string;
@@ -15,16 +16,39 @@ interface Course {
 }
 
 interface Props {
-  initialCourses: Course[];
   adminId: string;
 }
 
-export default function AdminCourseList({ initialCourses }: Props) {
-  const [courses, setCourses] = useState<Course[]>(initialCourses);
+export default function AdminCourseList({adminId} : Props) {
+  const [courses, setCourses] = useState<Course[]>();
   const [isPending, setIsPending] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const {confirm} = useConfirm();
   const router = useRouter();
+
+  useEffect(() => {
+    if(!adminId) return  ;
+    async function fetchCourses() {
+        try {
+          const response = await fetch(`/api/course?adminId=${adminId}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch managed courses");
+          }
+          const myCourses = await response.json();
+
+           setCourses(myCourses) ;
+        } catch (error) {
+
+        }
+    }
+    fetchCourses() ;
+  } ,[adminId])
 
   /* ---------------- TOGGLE COMPLETED ---------------- */
   const handleToggleContent = async (
@@ -51,7 +75,7 @@ export default function AdminCourseList({ initialCourses }: Props) {
 
       // ✅ UPDATE LOCAL STATE (this was missing)
       setCourses((prev) =>
-        prev.map((course) =>
+        prev?.map((course) =>
           course.id === courseId
             ? { ...course, isCompleted: !currentStatus }
             : course
@@ -81,7 +105,7 @@ export default function AdminCourseList({ initialCourses }: Props) {
             method: "DELETE",
           });
 
-          setCourses((prev) => prev.filter((c) => c.id !== courseId));
+          setCourses((prev) => prev?.filter((c) => c.id !== courseId));
           setIsDeleting(null);
           showToast.delete("Course deleted successfully!");
         }
@@ -93,14 +117,15 @@ export default function AdminCourseList({ initialCourses }: Props) {
       }
     )
   };
-
+   
+  if(!courses) return <Loader message="Loading courses" />
   /* ---------------- UI ---------------- */
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-          Your Courses ({courses.length})
+          Your Courses ({courses?.length})
         </h2>
 
         <Link href="/dashboard/admin/add-course">
@@ -112,7 +137,7 @@ export default function AdminCourseList({ initialCourses }: Props) {
       </div>
 
       {/* Empty state */}
-      {courses.length === 0 ? (
+      {courses?.length === 0 ? (
         <div className="p-10 border-2 border-dashed rounded-3xl text-center text-gray-400 bg-gray-50/50">
           You haven&apos;t created any courses yet.
         </div>

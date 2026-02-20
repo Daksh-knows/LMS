@@ -24,8 +24,7 @@ export default function PaymentPage() {
         return;
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "";
-      const orderRes = await fetch(`${baseUrl}/api/premium/order`, { method: "POST" });
+      const orderRes = await fetch(`/api/premium/order`, { method: "POST" });
       const order = await orderRes.json();
 
       if (!order.success) {
@@ -44,7 +43,7 @@ export default function PaymentPage() {
         handler: async function (response: any) {
           // --- INTERNAL VERIFICATION LOGIC ---
           const verifyPayment = async () => {
-            const res = await fetch(`${baseUrl}/api/premium/verify`, {
+            const res = await fetch(`/api/premium/verify`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -62,23 +61,6 @@ export default function PaymentPage() {
             return data;
           };
 
-          // --- TOAST PROMISE HANDLING ---
-          // toast.promise(verifyPayment(), {
-          //   loading: "Finalizing your upgrade...",
-          //   success: () => {
-          //     // 2. Clear loading before navigating
-          //     setLoading(false); 
-          //     console.log("Payment and upgrade successful!");
-          //     // 3. Redirect to dashboard
-          //     router.push("/dashboard?payment=success");
-          //     router.refresh(); 
-          //     return "Welcome to Premium! 🏆";
-          //   },
-          //   error: (err) => {
-          //     setLoading(false);
-          //     return `Error: ${err.message}`;
-          //   },
-          // });
           try{
             toast.loading("Finalizing your upgrade...");
             await verifyPayment();

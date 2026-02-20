@@ -63,10 +63,9 @@ export default function EnrollmentPage() {
         return;
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "";
 
       // 1. Create Order
-      const orderRes = await fetch(`${baseUrl}/api/premium/order`, {
+      const orderRes = await fetch(`/api/premium/order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),
@@ -95,7 +94,7 @@ export default function EnrollmentPage() {
           try {
             // 3. Verify Payment
             const verifyRes = await fetch(
-              `${baseUrl}/api/premium/verify`,
+              `/api/premium/verify`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

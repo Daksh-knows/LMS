@@ -51,9 +51,8 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
     try {
       const user: any = await getSession();
       const adminId = user?.user?.id;
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
       
-      const response = await fetch(`${baseUrl}/api/course/${courseId}/content?adminId=${adminId}`);
+      const response = await fetch(`/api/course/${courseId}/content?adminId=${adminId}`);
       if (!response.ok) throw new Error("Failed to fetch curriculum");
       
       const data = await response.json();
@@ -96,13 +95,12 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
   
   const saveOrder = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
       const user: any = await getSession();
       const adminId = user?.user?.id;
       
       const promises = sections.map(section => {
         const orderedLectureIds = section.lectures.map((l: any) => l.id);
-        return fetch(`${baseUrl}/api/lecture/reorder`, {
+        return fetch(`/api/lecture/reorder`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ lectureIds: orderedLectureIds, adminId }),
@@ -121,7 +119,6 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
   const handleDeleteSection = async (moduleId : any, title : string) => {
     // 1. Get user/session info first
     const user = await getSession();
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
     
     // 2. Trigger your global confirm modal
     confirm(
@@ -130,7 +127,7 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
       async () => {
         try {
           const response = await fetch(
-            `${baseUrl}/api/course/${id}/module/${moduleId}?adminId=${user?.user?.id}`,
+            `/api/course/${id}/module/${moduleId}?adminId=${user?.user?.id}`,
             { method: "DELETE" }
           );
           
@@ -158,8 +155,7 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
         async () => {
           try {
             console.log("Attempting to delete lecture with ID:", lectureId);
-            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "";
-            const response = await fetch(`${baseUrl}/api/lecture/${lectureId}`, { 
+            const response = await fetch(`/api/lecture/${lectureId}`, { 
               method: "DELETE" 
             });
             
