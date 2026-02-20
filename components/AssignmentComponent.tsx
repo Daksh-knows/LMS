@@ -91,7 +91,7 @@ const AssignmentComponent: React.FC  = () => {
       formData.append("file", file);
       formData.append("lectureId", lecture.id);
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/assignment/`, {
+      const response = await fetch(`/api/assignment/`, {
         method: "POST",
         body: formData,
       });

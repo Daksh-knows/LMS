@@ -53,7 +53,7 @@ const QuizUI: React.FC<QuizUIProps> = ({ courseId }) => {
       if (!lecture?.id) return; 
 
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/lecture/quiz-status/${lecture.id}`);
+        const res = await fetch(`/api/lecture/quiz-status/${lecture.id}`);
         const data = await res.json();
 
         if (data.hasSubmitted) {

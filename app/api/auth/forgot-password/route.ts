@@ -21,7 +21,7 @@ export async function POST(req: Request) {
       data: { resetToken, resetTokenExpiry },
     });
 
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`;
+    const resetUrl = `${process.env.APP_URL}/reset-password?token=${resetToken}`;
 
     console.log("SEND THIS URL VIA EMAIL:", resetUrl);
     await sendForgotPasswordLink(email, resetUrl);
