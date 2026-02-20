@@ -30,9 +30,8 @@ const TabbedContent: React.FC<Props> = ({
   const { data: session } = useSession();
   
   const {course} = useCourse();
-  if(!course) return <div>Loading course details...</div> ;
-  const adminId = course.adminId ;
-  const courseId = course.id ;
+  const adminId = course?.adminId ;
+  const courseId = course?.id ;
   
   const userId = session?.user?.id;
   
@@ -104,7 +103,7 @@ const TabbedContent: React.FC<Props> = ({
         
         {activeTab === "qa" && (
           <QnaTab 
-            courseId={courseId} 
+            courseId={course?.id || ""} 
             adminId={adminId} 
           />
         )}
