@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { storage, bucketName } from "@/lib/google-cloud";
+import { storage, bucketName, parsePrivateKey } from "@/lib/google-cloud";
 
 export async function POST(req: Request) {
   try {
     const { fileName, contentType } = await req.json();
     console.log('****************************************')
-    console.log("GCS_PRIVATE_KEY Length", process.env.GCS_PRIVATE_KEY?.length);
-    console.log("GCS_PRIVATE_KEY first 50 chars:", process.env.GCS_PRIVATE_KEY?.substring(0, 50));
+    const parsed = parsePrivateKey(process.env.GCS_PRIVATE_KEY);
+    console.log("Parsed key first 80 chars:", parsed?.substring(0, 80));
+    console.log("Has real newline:", parsed?.includes('\n'));
     console.log('****************************************')
 
     // Create a unique filename for the bucket
