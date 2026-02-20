@@ -4,6 +4,9 @@ import { storage, bucketName } from "@/lib/google-cloud";
 export async function POST(req: Request) {
   try {
     const { fileName, contentType } = await req.json();
+    console.log('****************************************')
+    console.log("GCS_PRIVATE_KEY first 50 chars:", process.env.GCS_PRIVATE_KEY?.substring(0, 50));
+    console.log('****************************************')
 
     // Create a unique filename for the bucket
     const uniqueFilename = `course-videos/${Date.now()}-${fileName.replace(/\s/g, "_")}`;
