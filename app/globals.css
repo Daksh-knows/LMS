@@ -2,6 +2,64 @@
 
 
 
+/* 1. Define the dark mode strategy */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* 2. Setup your color variables */
+:root {
+  --background: #FFFFFF;
+  --text-color: #000000 ;
+  --background-shade: #F9C56D ;
+  --start-background:#FEF5E7 ;
+  --banner-color:#312002C7 ;
+  --banner-border:#000000 ;
+  --box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --input-border: #B28800 ;
+  --banner-header:#F9C56D96;
+  --progress-unreached:#E1B66F78 ;
+}
+
+.dark {
+  --background: #000000;
+  --text-color: #FFFFFF;
+  --background-shade: #F59E0B ;
+  --start-background:#000000 ;
+  --banner-color: #31200238 ;
+  --banner-border: #FFCC5942 ;
+  --box-shadow: 0 25px 50px -12px rgba(245, 158, 11, 0.25);
+  --input-border: #464646 ;
+  --banner-header:#755500BA;
+  --progress-unreached:#464646 ;
+}
+
+[data-theme='dark'] {
+  --background: #000000;
+  --text-color: #FFFFFF;
+  --background-shade: #F59E0B;
+  --start-background: #000000;
+  --banner-color: #31200238;
+  --banner-border: #FFCC5942;
+  --box-shadow: 0 25px 50px -12px rgba(245, 158, 11, 0.25);
+  --input-border: #464646;
+  --banner-header:#755500BA;
+  --progress-unreached:#464646 ;
+}
+
+
+/* 4. Apply these to your base tags */
+body {
+  background-color: var(--background);
+  color: var(--text-color);
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+.theme-transition {
+  transition: background-color 0.5s ease, 
+              color 0.5s ease, 
+              border-color 0.5s ease, 
+              box-shadow 0.5s ease;
+}
+
 
 /* 1. Add the Typography Plugin */
 @plugin "@tailwindcss/typography";
