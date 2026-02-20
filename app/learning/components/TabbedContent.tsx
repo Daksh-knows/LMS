@@ -37,13 +37,12 @@ const TabbedContent: React.FC<Props> = ({
   const userId = session?.user?.id;
   
   const activeTab = (searchParams.get("tab") as TabId) || "overview";
-  
   const tabs = useMemo(() => [
     { id: "overview", label: "Overview", icon: BookOpen },
     { id: "qa", label: "FAQ", icon: MessageSquare },
     ...(lecture?.type === "VIDEO" || lecture?.type === "LIVE" ? [{ id: "bookmarks", label: "Bookmarks", icon: BookmarkPlus }] : []),
     { id: "reviews", label: "Reviews", icon: Star },
-  ], []);
+  ], [lecture]);
   
   const handleTabChange = (tabId: string) => {
     const params = new URLSearchParams(searchParams.toString());

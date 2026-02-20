@@ -162,7 +162,6 @@ export default function LearningClient({ courseId , lectureId  , user }: Learnin
   };
 
   const quizData = getQuizData();
-  if(!contextCourse) return <Loader message="Loading course" />
   return (
     <div className="">
       <div className="flex flex-col h-screen overflow-hidden bg-white">
@@ -180,7 +179,7 @@ export default function LearningClient({ courseId , lectureId  , user }: Learnin
             </Link>
             <div className="h-6 w-[1px] bg-gray-700 mx-2 hidden sm:block shrink-0"></div>
             <div className="font-bold text-sm md:text-base truncate text-gray-900">
-              {contextCourse.title}
+              {contextCourse?.title}
             </div>
           </div>
         </nav>
