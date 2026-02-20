@@ -52,7 +52,7 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
-    
+    console.log("Hell" ) ;
     // 1. Handle Timezone Offset from Client
     // The client should send: /api/user/activity?userId=...&timezone=Asia/Kolkata
     const userTimezone = searchParams.get("timezone") || "UTC";
@@ -87,6 +87,8 @@ export async function GET(req: Request) {
       }
     });
 
+    console.log("Months activities " , monthActivities) ;
+    
     // 3. Filter "Today" using string comparison to avoid UTC hour shifts
     const todayActivities = monthActivities.filter(a => 
       format(a.createdAt, 'yyyy-MM-dd') === todayStr

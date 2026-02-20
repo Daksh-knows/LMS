@@ -143,9 +143,9 @@ export default function CourseList({ courses: initialCourses, loading }: CourseL
                     )}
                     
                     <div className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
-                      hasAccess ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-300"
+                      !hasAccess && "bg-gray-100 text-gray-300"
                     }`}>
-                      {hasAccess ? <CheckCircle2 size={16} /> : <Lock size={14} />}
+                      {!hasAccess && <Lock size={14} />}
                     </div>
                   </div>
                 </div>

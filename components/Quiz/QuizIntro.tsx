@@ -1,7 +1,11 @@
+import { useLecture } from '@/context/LectureContext'
+import Loader from '@/utils/Loader';
 import { BrainCircuit, PlayCircle } from 'lucide-react'
 import React from 'react'
 
-function QuizIntro({lecture , metadata , questions , setQuizState} : any) {
+function QuizIntro({ metadata , questions , setQuizState} : any) {
+    const {lecture} = useLecture() ;
+    if(!lecture) return <Loader message="Loading Quiz details" />
   return (
       <div className="w-full h-full flex items-center justify-center">
         <div className="bg-white border border-blue-100 rounded-2xl p-6 shadow-sm max-w-2xl w-full">

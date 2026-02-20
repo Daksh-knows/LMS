@@ -29,7 +29,6 @@ export default function Sidebar({
   const navItems = [
     { label: "Overview", icon: LayoutDashboard, href: isAdmin ? "/dashboard/admin-overview" : "/dashboard" },
     ...(isAdmin ? [{ label: "Manage Courses", icon: ShieldCheck, href: "/dashboard/admin" }] : []),
-...(!oneCourse ? [{ label: "My Courses", icon: Library, href: "/dashboard/my-courses" }] : []),
     { label: "Support", icon: HeadphonesIcon, href: isAdmin ? "/dashboard/admin/support" : "/dashboard/support" },
   ];
 

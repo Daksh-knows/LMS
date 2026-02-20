@@ -7,14 +7,16 @@ import { useSession } from "next-auth/react";
 import { CldUploadWidget } from "next-cloudinary";
 import { showToast } from "@/utils/Toast";
 import { useConfirm } from "@/context/ConfirmContext";
+import { useLecture } from "@/context/LectureContext";
 
 interface QnaTabProps {
-  lectureId: string;
   courseId: string;
   adminId?: string;
 }
 
-export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
+export default function QnaTab({  courseId , adminId }: QnaTabProps) {
+  const {lecture} = useLecture() ;
+  const lectureId = lecture?.id ;
   const [questions, setQuestions] = useState<any[]>([]);
   const [selectedQuestion, setSelectedQuestion] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -361,23 +363,6 @@ export default function QnaTab({ lectureId, courseId , adminId }: QnaTabProps) {
                 ))}
               </div>
             )}
-
-            {/* <CldUploadWidget
-              uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
-              onSuccess={(result: any) => setImages((prev) => [...prev, result.info.secure_url])}
-              options={{ multiple: true, maxFiles: 5 }}
-            >
-              {({ open }) => (
-                <button
-                  type="button"
-                  onClick={() => open?.()}
-                  className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-[11px] font-bold text-gray-600 hover:bg-gray-100 transition shadow-sm"
-                >
-                  <ImageIcon size={14} />
-                  Images ({images.length}/5)
-                </button>
-              )}
-            </CldUploadWidget> */}
 
             <CldUploadWidget
               uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}

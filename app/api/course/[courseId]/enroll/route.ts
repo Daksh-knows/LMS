@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth-utils";
 
 export async function POST(
-  req: Request,
+  req: NextRequest,
    context: { params: Promise<{ courseId: string }> }
 ) {
   try {

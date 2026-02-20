@@ -67,7 +67,7 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
       }
     }, [lectureId, userId]);
   
-    //fetches course completion status
+    //fetches lecture completion status
     useEffect(() => {
       const fetchCompletionStatus = async () => {
         if (!userId || !lectureId) return;
