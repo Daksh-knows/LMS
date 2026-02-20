@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { showToast } from "@/utils/Toast";
 import { useLecture } from "@/context/LectureContext";
 import Loader from "@/utils/Loader";
+import { uploadFileToGCS } from "@/lib/cloud/file";
 
 interface Resource {
   id: string;
@@ -81,31 +82,34 @@ const AssignmentComponent: React.FC  = () => {
     setPreviewUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = ""; 
   };
-
   const handleSubmit = async () => {
     if (!file) return;
     setIsUploading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("lectureId", lecture.id);
+      // ✅ Step 1: Upload directly to GCS
+      const fileUrl = await uploadFileToGCS(file);
 
+      // ✅ Step 2: Send ONLY metadata to backend
       const response = await fetch(`/api/assignment/`, {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          lectureId: lecture.id,
+          fileUrl: fileUrl,
+        }),
       });
 
-      if (response.ok) {
-        if (previewUrl) URL.revokeObjectURL(previewUrl);
-        setIsSubmitted(true);
-        setFile(null);
-        setPreviewUrl(null);
-        setStatus("SUBMITTED");
-        showToast.success("Assignment submitted successfully!");
-      } else {
-        throw new Error("Failed to upload");
-      }
+      if (!response.ok) throw new Error("Failed to save submission");
+
+      setIsSubmitted(true);
+      setFile(null);
+      setPreviewUrl(null);
+      setStatus("SUBMITTED");
+
+      showToast.success("Assignment submitted successfully!");
     } catch (error) {
       console.error("Submission error:", error);
       showToast.error("Submission failed.");
