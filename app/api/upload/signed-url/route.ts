@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
-import { storage, bucketName } from "@/lib/google-cloud";
+import { storage, bucketName, parsePrivateKey } from "@/lib/google-cloud";
 
 export async function POST(req: Request) {
   try {
-    const { filename, contentType } = await req.json();
+    const { fileName, contentType } = await req.json();
+    console.log('****************************************')
+    const parsed = parsePrivateKey(process.env.GCS_PRIVATE_KEY);
+    console.log("Parsed key first 80 chars:", parsed?.substring(0, 80));
+    console.log("Has real newline:", parsed?.includes('\n'));
+    console.log('****************************************')
 
     // Create a unique filename for the bucket
-    const uniqueFilename = `course-videos/${Date.now()}-${filename.replace(/\s/g, "_")}`;
+    const uniqueFilename = `course-videos/${Date.now()}-${fileName.replace(/\s/g, "_")}`;
 
     // Generate a Signed URL that expires in 15 minutes
     // This URL allows a specific "PUT" operation for this specific file
@@ -21,7 +26,7 @@ export async function POST(req: Request) {
       });
 
     return NextResponse.json({
-      uploadUrl: url, // The secret temporary URL to upload to
+      url: url, // The secret temporary URL to upload to
       publicUrl: `https://storage.googleapis.com/${bucketName}/${uniqueFilename}` // The permanent URL to save in DB
     });
 

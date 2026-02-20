@@ -98,7 +98,7 @@ export default function CourseList({ courses: initialCourses, loading }: CourseL
                 {/* Image & Badges */}
                 <div className="relative aspect-video overflow-hidden">
                   <img 
-                    src={course.imageUrl} 
+                    src={course.imageUrl || null} 
                     alt={course.title} 
                     className={`w-full h-full object-cover transition-transform duration-700 ${hasAccess ? "group-hover:scale-105" : "opacity-60"}`} 
                   />
