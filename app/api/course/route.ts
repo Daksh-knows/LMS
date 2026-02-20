@@ -62,6 +62,8 @@ export async function POST(req: NextRequest) {
       adminId: data.adminId,
       isPublished: false,
       isCompleted: false,
+      type: data.type ,
+      price: data.price
     };
 
     // 4. Create Course in Database

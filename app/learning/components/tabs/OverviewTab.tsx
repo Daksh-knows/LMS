@@ -1,23 +1,11 @@
 import React, { useState } from "react";
 import { Globe, Clock, Award, User, Star, BookOpen, ChevronDown, ChevronUp } from "lucide-react";
+import { useCourse } from "@/context/CourseContext";
 
-interface OverviewProps {
-  course: {
-    title: string;
-    subtitle: string;
-    description: string;
-    language: string;
-    estimatedDuration: string;
-    admin: {
-      name: string;
-      image?: string;
-      bio?: string;
-    };
-  };
-}
-
-export const OverviewTab: React.FC<OverviewProps> = ({ course }) => {
+export const OverviewTab: React.FC = () => {
   const [showBio, setShowBio] = useState(false);
+  const {course} = useCourse();
+  if(!course) return <div>Loading Overview Tab details...</div> ;
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-10 ">
@@ -80,7 +68,7 @@ export const OverviewTab: React.FC<OverviewProps> = ({ course }) => {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-blue-600 text-white text-xl font-bold">
-                  {course.admin.name.charAt(0)}
+                  {course.admin.name?.charAt(0)}
                 </div>
               )}
             </div>
