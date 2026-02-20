@@ -57,6 +57,10 @@ jobs:
           echo "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}" >> .env
           echo "CLOUDINARY_CLOUD_NAME=${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}" >> .env
           echo "APP_URL=${{ secrets.APP_URL }}" >> .env
+          echo "GCS_PROJECT_ID=${{secrets.GCS_PROJECT_ID}}" >> .env
+          echo "GCS_CLIENT_EMAIL=${{secrets.GCS_CLIENT_EMAIL}}" >> .env
+          echo "GCS_PRIVATE_KEY=${{secrets.GCS_PRIVATE_KEY}}" >> .env
+          echo "GCS_BUCKET_NAME=${{secrets.GCS_BUCKET_NAME}}" >> .env
 
       - name: Build and Push Container Image
         uses: docker/build-push-action@v5
@@ -91,6 +95,10 @@ jobs:
             NEXT_PUBLIC_RAZORPAY_KEY_ID=${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID}}
             NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
             CLOUDINARY_CLOUD_NAME=${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
+            GCS_PROJECT_ID=${{secrets.GCS_PROJECT_ID}}
+            GCS_CLIENT_EMAIL=${{secrets.GCS_CLIENT_EMAIL}}
+            GCS_PRIVATE_KEY=${{secrets.GCS_PRIVATE_KEY}}
+            GCS_BUCKET_NAME=${{secrets.GCS_BUCKET_NAME}}
 
           flags: |-
             --allow-unauthenticated
