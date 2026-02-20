@@ -2,6 +2,8 @@ import { getCurrentUser } from '@/lib/auth-utils';
 import LearningClient from './LearningClient';
 import { notFound } from "next/navigation";
 import { BookmarkProvider } from '@/context/BookmarkContext';
+import { CourseProvider, useCourse } from '@/context/CourseContext';
+import { LectureProvider } from '@/context/LectureContext';
 
 interface PageProps {
   params: Promise<{
@@ -11,7 +13,7 @@ interface PageProps {
 }
 
 async function Page({ params }: PageProps) {
-  const { courseId, lectureId } = await params;
+  const { courseId } = await params;
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const user = await getCurrentUser();
@@ -28,7 +30,7 @@ async function Page({ params }: PageProps) {
     }
 
     course = await response.json();
-    // console.log("Fetched course data:", course);
+    console.log("Fetched course data:", course);
   } catch (error) {
     console.error("Error fetching course in Server Component:", error);
   }
@@ -38,16 +40,14 @@ async function Page({ params }: PageProps) {
   }
 
   return (
-    <div>
-      {/* 4. Pass the fetched data to your Client Component */}
+    <CourseProvider>
       <BookmarkProvider>
-        <LearningClient 
-          course={course} 
-          lectureId={lectureId} 
-          user={user}
-        />
+            <LearningClient 
+              course={course}
+              user={user}
+            />
       </BookmarkProvider>
-    </div>
+    </CourseProvider>
   );
 }
 

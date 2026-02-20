@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { ChevronLeft, VideoOff, Loader2 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 // Components
 import VideoPlayer from "../../components/VideoPlayer";
@@ -15,11 +15,13 @@ import ArticleComponent from "../../components/ArticleComponent";
 import LiveSessionComponent from "../../components/LiveSessionComponent";
 import Footer from "@/components/Footer";
 import { useBookmarks } from "@/context/BookmarkContext";
+import { useCourse } from "@/context/CourseContext";
+import { LectureProvider, useLecture } from "@/context/LectureContext";
+import Loader from "@/utils/Loader";
 
 interface LearningClientProps {
-  course: any;
-  lectureId: string;
   user: any ;
+  course: any;
 }
 
 interface Bookmark {
@@ -29,17 +31,28 @@ interface Bookmark {
   type: "BOOKMARK" | "IMPORTANT" | "QUESTION";
 }
 
-export default function LearningClient({ course, lectureId , user }: LearningClientProps) {
+export default function LearningClient({ course  , user }: LearningClientProps) {
   const [currentLecture, setCurrentLecture] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [seekTo, setSeekTo] = useState<string | null>(null);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [loadingBookmarks, setLoadingBookmarks] = useState(false);
   const searchParams = useSearchParams();
+  const params = useParams();
 // Create a handler to clear the seek value after the player reacts
   const handleSeekComplete = () => setSeekTo(null);
+  const lectureId = params.lectureId as string;
   const router = useRouter();
+  
+  const { course: contextCourse, setCourse } = useCourse();
 
+
+  useEffect(() => {
+    if (course) {
+      setCourse(course);
+    }
+
+  }, [course, setCourse]); 
 
   
   const oneCourse = process.env.NEXT_PUBLIC_ONE_COURSE === "true";
@@ -66,6 +79,7 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
     } 
     console.log("Updating progress for lectureId:", lectureId);
   }, [lectureId]);
+  
 
   useEffect(() => {
     if (!lectureId) return;
@@ -76,7 +90,7 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
         if (!response.ok) throw new Error("Failed to fetch lecture");
         const data = await response.json();
         setCurrentLecture(data);
-        // console.log("Fetched lecture data:", data);
+        console.log("Fetched lecture data:", data);
       } catch (error) {
         console.error("Error loading lecture:", error);
       } finally {
@@ -90,6 +104,10 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
 
     // console.log("FL" , currentLecture) ; 
   }, [lectureId]);
+
+  const handleBookmarkClick = useCallback((time: string) => {
+    setSeekTo(time);
+  }, []);
 
   const handleSelectLecture = (selectedLecture: any) => {
     const currentTab = searchParams.get("tab") || "overview";
@@ -109,7 +127,8 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
 
   const quizData = getQuizData();
   // console.log("Course Data:", course);
-
+  //  if(!currentLecture) return <div><Loader message="Loading lecture details" /> </div>
+   console.log()
   return (
     <div className="">
       <div className="flex flex-col h-screen overflow-hidden bg-white">
@@ -117,7 +136,7 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
         <nav className="h-14 bg-amber-100 text-white flex items-center justify-between px-4 shadow-md z-10 shrink-0">
           <div className="flex items-center gap-4 min-w-0">
             <Link
-              href={ oneCourse ? "/dashboard" : "/dashboard/my-courses"}
+              href="/dashboard"
               className="flex items-center gap-1 text-gray-300 hover:text-white transition-colors group shrink-0"
             >
               <div className="p-1 rounded-full bg-gray-700 group-hover:bg-gray-800">
@@ -131,114 +150,108 @@ export default function LearningClient({ course, lectureId , user }: LearningCli
             </div>
           </div>
         </nav>
-
+         
           {/* Main Content Area */}
-          <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
-            <main className="flex-1 overflow-y-auto bg-gray-50 relative h-full">
-              {isLoading ? (
-                <div className="flex flex-col items-center justify-center h-full">
-                  <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-                </div>
-              ) : currentLecture ? (
-                <>
-                  {/* --- THE STAGE (Video/Quiz Parent) --- */}
-                  <div className="w-full  flex justify-center items-center min-h-[45vh] md:min-h-[55vh] lg:min-h-[65vh] overflow-hidden shadow-inner">
-                    <div className="w-full flex justify-center items-center h-full  mx-auto">
-                      {/* --- lecture UI --- */}
-                      {currentLecture.type === 'VIDEO' && (
-                        <div id="video-stage" className="flex justify-center aspect-video max-h-[90vh] md:max-h-[75vh] w-full h-full">
-                          <VideoPlayer  
-                             videoUrl={currentLecture.videoUrl} 
-                             lectureId={currentLecture.id} 
-                             seekTo={seekTo} 
-                             onSeekComplete={handleSeekComplete}
-                          />
-                        </div>
-                      )}
-
-                      {/* --- LIVE UI --- */}
-                      {currentLecture.type === 'LIVE' && currentLecture.description && (
-                        <div className="h-full w-full">
-                          <LiveSessionComponent
-                            data={currentLecture.description} 
-                            lectureTitle={currentLecture.title} 
-                          />
-                        </div>
-                      )}
-
-                        {/* --- QUIZ UI --- */}
-                        {currentLecture.type === 'QUIZ' && quizData && (
-                          <div className="h-full w-full bg-white overflow-y-auto">
-                            <QuizComponent lecture={currentLecture} courseId={course.id} />
-                          </div>
-                        )}
-
-
-                        {/* ASSIGNMENT UI */}
-                        {currentLecture.type === 'ASSIGNMENT' && (
-                          <div className="h-full w-full bg-white overflow-y-auto overflow-x-auto no-scrollbar">
-                            <AssignmentComponent lecture={currentLecture} />
-                          </div>
-                        )}
-
-
-                        {/* TEXT / ARTICLE UI */}
-                        {currentLecture.type === 'TEXT' && (
-                          <div className="h-full w-full bg-white overflow-y-auto scrollbar-hide">
-                            <ArticleComponent lecture={currentLecture} />
-                          </div>
-                        )}
-                        
-                      </div>
-                    </div>
-
-                    {/* Lecture Info and Tabs - Now more visible on page load */}
-                    <div className="w-full p-5 bg-white border-t border-gray-200">
-                      <div className="max-w-5xl mx-auto">
-                        <div className="mt-4 mb-4">
-                          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-                            {currentLecture.title}
-                          </h1>
-                        </div>
-                        <TabbedContent 
-                          lecture={currentLecture} 
-                          courseId={course.id} 
-                          adminId={course.adminId} 
-                          onBookmarkClick={(time) => setSeekTo(time)}
-                          course={course}
-                        />
-                      </div>
-                    </div>
-                  </>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-center p-10">
-                <div className="bg-gray-50 p-6 rounded-full mb-4">
-                  <VideoOff size={48} className="text-gray-300" />
-                </div>
-                <h2 className="text-xl font-semibold text-gray-700">No lectures found</h2>
-                <p className="text-gray-500 max-w-xs mt-2">Content hasn't been uploaded yet.</p>
-              </div>
-            )}
-
-            <div className="md:hidden border-t border-gray-200">
-              <CourseSidebar
-                sections={course.modules || []}
-                currentLectureId={lectureId}
-                onSelectLecture={handleSelectLecture}
-              />
-            </div>
-            <Footer />
-          </main>
           
-          {/* Course Sidebar */}
-          <aside className="hidden md:block w-[220px] md:w-[260px] xl:w-[350px] shrink-0 border-l border-gray-200 h-full">
-            <CourseSidebar
-              sections={course.modules || []}
-              currentLectureId={lectureId}
-              onSelectLecture={handleSelectLecture}
-            />
-          </aside>
-        </div>
+              <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+                <main className="flex-1 overflow-y-auto bg-gray-50 relative h-full">
+                  {isLoading ? (
+                     <Loader message="Loading lecture" />
+                  ) : currentLecture ? (
+                    <LectureProvider>
+                        {/* --- THE STAGE (Video/Quiz Parent) --- */}
+                        <div className="w-full  flex justify-center items-center min-h-[45vh] md:min-h-[55vh] lg:min-h-[65vh] overflow-hidden shadow-inner">
+                          <div className="w-full flex justify-center items-center h-full  mx-auto">
+                            {/* --- lecture UI --- */}
+                            {currentLecture.type === 'VIDEO' && (
+                              <div id="video-stage" className="flex justify-center aspect-video max-h-[90vh] md:max-h-[75vh] w-full h-full">
+                                {currentLecture?.videoUrl && <VideoPlayer  
+                                  videoUrl={currentLecture.videoUrl} 
+                                  lectureId={currentLecture.id} 
+                                  seekTo={seekTo} 
+                                  onSeekComplete={handleSeekComplete}
+                                />}
+                              </div>
+                            )}
+
+                            {/* --- LIVE UI --- */}
+                            {currentLecture.type === 'LIVE' && currentLecture.description && (
+                              <div className="h-full w-full">
+                                <LiveSessionComponent
+                                  data={currentLecture.description} 
+                                  lectureTitle={currentLecture.title} 
+                                />
+                              </div>
+                            )}
+
+                              {/* --- QUIZ UI --- */}
+                              {currentLecture.type === 'QUIZ' && quizData && (
+                                <div className="h-full w-full bg-white overflow-y-auto">
+                                  <QuizComponent  courseId={course.id} />
+                                </div>
+                              )}
+
+
+                              {/* ASSIGNMENT UI */}
+                              {currentLecture.type === 'ASSIGNMENT' && (
+                                <div className="h-full w-full bg-white overflow-y-auto overflow-x-auto no-scrollbar">
+                                  <AssignmentComponent />
+                                </div>
+                              )}
+
+
+                              {/* TEXT / ARTICLE UI */}
+                              {currentLecture.type === 'TEXT' && (
+                                <div className="h-full w-full bg-white overflow-y-auto scrollbar-hide">
+                                  <ArticleComponent/>
+                                </div>
+                              )}
+                              
+                            </div>
+                          </div>
+
+                          {/* Lecture Info and Tabs - Now more visible on page load */}
+                          <div className="w-full p-5 bg-white border-t border-gray-200">
+                            <div className="max-w-5xl mx-auto">
+                              <div className="mt-4 mb-4">
+                                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                                  {currentLecture.title}
+                                </h1>
+                              </div>
+                              <TabbedContent 
+                                onBookmarkClick={handleBookmarkClick}
+                              />
+                            </div>
+                          </div>
+                      </LectureProvider>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-center p-10">
+                    <div className="bg-gray-50 p-6 rounded-full mb-4">
+                      <VideoOff size={48} className="text-gray-300" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-gray-700">No lectures found</h2>
+                    <p className="text-gray-500 max-w-xs mt-2">Content hasn't been uploaded yet.</p>
+                  </div>
+                )}
+
+                <div className="md:hidden border-t border-gray-200">
+                  <CourseSidebar
+                    currentLectureId={lectureId}
+                    onSelectLecture={handleSelectLecture}
+                  />
+                </div>
+                <Footer />
+              </main>
+              
+              {/* Course Sidebar */}
+              <aside className="hidden md:block w-[220px] md:w-[260px] xl:w-[350px] shrink-0 border-l border-gray-200 h-full">
+                <CourseSidebar
+                  currentLectureId={lectureId}
+                  onSelectLecture={handleSelectLecture}
+                />
+              </aside>
+            </div>
+         
       </div>
     </div>
   );
