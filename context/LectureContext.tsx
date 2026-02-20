@@ -2,7 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useParams } from "next/navigation";
-import { ItemType } from "@/app/generated/prisma/enums";
+
+type ItemType = "VIDEO" | "LIVE" | "TEXT" | "ASSIGNMENT" | "QUIZ"
 
 interface AnswerOption {
   id: string;
