@@ -6,6 +6,7 @@ import { Lock, ArrowRight, Loader2, KeyRound, CheckCircle2, Circle, Eye, EyeOff 
 import { getSession } from "next-auth/react";
 import ThemeSwitcher from '../Theme/ThemeSwitcher';
 import { showToast } from '@/utils/Toast';
+import { motion, AnimatePresence } from 'framer-motion'; // Added Framer Motion
 
 export default function ResetPasswordForm() {
   const router = useRouter();
@@ -17,7 +18,6 @@ export default function ResetPasswordForm() {
   const [hasSession, setHasSession] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Password Validation State
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -93,125 +93,147 @@ export default function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--start-background)] flex flex-col items-center justify-center p-6 relative overflow-hidden theme-transition">
-      <ThemeSwitcher className="fixed bottom-6 right-6 z-50" />
-      {/* Background Glow Shade */}
-      <div 
-        className="absolute rounded-full pointer-events-none animate-blob theme-transition"
-        style={{
-          width: '306.8px',
-          height: '306.4px',
-          backgroundColor: 'var(--background-shade)',
-          filter: 'blur(150px)', 
-          top: '122px',
-          left: '197.22px',
-          transform: 'rotate(2.02deg)',
-          zIndex: 0
-        }}
-      />
+    <AnimatePresence>
+      <div className="min-h-screen bg-[var(--start-background)] flex flex-col items-center justify-center p-6 relative overflow-hidden theme-transition">
+        <ThemeSwitcher className="fixed bottom-6 right-6 z-50" />
+        
+        {/* Background Glow Shade */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          className="absolute rounded-full pointer-events-none animate-blob theme-transition"
+          style={{
+            width: '306.8px',
+            height: '306.4px',
+            backgroundColor: 'var(--background-shade)',
+            filter: 'blur(150px)', 
+            top: '122px',
+            left: '197.22px',
+            transform: 'rotate(2.02deg)',
+            zIndex: 0
+          }}
+        />
 
-      <div className="w-full max-w-[440px] z-10 theme-transition">
-        {/* Card */}
-        <div className="bg-transparent backdrop-blur-xl rounded-3xl border border-white/10 shadow-[var(--box-shadow)] overflow-hidden">
-          
-          {/* Header Section (Gold Header from image) */}
-          <div className="bg-(--banner-header) theme-transition p-8  text-center">
-             <h1 className="text-3xl theme-transition font-bold text-[var(--text-color)] tracking-tight">Secure Your Account</h1>
-             <p className="mt-2 theme-transition text-xs text-[var(--text-color)] opacity-70 leading-relaxed">
-               To protect your account, please enter a new password. We recommend using a unique phrase you don't use elsewhere.
-             </p>
-          </div>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="w-full max-w-[440px] z-10 theme-transition"
+        >
+          {/* Card */}
+          <div className="bg-transparent backdrop-blur-xl rounded-3xl border border-white/10 shadow-[var(--box-shadow)] overflow-hidden">
+            
+            {/* Header Section */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="bg-(--banner-header) theme-transition p-8 text-center"
+            >
+               <h1 className="text-3xl theme-transition font-bold text-[var(--text-color)] tracking-tight">Secure Your Account</h1>
+               <p className="mt-2 theme-transition text-xs text-[var(--text-color)] opacity-70 leading-relaxed">
+                 To protect your account, please enter a new password. We recommend using a unique phrase you don't use elsewhere.
+               </p>
+            </motion.div>
 
-          <div className="p-8 space-y-6">
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/30 text-red-500 p-3 rounded-xl text-xs font-bold animate-in fade-in">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* New Password */}
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-[var(--text-color)] ml-1">New Password</label>
-                <div className="relative group">
-                  <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-[#464646] w-5 h-5 group-focus-within:text-[#FABD23] transition-colors" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    placeholder="••••••••"
-                    className="w-full pl-12 pr-12 py-3.5 bg-transparent border border-[var(--input-border)] rounded-xl outline-none text-[var(--text-color)] placeholder:text-[#464646] focus:border-[#FABD23]/50 transition-all"
-                  />
-                  <button 
-                    type="button" 
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#464646] hover:text-white"
-                  >
-                    {showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}
-                  </button>
-                </div>
-              </div>
-
-              {/* Strength Indicator */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
-                   <span className="text-[var(--text-color)] opacity-60">Security Strength</span>
-                   <span className={strengthPercent === 100 ? "text-emerald-500" : "text-[#FABD23]"}>
-                     {strengthPercent}% - {strengthLabel}
-                   </span>
-                </div>
-                <div className="h-1.5 w-full bg-(--progress-unreached) opacity-60 rounded-full overflow-hidden">
-                   <div 
-                    className="h-full bg-[#FABD23] transition-all duration-500 ease-out"
-                    style={{ width: `${strengthPercent}%` }}
-                   />
-                </div>
-              </div>
-
-              {/* Confirm Password */}
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-[var(--text-color)] ml-1">Confirm New Password</label>
-                <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#464646] w-5 h-5 group-focus-within:text-[#FABD23] transition-colors" />
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    placeholder="••••••••"
-                    className="w-full pl-12 pr-4 py-3.5 bg-transparent border border-[var(--input-border)] rounded-xl outline-none text-[var(--text-color)] placeholder:text-[#464646] focus:border-[#FABD23]/50 transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* Requirements Grid */}
-              <div className="grid grid-cols-2 gap-3 pt-2">
-                {requirements.map((req, i) => (
-                  <div key={i} className={`flex items-center gap-2 text-xs font-medium transition-colors ${req.met ? "text-[#FABD23]" : "text-[#464646]"}`}>
-                    {req.met ? <CheckCircle2 size={14} /> : <Circle size={14} />}
-                    {req.label}
+            <div className="p-8 space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* New Password */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-[var(--text-color)] ml-1">New Password</label>
+                  <div className="relative group">
+                    <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-[#464646] w-5 h-5 group-focus-within:text-[#FABD23] transition-colors" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      placeholder="••••••••"
+                      className="w-full pl-12 pr-12 py-3.5 bg-transparent border border-[var(--input-border)] rounded-xl outline-none text-[var(--text-color)] placeholder:text-[#464646] focus:border-[#FABD23]/50 transition-all"
+                    />
+                    <button 
+                      type="button" 
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[#464646] hover:text-white"
+                    >
+                      {showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}
+                    </button>
                   </div>
-                ))}
-              </div>
+                </div>
 
-              <button 
-                type="submit" 
-                disabled={isLoading} 
-                className="w-full h-[52px] bg-gradient-to-r from-[#F59E0B] to-[#C47E09] text-white font-bold rounded-xl shadow-lg shadow-amber-900/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {isLoading ? <Loader2 className="animate-spin" /> : <>Update Password <ArrowRight size={20}/></>}
-              </button>
-            </form>
+                {/* Strength Indicator */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
+                     <span className="text-[var(--text-color)] opacity-60">Security Strength</span>
+                     <span className={strengthPercent === 100 ? "text-emerald-500" : "text-[#FABD23]"}>
+                       {strengthPercent}% - {strengthLabel}
+                     </span>
+                  </div>
+                  <div className="h-1.5 w-full bg-(--progress-unreached) opacity-60 rounded-full overflow-hidden">
+                     <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${strengthPercent}%` }}
+                      className="h-full bg-[#FABD23]"
+                      transition={{ type: "spring", stiffness: 50, damping: 15 }}
+                     />
+                  </div>
+                </div>
+
+                {/* Confirm Password */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-[var(--text-color)] ml-1">Confirm New Password</label>
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#464646] w-5 h-5 group-focus-within:text-[#FABD23] transition-colors" />
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      placeholder="••••••••"
+                      className="w-full pl-12 pr-4 py-3.5 bg-transparent border border-[var(--input-border)] rounded-xl outline-none text-[var(--text-color)] placeholder:text-[#464646] focus:border-[#FABD23]/50 transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Requirements Grid */}
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  {requirements.map((req, i) => (
+                    <motion.div 
+                      key={i} 
+                      animate={{ color: req.met ? "#FABD23" : "#464646" }}
+                      className="flex items-center gap-2 text-xs font-medium"
+                    >
+                      {req.met ? <CheckCircle2 size={14} /> : <Circle size={14} />}
+                      {req.label}
+                    </motion.div>
+                  ))}
+                </div>
+
+                <motion.button 
+                  whileTap={{ scale: 0.98 }}
+                  type="submit" 
+                  disabled={isLoading} 
+                  className="w-full h-[52px] bg-gradient-to-r from-[#F59E0B] to-[#C47E09] text-white font-bold rounded-xl shadow-lg shadow-amber-900/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isLoading ? <Loader2 className="animate-spin" /> : <>Update Password <ArrowRight size={20}/></>}
+                </motion.button>
+              </form>
+            </div>
           </div>
-        </div>
 
-        {/* Footer */}
-        <p className="mt-8 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-color)] opacity-40">
-           <ShieldCheck size={14} /> Secure Enterprise Encryption
-        </p>
+          {/* Footer */}
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.4 }}
+            transition={{ delay: 0.8 }}
+            className="mt-8 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-color)]"
+          >
+             <ShieldCheck size={14} /> Secure Enterprise Encryption
+          </motion.p>
+        </motion.div>
       </div>
-    </div>
+    </AnimatePresence>
   );
 }
 

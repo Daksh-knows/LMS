@@ -1,90 +1,88 @@
-import { Github, Twitter, Linkedin, Mail, GraduationCap } from "lucide-react";
-import Link from "next/link";
+"use client";
+
+import React from 'react';
+import Link from 'next/link';
+import { Phone, Mail, MapPin, Facebook, Linkedin, Instagram, MessageCircle } from "lucide-react";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-zinc-200 border-t-2 border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
-        {/* Main Grid: Set to 2 columns on mobile, 4 on medium screens */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-y-10 gap-x-8">
+    <footer className="relative w-full overflow-hidden top-shadow-box theme-transition py-12">
+      {/* Background Gradients */}
+      <div 
+        className="absolute top-0 left-0 w-1/2 h-full opacity-40 pointer-events-none theme-transition"
+        style={{ background: 'var(--footer-left-gradient)', filter: 'blur(100px)' }}
+      />
+      <div 
+        className="absolute top-0 right-[-15%] w-[60%] h-full opacity-20 pointer-events-none theme-transition"
+        style={{ background: 'var(--footer-right-gradient)', filter: 'blur(100px)' }}
+      />
+
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-12 mb-16">
           
-          {/* Brand Section - Spans 2 columns on mobile to stay centered/full-width */}
-          <div className="col-span-2 md:col-span-1 flex flex-col items-center md:items-start text-center md:text-left">
-            <Link href="/" className="flex items-center gap-2 mb-4 group">
-              <div className="bg-purple-600 p-1.5 rounded-lg group-hover:scale-110 transition-transform">
-                <GraduationCap className="text-white" size={20} />
-              </div>
-              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
-                LMS Platform
-              </span>
-            </Link>
-            <p className="text-gray-500 text-sm leading-relaxed mb-6 max-w-xs">
-              Empowering students worldwide with high-quality courses, interactive quizzes, and personalized learning paths.
+          <div className="col-span-2 md:col-span-1">
+            <p className="text-sm font-bold leading-relaxed text-[var(--text-color)] theme-transition opacity-90">
+              Learn first, pay for placement only if you choose. Your transparent path to career success.
             </p>
-            <div className="flex gap-5">
-              <Link href="#" className="text-gray-400 hover:text-purple-600 transition-colors transform hover:-translate-y-1">
-                <Twitter size={20} />
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-purple-600 transition-colors transform hover:-translate-y-1">
-                <Github size={20} />
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-purple-600 transition-colors transform hover:-translate-y-1">
-                <Linkedin size={20} />
-              </Link>
-            </div>
           </div>
-          
-          {/* Quick Links - Takes 1 column on mobile (side-by-side with Support) */}
-          <div className="ml-2 flex flex-col items-start">
-            <h4 className="font-bold text-gray-900 mb-5 text-sm uppercase tracking-wider">Platform</h4>
-            <ul className="space-y-3 text-sm text-gray-600">
-              <li><Link href="/courses" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">All Courses</Link></li>
-              <li><Link href="/dashboard" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">My Learning</Link></li>
-              <li><Link href="/leaderboard" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">Leaderboard</Link></li>
-              <li><Link href="/certificates" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">Certificates</Link></li>
+
+          <div className="flex flex-col space-y-4">
+            <h4 className="text-base font-bold text-[var(--text-color)] theme-transition">Quick Links</h4>
+            <ul className="space-y-3 text-sm font-medium text-[var(--text-color)] theme-transition opacity-70">
+              <li><Link href="/how-it-works" className="hover:text-[var(--colored-text)] theme-transition transition-colors">• How It Works</Link></li>
+              <li><Link href="/dashboard" className="hover:text-[var(--colored-text)] theme-transition transition-colors">• Learning Dashboard</Link></li>
+              <li><Link href="/support" className="hover:text-[var(--colored-text)] theme-transition transition-colors">• Placement Support</Link></li>
             </ul>
           </div>
 
-          {/* Support - Takes 1 column on mobile (side-by-side with Platform) */}
-          <div className="flex flex-col items-start">
-            <h4 className="font-bold text-gray-900 mb-5 text-sm uppercase tracking-wider">Support</h4>
-            <ul className="space-y-3 text-sm text-gray-600">
-              <li><Link href="/help" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">Help Center</Link></li>
-              <li><Link href="/faq" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">FAQs</Link></li>
-              <li><Link href="/contact" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">Contact Us</Link></li>
-              <li><Link href="/community" className="hover:text-purple-600 transition-colors underline-offset-4 hover:underline">Community</Link></li>
+          <div className="flex flex-col space-y-4">
+            <h4 className="text-base font-bold text-[var(--text-color)] theme-transition">Legal</h4>
+            <ul className="space-y-3 text-sm font-medium text-[var(--text-color)] theme-transition opacity-70">
+              <li><Link href="/privacy" className="hover:text-[var(--colored-text)] theme-transition transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="hover:text-[var(--colored-text)] theme-transition transition-colors">Terms and Conditions</Link></li>
+              <li><Link href="/refund" className="hover:text-[var(--colored-text)] theme-transition transition-colors">Refund Policy</Link></li>
+              <li><Link href="/contact" className="hover:text-[var(--colored-text)] theme-transition transition-colors">Contact Us</Link></li>
             </ul>
           </div>
 
-          {/* Newsletter - Spans 2 columns on mobile to look better below the links */}
-          <div className="col-span-2 md:col-span-1 flex flex-col items-center md:items-start">
-            <h4 className="font-bold text-gray-900 mb-5 text-sm uppercase tracking-wider">Stay Updated</h4>
-            <p className="text-gray-500 text-sm mb-4 text-center md:text-left">Get notified about new courses and feature updates.</p>
-            <div className="flex w-full max-w-sm gap-2">
-              <input 
-                type="email" 
-                placeholder="Email address" 
-                className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm w-full focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
-              />
-              <button className="bg-purple-600 text-white p-2.5 rounded-xl hover:bg-purple-700 transition-all active:scale-95 shrink-0">
-                <Mail size={18} />
-              </button>
+          {/* Centered on mobile: items-center + text-center | Left-aligned on desktop: md:items-start + md:text-left */}
+          <div className="col-span-2 md:col-span-1 flex flex-col items-center md:items-start space-y-4 text-center md:text-left">
+            <h4 className="text-base font-bold text-[var(--text-color)] theme-transition">Get In Touch</h4>
+            <ul className="space-y-4 text-sm font-bold text-[var(--colored-text)] theme-transition">
+              <li className="flex items-center justify-center md:justify-start gap-3">
+                <Phone size={18} /> <span>9820772246</span>
+              </li>
+              <li className="flex items-center justify-center md:justify-start gap-3">
+                <Mail size={18} /> <span>admin@sixladders.com</span>
+              </li>
+              <li className="flex items-center justify-center md:justify-start gap-3">
+                <MapPin size={18} className="text-[var(--colored-text)] theme-transition shrink-0" /> 
+                <span className="text-[var(--colored-text)] theme-transition">SPTBI, Andheri West.</span>
+              </li>
+            </ul>
+            
+            {/* Centered icons on mobile */}
+            <div className="flex justify-center md:justify-start gap-4 pt-2">
+              {[
+                { icon: Facebook, href: "#" },
+                { icon: Linkedin, href: "#" },
+                { icon: Instagram, href: "#" },
+                { icon: MessageCircle, href: "#" } 
+              ].map((social, i) => (
+                <Link key={i} href={social.href} className="theme-transition text-[var(--text-color)] hover:text-[var(--colored-text)] transition-all transform hover:scale-110">
+                  <social.icon size={22} strokeWidth={2.5} />
+                </Link>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="mt-16 pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-xs text-gray-400 font-medium">
-            © {currentYear} LMS Platform. All rights reserved.
+        <div className="pt-8 border-t border-white/10 flex flex-col items-center justify-center">
+          <p className="text-xs font-bold theme-transition text-[var(--text-color)] opacity-40 tracking-wide">
+            © {currentYear} XYZ — All rights reserved.
           </p>
-          <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-xs font-semibold text-gray-400">
-            <Link href="/terms" className="hover:text-purple-600 transition-colors">Terms</Link>
-            <Link href="/privacy" className="hover:text-purple-600 transition-colors">Privacy</Link>
-            <Link href="/cookies" className="hover:text-purple-600 transition-colors">Cookies</Link>
-          </div>
         </div>
       </div>
     </footer>
