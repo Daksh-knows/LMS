@@ -17,10 +17,9 @@ export function parsePrivateKey(key: string | undefined): string | undefined {
 // 1. Configure Google Cloud Storage
 export const storage = new Storage({
   projectId: process.env.GCS_PROJECT_ID,
-  credentials: {
-    client_email: process.env.GCS_CLIENT_EMAIL,
-    private_key: parsePrivateKey(process.env.GCS_PRIVATE_KEY),
-  },
+  credentials: process.env.GCS_SERVICE_ACCOUNT 
+    ? JSON.parse(process.env.GCS_SERVICE_ACCOUNT)
+    : undefined,
 });
 
 
