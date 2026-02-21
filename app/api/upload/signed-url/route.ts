@@ -4,6 +4,11 @@ import { storage, bucketName, parsePrivateKey } from "@/lib/google-cloud";
 export async function POST(req: Request) {
   try {
     const { fileName, contentType } = await req.json();
+    console.log('****************************************')
+    const parsed = parsePrivateKey(process.env.GCS_PRIVATE_KEY);
+    console.log("Parsed key first 80 chars:", parsed?.substring(0, 80));
+    console.log("Has real newline:", parsed?.includes('\n'));
+    console.log('****************************************')
 
     // Create a unique filename for the bucket
     const uniqueFilename = `course-videos/${Date.now()}-${fileName.replace(/\s/g, "_")}`;
@@ -21,7 +26,7 @@ export async function POST(req: Request) {
       });
 
     return NextResponse.json({
-      url: url,
+      url: url, // The secret temporary URL to upload to
       publicUrl: `https://storage.googleapis.com/${bucketName}/${uniqueFilename}` // The permanent URL to save in DB
     });
 
