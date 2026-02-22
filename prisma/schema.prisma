@@ -56,6 +56,7 @@ model User {
   resetToken           String?
   resetTokenExpiry     DateTime?
   accounts             Account[]
+  notifications        Notification[]
   AssignmentSubmission AssignmentSubmission[]
   bookmarks            Bookmark[]
   createdCourses       Course[]               @relation("CourseAuthor")
@@ -113,6 +114,7 @@ model Course {
   students          MyEnrollment[]
   modules           Module[]
   userProgress      UserProgress[]
+  notifications      Notification[]
 
   @@index([title])
 }
@@ -442,4 +444,34 @@ enum ActivityType {
 enum CourseType {
   CRASH
   PREMIUM
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String   // e.g., "New Assignment Posted"
+  message     String   @db.Text // The actual text
+  actionUrl   String?  // Where to redirect when clicked
+  isRead      Boolean  @default(false)
+  type        NotificationType @default(SYSTEM)
+  
+  // Optional: Link to a specific course if relevant
+  courseId    String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course?  @relation(fields: [courseId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+enum NotificationType {
+  SYSTEM
+  COURSE_UPDATE
+  ASSIGNMENT
+  MENTION
+  BILLING
 }
