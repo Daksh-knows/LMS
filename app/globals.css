@@ -26,7 +26,9 @@
   --sidebar-nav-text-active: #92400e;  
   --sidebar-nav-bg-hover: #f1f5f9;    
   --sidebar-nav-bg-active: #fef3c7;    
-  --sidebar-nav-indicator: #d97706;      
+  --sidebar-nav-indicator: #d97706;   
+  --header-background: #FFFFFF  ; 
+  --streak-background:#FEF7ED ;
 }
 
 .dark {
@@ -51,6 +53,8 @@
   --sidebar-nav-bg-hover: #1e1e1e;      
   --sidebar-nav-bg-active: #322607;    
   --sidebar-nav-indicator: #fabb22; 
+  --header-background: #000000  ; 
+  --streak-background: #121212;
 }
 
 [data-theme='dark'] {
@@ -75,6 +79,8 @@
   --sidebar-nav-bg-hover: #1e1e1e;       
   --sidebar-nav-bg-active: #322607;    
   --sidebar-nav-indicator: #fabb22;   
+  --header-background: #000000  ; 
+  --streak-background: #121212;
 }
 
 .top-shadow-box {
@@ -82,6 +88,9 @@
   box-shadow: 0 -5px 15px 0 #FFCC5942;
 }
 
+.bottom-shadow-box {
+  box-shadow: 0 5px 15px 0 #FFCC5942;
+}
 
 /* 4. Apply these to your base tags */
 body {

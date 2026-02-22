@@ -64,7 +64,7 @@ export default function CourseList({ courses: initialCourses, loading }: CourseL
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm md:text-lg lg:text-xl font-extrabold text-gray-900 tracking-tight">
+        <h3 className="text-sm md:text-lg lg:text-xl font-extrabold text-(--text-color) theme-transition tracking-tight">
           {oneCourse ? "Featured Course" : "All Courses"}
         </h3>
       </div>
@@ -89,10 +89,10 @@ export default function CourseList({ courses: initialCourses, loading }: CourseL
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 onClick={(e) => hasAccess && handleResumeCourse(e, course.id)}
-                className={`relative group overflow-hidden rounded-[2rem] border transition-all duration-500 shadow-sm ${
+                className={`relative theme-transition group overflow-hidden rounded-[2rem] border-(--banner-border)  shadow-(--box-shadow) transition-all duration-500  ${
                   hasAccess 
-                    ? "border-green-100 bg-white cursor-pointer hover:shadow-xl hover:shadow-indigo-100/50" 
-                    : "border-gray-200 bg-gray-50/50 cursor-not-allowed grayscale"
+                    ? "border-green-100 bg-[var(--streak-background)] cursor-pointer hover:shadow-xl hover:shadow-indigo-100/50" 
+                    : "border-gray-200 bg-[var(--streak-background)]-50/50 cursor-not-allowed grayscale"
                 }`}
               >
                 {/* Image & Badges */}
@@ -120,7 +120,7 @@ export default function CourseList({ courses: initialCourses, loading }: CourseL
 
                 {/* Content */}
                 <div className="p-6 flex flex-col gap-2">
-                  <h2 className={`text-lg font-black leading-tight transition-colors ${hasAccess ? "text-gray-900 group-hover:text-indigo-600" : "text-gray-400"}`}>
+                  <h2 className={`text-lg font-black leading-tight transition-colors ${hasAccess ? "text-(--text-color) group-hover:text-indigo-600" : "text-gray-400"}`}>
                     {course.title}
                   </h2>
                   <p className="text-gray-500 text-sm line-clamp-2 font-medium">
@@ -132,7 +132,7 @@ export default function CourseList({ courses: initialCourses, loading }: CourseL
                       <button
                         onClick={(e) => handleResumeCourse(e, course.id)}
                         disabled={isResuming}
-                        className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95"
+                        className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2  hover:bg-indigo-700 transition-all active:scale-95"
                       >
                         {isResuming ? <Loader2 className="animate-spin" size={14} /> : <>Continue Learning <ArrowRight size={14} /></>}
                       </button>
