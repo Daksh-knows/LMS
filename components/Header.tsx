@@ -40,7 +40,7 @@ export default function Header({ user, onMenuClick, isSidebarOpen }: { user: any
     : user?.email?.charAt(0).toUpperCase() || "U";
 
   return (
-    <header className="fixed top-0 right-0 left-0  lg:left-64 h-16 bg-amber-50 backdrop-blur-md border-b border-gray-100 z-40 px-8 flex items-center justify-between">
+    <header className="fixed top-0 right-0 left-0 theme-transition  lg:left-64 h-16 bg-(--header-background) backdrop-blur-md bottom-shadow-box  z-40 px-8 flex items-center justify-between">
 
       <button 
         onClick={onMenuClick}
@@ -58,62 +58,66 @@ export default function Header({ user, onMenuClick, isSidebarOpen }: { user: any
         </motion.div>
       </button>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
         {/* Dynamic Streak Display */}
-          <div className="flex items-center gap-2 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-100 transition-all hover:scale-105">
-            {/* Wrap Lottie in a small, constrained container */}
-            <div className="w-10 h-10 flex items-center justify-center shrink-0 overflow-hidden">
-              <DotLottieReact
-                src="/icons/FlameAnimation.lottie"
-                loop
-                autoplay
-                // style ensures it doesn't try to expand past the 24px container
-                style={{ width: '100%', height: '100%' }}
-              />
-            </div>
-
-            <div className="flex flex-col leading-none">
-              {loading ? (
-                <Loader2 className="h-3 w-3 animate-spin text-orange-600" />
-              ) : (
-                <span className="text-sm font-bold text-gray-800">
-                  {streak ?? 0}
-                </span>
-              )}
-              <span className="text-[10px] text-gray-500 font-medium">Days Streak</span>
-            </div>
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-[var(--streak-background)] px-2 py-1 sm:px-3 sm:py-1.5 rounded-full border border-[#FABD23] transition-all hover:scale-105">
+          
+          {/* Scaled Lottie Container */}
+          <div className="w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center shrink-0 overflow-hidden">
+            <DotLottieReact
+              src="/icons/FlameAnimation.lottie"
+              loop
+              autoplay
+              style={{ width: '100%', height: '100%' }}
+            />
           </div>
 
-          <div className="relative group flex items-center">
-            {/* The Info Button */}
-            <button className="text-gray-400 hover:text-gray-600 transition-colors p-1 focus:outline-none">
-              <Info size={18} />
-            </button>
+          <div className="flex flex-col leading-none">
+            {loading ? (
+              <Loader2 className="h-3 w-3 animate-spin text-orange-600" />
+            ) : (
+              <span className="text-xs sm:text-sm font-bold text-[var(--text-color)]">
+                {streak ?? 0}
+              </span>
+            )}
+            {/* Hidden 'Days Streak' on very small mobile, visible from 'sm' breakpoint up */}
+            <span className="hidden sm:inline text-[10px] text-[var(--text-color)] font-medium">
+              Days Streak
+            </span>
+            {/* Mobile-only label (optional) */}
+            <span className="sm:hidden text-[8px] text-[var(--text-color)] font-bold">
+              DAYS
+            </span>
+          </div>
+        </div>
 
-            {/* The Tooltip Card */}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-64 p-3 
-                            bg-gray-900 text-white text-xs rounded-xl shadow-xl z-[70] 
-                            pointer-events-none 
-                            /* Slower Animation Styles */
-                            opacity-0 invisible group-hover:opacity-100 group-hover:visible 
-                            translate-y-[-12px] group-hover:translate-y-0
-                            transition-all duration-500 ease-in-out">
-              <div className="relative">
-                {/* Tooltip Arrow */}
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 border-8 border-transparent border-b-gray-900" />
-                
-                <p className="leading-relaxed text-center">
-                  Watch videos, attempt quizzes, and submit assignments to keep your streak going! 🔥
-                </p>
-              </div>
+        {/* Info Button: Hidden on Mobile, Flex on Desktop */}
+        <div className="relative group hidden md:flex items-center">
+          <button className="text-gray-400 hover:text-[var(--nav-item-active)] transition-colors p-1 focus:outline-none">
+            <Info size={18} />
+          </button>
+
+          {/* Tooltip Card */}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-64 p-3 
+                          bg-gray-900 text-white text-xs rounded-xl shadow-xl z-[70] 
+                          pointer-events-none 
+                          opacity-0 invisible group-hover:opacity-100 group-hover:visible 
+                          translate-y-[-12px] group-hover:translate-y-0
+                          transition-all duration-500 ease-in-out">
+            <div className="relative">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 border-8 border-transparent border-b-gray-900" />
+              <p className="leading-relaxed text-center">
+                Watch videos, attempt quizzes, and submit assignments to keep your streak going! 🔥
+              </p>
             </div>
           </div>
+        </div>
       </div>
 
       <div className="flex items-center gap-4">
         <ThemeSwitcher />
         <Link
-          className="w-10 h-10 rounded-full bg-red-700 flex items-center justify-center text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity overflow-hidden border-2 border-white shadow-sm"
+          className="w-10 h-10 rounded-full bg-red-700 flex items-center justify-center text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity overflow-hidden border-2 border-[#FABD23] shadow-sm"
           href="/dashboard/profile"
         >
           {user?.image ? (
