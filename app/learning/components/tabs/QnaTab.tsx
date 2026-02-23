@@ -5,7 +5,7 @@ import { useConfirm } from "@/context/ConfirmContext";
 import { useLecture } from "@/context/LectureContext";
 import Loader from "@/utils/Loader";
 import { showToast } from "@/utils/Toast";
-import { ChevronDown, Globe, MessageSquarePlus } from "lucide-react";
+import { ChevronDown, MessageSquarePlus } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -122,17 +122,16 @@ export default function QnaTab({ courseId, adminId }: QnaTabProps) {
    };
 
   if (isLoading && questions.length === 0) {
-    return <div className="flex justify-center py-10"><Loader message="Loading questions..." /></div>;
+    return <div className="flex justify-center py-20"><Loader message="Loading Questions ... " /></div>;
   }
 
-  // View 1: Single Question Details
   if (selectedQuestion) {
     return (
-      <QuestionDetail
+      <QuestionDetail 
         question={selectedQuestion}
         adminId={adminId}
         currentUserId={userId}
-        currentUserInitials={session?.user?.name?.charAt(0) || "Y"}
+        currentUserInitials={session?.user?.name?.charAt(0) || "U"}
         onBack={() => setSelectedQuestion(null)}
         onDelete={handleDelete}
         onReply={handleNewReply}
@@ -140,69 +139,78 @@ export default function QnaTab({ courseId, adminId }: QnaTabProps) {
     );
   }
 
-  // View 2: Main Questions List
   return (
-    <div className="py-4 md:py-6 space-y-4 md:space-y-6">
-      {/* Header Actions */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">Q&A</h3>
-          <div className="flex items-center gap-3 mt-1">
-            <span className="text-[9px] uppercase tracking-wider font-bold text-gray-400">Sort:</span>
-            <div className="relative inline-block">
+    <div className="py-4 md:py-6 space-y-4 md:space-y-6 w-full">
+      
+      {/* 1. Header Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-[var(--qna-banner-bg)] border border-[var(--qna-banner-border)] rounded-xl p-3 sm:px-4 sm:py-2 shadow-sm theme-transition gap-3 sm:gap-4 sm:min-h-[52px]">
+        
+        {/* Left Side: Title & Sort */}
+        <div className="flex items-center justify-between sm:justify-start gap-4 w-full sm:w-auto">
+          <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white tracking-wide">Q&A</h3>
+          
+          <div className="w-px h-5 sm:h-6 bg-white/30 hidden sm:block"></div>
+          
+          <div className="flex items-center gap-2 text-white/80 text-xs sm:text-sm">
+            <span>sort :</span>
+            <div className="relative group">
               <select 
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="appearance-none pr-6 text-xs font-medium text-gray-600 bg-transparent border-none focus:ring-0 cursor-pointer hover:text-gray-900"
+                className="appearance-none pr-5 text-white font-semibold bg-transparent border-none focus:ring-0 cursor-pointer outline-none"
               >
-                <option value="latest">Latest</option>
-                <option value="oldest">Oldest</option>
-                <option value="replies">Most Replies</option>
+                <option value="latest" className="text-black">Latest</option>
+                <option value="oldest" className="text-black">Oldest</option>
+                <option value="replies" className="text-black">Most Replies</option>
               </select>
-              <ChevronDown size={12} className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
+              <ChevronDown size={14} className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-white/80 group-hover:text-white transition-colors" />
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Right Side: Toggle & Button */}
+        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto mt-1 sm:mt-0 border-t border-white/10 sm:border-t-0 pt-3 sm:pt-0">
+          {/* Custom Radio Toggle */}
           <button 
             onClick={() => setIsAllLectures(!isAllLectures)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold transition-all border ${
-              isAllLectures ? "bg-purple-50 text-purple-700 border-purple-100" : "bg-white text-gray-600 border-gray-200 shadow-sm"
-            }`}
+            className="flex items-center gap-1.5 sm:gap-2 text-white text-[11px] sm:text-sm font-medium hover:opacity-80 transition-opacity whitespace-nowrap"
           >
-            <Globe size={13} />
-            {isAllLectures ? "All Lectures" : "This Lecture"}
+            <div className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border-[1.5px] border-[var(--colored-text)] flex items-center justify-center shrink-0`}>
+              {!isAllLectures && <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[var(--colored-text)]" />}
+            </div>
+            This Lecture
           </button>
+
+          {/* Ask Question Button */}
           <button 
             onClick={() => setShowForm(!showForm)}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-900 text-white rounded-lg text-[11px] font-bold hover:bg-black transition-all shadow-md active:scale-95"
+            className="flex items-center justify-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-black text-white dark:bg-[var(--colored-text)] dark:text-black rounded-lg text-[11px] sm:text-sm font-bold hover:brightness-110 transition-all active:scale-95 shadow-sm whitespace-nowrap shrink-0 sm:max-h-[32px]"
           >
-            <MessageSquarePlus size={13} />
-            {isTeacher ? "Announcement" : "Ask Question"}
+            <MessageSquarePlus size={14} className="sm:w-4 sm:h-4" />
+            Ask Question
           </button>
         </div>
       </div>
 
       {showForm && (
-        <NewQuestionForm
+        <NewQuestionForm 
           onSubmit={handleNewQuestion} 
           onCancel={() => setShowForm(false)} 
         />
       )}
 
-      <div className="space-y-3 md:space-y-4">
+      {/* 2. Questions List */}
+      <div className="space-y-3 sm:space-y-4">
         {sortedQuestions.length === 0 ? (
-          <div className="text-center py-12 border border-dashed rounded-2xl text-gray-400 text-xs md:text-sm bg-gray-50/50">
-            No questions yet.
+          <div className="text-center py-12 sm:py-16 border border-dashed border-[var(--qna-banner-border)] rounded-xl text-[var(--text-color)] opacity-60 text-xs sm:text-sm bg-transparent">
+            No questions yet. Be the first to ask!
           </div>
         ) : (
           sortedQuestions.map((q) => (
-            <QuestionCard
+            <QuestionCard 
               key={q.id}
               question={q}
               adminId={adminId}
-              sortBy={sortBy}
               onClick={() => setSelectedQuestion(q)}
             />
           ))
