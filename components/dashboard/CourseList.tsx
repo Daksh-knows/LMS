@@ -115,7 +115,7 @@ export default function CourseList({ courses: initialCourses, loading }: CourseL
       {/* Carousel Card Container */}
       <div className={`
           relative overflow-hidden rounded-[9px] bg-[var(--streak-background)] theme-transition min-h-[254px] 
-          border border-[var(--banner-border)]
+          border border-transparent
           shadow-[0px_0px_23.6px_0px_rgba(0,0,0,0.25)] 
           dark:border-[#464646] 
           dark:shadow-[0px_10px_40px_-10px_rgba(250,189,35,0.4)]
