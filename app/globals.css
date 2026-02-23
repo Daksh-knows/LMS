@@ -33,8 +33,12 @@
   --tab-border: #000000 ;
   --amber-glow: 0 0 15px 2px rgba(0, 0, 0, 0.25);
   --prose-heading: #000000 ;
-  --intructor-banner: #F3F4F6;
-  
+  --intructor-banner: #FBD89D;
+  --tab-background: #FEF7EB ;
+  --course-sidebar-background: #FEF7EB ;
+  --course-sidebar-border: #B28800 ;
+  --course-sidebar-module-header: #C47E09 ;
+  --course-sidebar-lecture-item: #FBD89D ;
 }
 
 .dark {
@@ -69,6 +73,9 @@
   --intructor-banner: #464646 ;
   --intructor-banner-border: #FABB22 ;
   --course-sidebar-background: #1A1A1A ;
+  --course-sidebar-border: #464646 ;
+  --course-sidebar-module-header: #333333 ;
+  --course-sidebar-lecture-item: #322607 ;
 }
 
 [data-theme='dark'] {
@@ -103,6 +110,9 @@
   --intructor-banner: #464646 ;
   --intructor-banner-border: #FABB22 ;
   --course-sidebar-background: #1A1A1A ;
+  --course-sidebar-border: #464646 ;
+  --course-sidebar-module-header: ##333333 ;
+  --course-sidebar-lecture-item: #322607 ;
 }
 
 .top-shadow-box {
