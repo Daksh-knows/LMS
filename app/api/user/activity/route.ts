@@ -6,44 +6,59 @@ export async function POST(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
+    
     if (!userId) {
       return new NextResponse("User ID is required", { status: 400 });
     }
 
     const { type, duration } = await req.json();
     
+    // 1. Get the start and end of the CURRENT day in UTC
+    const now = new Date();
+    const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+    const endOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
 
-    // 1. Normalize the date to midnight
-    // This ensures all activity for "Today" hits the same row
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const activity = await db.userActivity.upsert({
+    // 2. Find if an entry already exists for this user, activity type, and TODAY
+    const existingActivity = await db.userActivity.findFirst({
       where: {
-        // This matches the @@unique we defined in the schema
-        userId_type_createdAt: {
-          userId,
-          type,
-          createdAt: today,
-        },
-      },
-      update: {
-        // THIS is where the "add to existing value" happens
-        duration: {
-          increment: duration || 0,
-        },
-      },
-      create: {
         userId,
         type,
-        duration: duration || 0,
-        createdAt: today, // Ensures the first record starts at midnight
+        createdAt: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
       },
     });
 
+    let activity;
+
+    if (existingActivity) {
+      // 3a. If it exists, UPDATE it by adding the new duration to the previous one
+      activity = await db.userActivity.update({
+        where: { 
+          id: existingActivity.id 
+        },
+        data: {
+          duration: {
+            increment: duration || 0, 
+          },
+        },
+      });
+    } else {
+      // 3b. If it doesn't exist, CREATE a new entry
+      activity = await db.userActivity.create({
+        data: {
+          userId,
+          type,
+          duration: duration || 0,
+          createdAt: startOfDay, 
+        },
+      });
+    }
+
     return NextResponse.json(activity);
   } catch (error) {
-    console.error("[USER_ACTIVITY_UPSERT]", error);
+    console.error("[USER_ACTIVITY_UPDATE]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

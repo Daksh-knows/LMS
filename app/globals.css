@@ -3,7 +3,7 @@
 
 
 /* 1. Define the dark mode strategy */
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, [data-theme="dark"], .dark * , [data-theme="dark"] *));
 
 /* 2. Setup your color variables */
 :root {
@@ -35,6 +35,11 @@
   --prose-heading: #000000 ;
   --intructor-banner: #F3F4F6;
   
+  /* Learning Tabs */
+  --qna-banner-bg: #C47E09;
+  --qna-banner-border: #FFCC594D;
+  --qna-card-bg:#FBD89D80;
+  --qna-card-border: #B28800;
 }
 
 .dark {
@@ -103,6 +108,12 @@
   --intructor-banner: #464646 ;
   --intructor-banner-border: #FABB22 ;
   --course-sidebar-background: #1A1A1A ;
+
+  /* Learning Tab Dark*/
+  --qna-banner-bg: #322607;
+  --qna-banner-border: #FFCC594D;
+  --qna-card-bg: #282828;
+  --qna-card-border: #474747;
 }
 
 .top-shadow-box {

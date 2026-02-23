@@ -102,7 +102,7 @@ export default function ProgressSection({ stats }: ProgressSectionProps) {
         variants={containerVariants}
         initial="hidden"
         animate="show"
-        className="p-6 md:p-8 rounded-[1rem] bg-[var(--streak-background)] border border-transparent theme-transition flex flex-col"
+        className="p-6 md:p-8 rounded-[1rem] bg-[var(--streak-background)] border border-transparent dark:border-[#464646] dark:shadow-[0px_10px_40px_-10px_rgba(250,189,35,0.4)]  theme-transition flex flex-col"
       >
         <motion.h3 variants={itemVariants} className="text-[var(--text-color)] font-bold text-lg mb-6 tracking-tight">
           Today's Progress
@@ -159,7 +159,7 @@ export default function ProgressSection({ stats }: ProgressSectionProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="p-6 md:p-8 rounded-[1rem] bg-[var(--streak-background)] border border-transparent theme-transition flex flex-col overflow-hidden"
+        className="p-6 md:p-8 rounded-[1rem] bg-[var(--streak-background)] border border-transparent dark:border-[#464646] dark:shadow-[0px_10px_40px_-10px_rgba(250,189,35,0.4)] theme-transition flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex justify-between items-center mb-6">

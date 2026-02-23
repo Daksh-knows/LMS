@@ -32,66 +32,64 @@ const QuestionDetail = ({
       await onReply(replyContent);
       setReplyContent("");
     } catch (error) {
-      // Error handled by parent
+      // Handled by parent
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="py-4 md:py-6 space-y-4 md:space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-      <button onClick={onBack} className="flex items-center gap-2 text-xs md:text-sm text-gray-500 hover:text-gray-900 transition-colors mb-2 group">
+    <div className="py-2 animate-in fade-in slide-in-from-right-4 duration-300">
+      <button onClick={onBack} className="flex items-center gap-2 text-xs font-bold text-[var(--text-color)] opacity-60 hover:opacity-100 transition-opacity mb-4 group">
         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> 
-        Back to questions
+        Back to Q&A
       </button>
 
-      <div className={`border rounded-xl p-4 md:p-6 shadow-sm ${isQuestionTeacher ? "bg-blue-50/30 border-blue-200" : "bg-white border-gray-200"}`}>
+      <div className="border border-[var(--qna-card-border)] bg-[var(--qna-card-bg)] rounded-xl p-5 md:p-6 theme-transition">
+        {/* Header */}
         <div className="flex justify-between items-start gap-3 mb-4">
           <div className="flex gap-3 md:gap-4">
-            <div 
-              style={{ backgroundColor: isQuestionTeacher ? "#2563eb" : "#0d9488" }} 
-              className="h-8 w-8 md:h-10 md:w-10 rounded-full flex items-center justify-center text-white font-bold shrink-0 text-sm md:text-base"
-            >
-              {question.user?.image ? <img src={question.user.image} alt="User" className="h-full w-full rounded-full object-cover" /> : <span>{question.user?.name?.charAt(0) || "U"}</span>}
+            <div className="h-10 w-10 md:h-12 md:w-12 rounded-full shrink-0 flex items-center justify-center text-white font-bold text-lg overflow-hidden border border-[var(--qna-banner-border)] bg-[var(--banner-color)]">
+              {question.user?.image ? <img src={question.user.image} alt="User" className="h-full w-full object-cover" /> : <span>{question.user?.name?.charAt(0) || "U"}</span>}
             </div>
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
-                <h2 className="text-base md:text-lg font-bold text-gray-900 leading-tight truncate">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-base md:text-lg font-bold text-[var(--text-color)] leading-tight">
                   {question.title}
                 </h2>
                 {isQuestionTeacher && (
-                  <span className="bg-blue-600 text-white text-[7px] md:text-[8px] px-1.5 py-0.5 rounded font-black uppercase shrink-0">Teacher</span>
+                  <span className="bg-[var(--colored-text)] text-black text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider">Instructor</span>
                 )}
               </div>
-              <p className="text-[10px] md:text-xs text-gray-500 mt-1">
+              <p className="text-[11px] md:text-xs text-[var(--text-color)] opacity-60 mt-1">
                 {question.user?.name} • {new Date(question.createdAt).toLocaleDateString()}
               </p>
             </div>
           </div>
           
           {currentUserId === question.userId && (
-            <button onClick={() => onDelete(question.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0">
+            <button onClick={() => onDelete(question.id)} className="p-2 text-[var(--text-color)] opacity-50 hover:opacity-100 hover:text-red-500 transition-colors shrink-0">
               <Trash2 size={16} />
             </button>
           )}
         </div>
 
-        <p className="text-gray-700 whitespace-pre-wrap text-sm leading-relaxed border-b pb-6">
+        {/* Description */}
+        <p className="text-[var(--text-color)] opacity-90 whitespace-pre-wrap text-sm leading-relaxed border-b border-[var(--qna-banner-border)] pb-6">
           {question.description}
         </p>
 
+        {/* Images */}
         {question.images && question.images.length > 0 && (
-          <div className={`p-1 my-6 ${question.images.length === 1 ? "flex justify-start" : "grid gap-2 grid-cols-2 sm:grid-cols-3"}`}>
+          <div className="flex flex-wrap gap-2 py-4">
             {question.images.map((image: any) => (
               <div 
                 key={image.id} 
-                className={`relative group cursor-zoom-in overflow-hidden rounded-lg border border-gray-100 bg-gray-50 transition-all ${
-                  question.images.length === 1 ? "w-full max-w-[280px] md:max-w-[350px] aspect-square" : "aspect-square md:aspect-video"
-                }`}
+                className="relative group cursor-zoom-in overflow-hidden rounded-lg border border-[var(--qna-banner-border)] h-24 w-24 md:h-32 md:w-32"
                 onClick={() => window.open(image.url, '_blank')}
               >
                 <img src={image.url} alt="Attachment" className="h-full w-full object-cover" />
-                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <Search className="text-white" size={20} />
                 </div>
               </div>
@@ -100,10 +98,10 @@ const QuestionDetail = ({
         )}
 
         {/* Replies Section */}
-        <div className="mt-6 space-y-6">
+        <div className="mt-6 space-y-5">
           <div className="flex items-center gap-2">
-            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Replies</h4>
-            <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-[10px] font-bold">
+            <h4 className="text-xs font-bold text-[var(--text-color)] uppercase tracking-widest opacity-60">Replies</h4>
+            <span className="bg-[var(--qna-banner-border)] text-[var(--text-color)] px-2 py-0.5 rounded text-[10px] font-bold">
               {question.replies?.length || 0}
             </span>
           </div>
@@ -112,45 +110,43 @@ const QuestionDetail = ({
             {sortedReplies.map((reply: any) => {
               const isReplyTeacher = reply.userId === adminId;
               return (
-                <div key={reply.id} className="flex gap-2 md:gap-3">
-                  <div 
-                    style={{ backgroundColor: isReplyTeacher ? "#2563eb" : "#9ca3af" }}
-                    className="h-7 w-7 md:h-8 md:w-8 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white shadow-sm"
-                  >
-                    {reply.user?.name?.charAt(0)}
+                <div key={reply.id} className="flex gap-3">
+                  <div className="h-8 w-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white bg-[var(--banner-color)] border border-[var(--qna-banner-border)]">
+                    {reply.user?.name?.charAt(0) || "U"}
                   </div>
-                  <div className={`flex-1 p-3 rounded-xl md:rounded-2xl border ${isReplyTeacher ? "bg-blue-50 border-blue-100" : "bg-gray-50 border-gray-100"}`}>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-[11px] md:text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                  <div className="flex-1 p-4 rounded-xl border border-[var(--qna-banner-border)] bg-transparent">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[11px] md:text-xs font-bold text-[var(--text-color)] flex items-center gap-2">
                         {reply.user?.name}
-                        {isReplyTeacher && <span className="bg-blue-600 text-white text-[7px] px-1.5 py-0.5 rounded font-black uppercase">Teacher</span>}
+                        {isReplyTeacher && <span className="bg-[var(--colored-text)] text-black text-[8px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider">Instructor</span>}
                       </span>
-                      <span className="text-[9px] text-gray-400">{new Date(reply.createdAt).toLocaleDateString()}</span>
+                      <span className="text-[10px] text-[var(--text-color)] opacity-50">{new Date(reply.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <p className="text-xs md:text-sm text-gray-600 leading-normal">{reply.content}</p>
+                    <p className="text-sm text-[var(--text-color)] opacity-80 leading-relaxed">{reply.content}</p>
                   </div>
                 </div>
               );
             })}
           </div>
 
-          <form onSubmit={handleReplySubmit} className="mt-6 pt-4 border-t border-gray-100">
-            <div className="flex items-start gap-2 md:gap-3">
-              <div className="h-8 w-8 rounded-full bg-gray-900 flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+          {/* Reply Form */}
+          <form onSubmit={handleReplySubmit} className="mt-6 pt-6 border-t border-[var(--qna-banner-border)]">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-full flex items-center justify-center text-white bg-[var(--banner-color)] text-sm font-bold shrink-0 border border-[var(--qna-banner-border)]">
                 {currentUserInitials}
               </div>
               <div className="flex-1 flex gap-2">
                 <textarea
                   value={replyContent}
                   onChange={(e) => setReplyContent(e.target.value)}
-                  placeholder="Write a reply..."
-                  className="w-full p-3 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all resize-none min-h-[45px] max-h-[120px]"
+                  placeholder="Type your reply..."
+                  className="w-full p-3 text-sm bg-transparent border border-[var(--qna-banner-border)] text-[var(--text-color)] placeholder:text-[var(--text-color)] placeholder:opacity-50 rounded-xl focus:border-[var(--colored-text)] outline-none transition-colors resize-none min-h-[50px] max-h-[120px]"
                   required
                 />
                 <button 
                   disabled={isSubmitting || !replyContent.trim()}
                   type="submit"
-                  className="bg-gray-900 text-white rounded-xl hover:bg-black disabled:bg-gray-200 transition-all p-3 shadow-sm h-[45px] w-[45px] flex items-center justify-center shrink-0"
+                  className="bg-[var(--colored-text)] text-black rounded-xl hover:brightness-110 disabled:opacity-50 transition-all p-3 shadow-sm h-[50px] w-[50px] flex items-center justify-center shrink-0 active:scale-95"
                 >
                   <Send size={18} className={isSubmitting ? "animate-pulse" : ""} />
                 </button>

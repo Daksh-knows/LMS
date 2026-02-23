@@ -20,32 +20,31 @@ const NewQuestionForm = ({
     try {
       setIsSubmitting(true);
       await onSubmit({ title, description, images });
-      // Reset form on success
       setTitle("");
       setDescription("");
       setImages([]);
     } catch (error) {
-      // Error handled by parent
+      // Handled by parent toast
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 border border-gray-200 rounded-2xl bg-gray-50 space-y-3 animate-in fade-in zoom-in-95 duration-200">
+    <form onSubmit={handleSubmit} className="p-4 sm:p-5 border border-[var(--qna-card-border)] rounded-xl bg-[var(--qna-card-bg)] space-y-4 animate-in fade-in zoom-in-95 duration-200 theme-transition">
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="Title"
-        className="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-100"
+        placeholder="Question Title"
+        className="w-full px-4 py-3 text-sm bg-transparent border border-[var(--qna-banner-border)] text-[var(--text-color)] placeholder:text-[var(--text-color)] placeholder:opacity-50 rounded-lg outline-none focus:border-[var(--colored-text)] transition-colors"
         required
       />
       <textarea
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        placeholder="What is your question?"
-        rows={3}
-        className="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-100 resize-none"
+        placeholder="What is your question about?"
+        rows={4}
+        className="w-full px-4 py-3 text-sm bg-transparent border border-[var(--qna-banner-border)] text-[var(--text-color)] placeholder:text-[var(--text-color)] placeholder:opacity-50 rounded-lg outline-none focus:border-[var(--colored-text)] resize-none transition-colors"
         required
       />
 
@@ -53,8 +52,8 @@ const NewQuestionForm = ({
         {images.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {images.map((url) => (
-              <div key={url} className="relative h-16 w-16 rounded-lg overflow-hidden border border-gray-200">
-                <button type="button" onClick={() => setImages(prev => prev.filter(i => i !== url))} className="absolute top-0.5 right-0.5 p-1 bg-black/50 text-white rounded-full z-10">
+              <div key={url} className="relative h-16 w-16 rounded-lg overflow-hidden border border-[var(--qna-banner-border)]">
+                <button type="button" onClick={() => setImages(prev => prev.filter(i => i !== url))} className="absolute top-0.5 right-0.5 p-1 bg-black/60 text-white rounded-full z-10 hover:bg-black transition-colors">
                   <X size={10} />
                 </button>
                 <img src={url} alt="Preview" className="object-cover h-full w-full" />
@@ -73,19 +72,21 @@ const NewQuestionForm = ({
               type="button"
               disabled={!open}
               onClick={() => open?.()}
-              className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-[11px] font-bold text-gray-600 hover:bg-gray-100 transition shadow-sm disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-transparent border border-[var(--qna-banner-border)] rounded-lg text-xs font-bold text-[var(--text-color)] opacity-80 hover:opacity-100 hover:border-[var(--colored-text)] transition-all disabled:opacity-50"
             >
               <ImageIcon size={14} />
-              Images ({images.length}/5)
+              Attach Image ({images.length}/5)
             </button>
           )}
         </CldUploadWidget>
       </div>
 
       <div className="flex justify-end gap-3 pt-2">
-        <button type="button" onClick={onCancel} className="px-3 py-2 text-[11px] font-bold text-gray-500">Cancel</button>
-        <button disabled={isSubmitting} type="submit" className="px-4 py-2 bg-gray-900 text-white rounded-xl text-[11px] font-bold disabled:opacity-50 shadow-sm">
-          {isSubmitting ? "Posting..." : "Post"}
+        <button type="button" onClick={onCancel} className="px-4 py-2 text-xs font-bold text-[var(--text-color)] opacity-60 hover:opacity-100 transition-opacity">
+          Cancel
+        </button>
+        <button disabled={isSubmitting} type="submit" className="px-6 py-2 bg-[var(--colored-text)] text-black rounded-lg text-xs font-bold disabled:opacity-50 hover:brightness-110 active:scale-95 transition-all">
+          {isSubmitting ? "Posting..." : "Post Question"}
         </button>
       </div>
     </form>
