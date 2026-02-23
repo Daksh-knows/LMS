@@ -11,7 +11,7 @@ import Loader from "@/utils/Loader";
 
 const ArticleComponent: React.FC = () => {
   const {lecture} = useLecture() ;
-  if(!lecture) return <Loader message="Loading article details" />
+  
 
   const [isCompleted, setIsCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -22,7 +22,7 @@ const ArticleComponent: React.FC = () => {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const res = await fetch(`/api/text?lectureId=${lecture.id}`);
+        const res = await fetch(`/api/text?lectureId=${lecture?.id}`);
         if (res.ok) {
           const data = await res.json();
           setIsCompleted(data.isCompleted);
@@ -34,7 +34,9 @@ const ArticleComponent: React.FC = () => {
       }
     };
     fetchStatus();
-  }, [lecture.id]);
+  }, [lecture?.id]);
+
+  if(!lecture) return <Loader message="Loading article details" />
 
   const handleMarkAsRead = async () => {
     if (isCompleted || isUpdating) return;
@@ -60,6 +62,7 @@ const ArticleComponent: React.FC = () => {
       setIsUpdating(false);
     }
   };
+
 
   return (
     <div className="min-h-full bg-white">

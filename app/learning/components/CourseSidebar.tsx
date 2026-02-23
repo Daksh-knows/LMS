@@ -176,31 +176,33 @@ const getStatusIndicator = (item: any, isActive: boolean) => {
 
       {/* 2. UNIFIED MODULES LIST */}
       <div className="flex-1 overflow-hidden flex flex-col  border border-white/10 rounded-2xl">
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2 ">
           {sections.map((section) => {
             const isOpen = openSections.includes(section.id);
             
             return (
               <div key={section.id} className="rounded-xl overflow-hidden">
                 {/* Module Header */}         
-                <button 
-                  onClick={() => toggleSection(section.id)}
-                  className={`w-full flex items-center justify-between p-4 transition-all bg-(--course-sidebar-module-header)"
-                  } ${courseType === "CRASH" ? "cursor-default" : "cursor-pointer"}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <ChevronDown 
-                      size={18} 
-                      className={`transition-transform duration-300 ${isOpen ? "rotate-0 text-[#FABD23]" : "-rotate-90 text-gray-500"}`} 
-                    />
-                    <span className={`font-bold text-sm theme-transition text-white`}>
-                      {section.title}
+                <div className="bg-(--course-sidebar-module-header) dark:bg-[#333333] theme-transition">
+                  <button 
+                    onClick={() => toggleSection(section.id)}
+                    className={`w-full flex items-center justify-between p-4 transition-all bg-(--course-sidebar-module-header)"
+                    } ${courseType === "CRASH" ? "cursor-default" : "cursor-pointer"}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <ChevronDown 
+                        size={18} 
+                        className={`transition-transform duration-300 ${isOpen ? "rotate-0 text-[#FABD23]" : "-rotate-90 text-gray-500"}`} 
+                      />
+                      <span className={`font-bold text-sm theme-transition text-white`}>
+                        {section.title}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                      {section.lectures.length} Lessons
                     </span>
-                  </div>
-                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                    {section.lectures.length} Lessons
-                  </span>
-                </button>
+                  </button>
+                </div>
 
                 {/* Lectures List */}
                 <AnimatePresence initial={false}>
