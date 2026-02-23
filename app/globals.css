@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+
+
 /* 1. Define the dark mode strategy */
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -18,7 +20,7 @@
   --sidebar-background: #FEF7EB ;
   --footer-right-gradient: #F59E0B ;
   --footer-left-gradient: #FDE9C7 ;
-  --colored-text:#FABB22 ;
+  --colored-text:#FABD23 ;
   --nav-item-active: #b91c1c;
   --sidebar-nav-text-idle: #64748b;     
   --sidebar-nav-text-active: #92400e;  
@@ -135,6 +137,8 @@ body {
   --color-brand-blue: #2563eb;
   /* Add any other custom theme variables here */
 }
+
+/* app/globals.css */
 
 /* Target the Tiptap editor and the viewer specifically */
 .tiptap p, .prose p {

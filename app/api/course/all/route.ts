@@ -13,6 +13,11 @@ export async function GET() {
       orderBy: { title: 'asc' },
       include: {
         category: true,
+        _count: {
+          select: {
+            modules: true,
+          },
+        },
         // Check if THIS specific user is enrolled
         students: userId ? {
           where: { userId: userId },
@@ -24,9 +29,10 @@ export async function GET() {
     // Add the flag to the response
     const formattedCourses = courses.map(course => ({
       ...course,
-      isEnrolled: course.students && course.students.length > 0
+      isEnrolled: course.students && course.students.length > 0,
+      modules: course._count.modules,
     }));
-
+    console.log(formattedCourses);
     return NextResponse.json({ success: true, data: formattedCourses });
 
   } catch (error) {
