@@ -167,18 +167,18 @@ const CourseSidebar: React.FC<Props> = ({
   };
 
   return (
-    <div className="w-full h-full bg-white flex flex-col border-l border-gray-300 font-sans shadow-sm">
+    <div className="w-full h-full  bg-(--course-sidebar-background) flex flex-col rounded-2xl  font-sans shadow-sm">
       {/* Sidebar Header */}
-      <div className="p-5 border-b-2 border-gray-200 shrink-0 bg-gray-50/50 backdrop-blur-md sticky top-0 z-20">
-        <h2 className="font-black text-gray-900 text-lg tracking-tight flex items-center justify-between">
+      <div className="p-5 shrink-0 rounded-2xl backdrop-blur-md sticky top-0 z-20">
+        <h2 className="font-black text-(--text-color) font-medium text-lg tracking-tight flex items-center justify-between">
           Course Content
           <div className="flex gap-2">
             {courseType === "CRASH" && (
-              <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-1 rounded-md uppercase tracking-widest font-bold border border-amber-200">
+              <span className="text-[10px]  text-amber-700 px-2 py-1 rounded-md uppercase tracking-widest font-bold border border-amber-200">
                 Crash
               </span>
             )}
-            <span className="text-[10px] bg-gray-800 text-white px-2 py-1 rounded-md uppercase tracking-widest font-bold">
+            <span className="text-[10px]  text-white px-2 py-1 rounded-md uppercase tracking-widest font-bold">
               {sections.length} Module{sections.length > 1 ? "s" : ""}
             </span>
           </div>
@@ -196,7 +196,7 @@ const CourseSidebar: React.FC<Props> = ({
                 onClick={() => toggleSection(section.id)}
                 // 4. Update cursor and hover effect based on courseType
                 className={`w-full flex items-center gap-3 px-5 py-5 transition-all duration-200 text-left group ${
-                  isOpen ? "bg-white" : "hover:bg-gray-100/50"
+                  isOpen ? "bg-transparent" : "hover:bg-gray-100/50"
                 } ${courseType === "CRASH" ? "cursor-default" : "cursor-pointer"}`}
               >
                 <motion.div

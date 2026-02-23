@@ -51,12 +51,11 @@ const TabbedContent: React.FC<Props> = ({
   
   if(!lecture) return <Loader message="Loading tab details" />
   return (
-    <div className="mt-6 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+    <div className="mt-6 bg-(--tab-background) shadow-(--amber-glow) theme-transition rounded-2xl border-(--tab-border)  overflow-hidden">
       {/* Tab Navigation */}
-      <div className="flex items-center border-b border-gray-100 bg-gray-50/50 px-2 pt-2">
+      <div className="flex items-center px-6 border-b border-white/5 ">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
-          const Icon = tab.icon;
 
           return (
             <button
@@ -64,33 +63,26 @@ const TabbedContent: React.FC<Props> = ({
               onClick={() => handleTabChange(tab.id)}
               className={`
                 relative flex items-center gap-2 
-                /* Responsive Padding: Small on mobile, large on desktop */
-                px-4 md:px-3 lg:px-6 py-3.5 
-                /* Responsive Text: Extra small on mobile, small on desktop */
-                text-xs lg:text-sm font-semibold 
-                transition-all duration-200 rounded-t-lg
-                /* Prevent text wrapping on mobile */
-                whitespace-nowrap flex-1 md:flex-none justify-center
+                /* Vertical padding to give height, horizontal for spacing */
+                px-4 lg:px-6 py-5 
+                /* Font styling with the requested color */
+                text-xs lg:text-sm font-bold tracking-wide
+                transition-all duration-200
+                whitespace-nowrap
                 ${
                   isActive
-                    ? "text-purple-700 bg-white shadow-[0_-1px_2px_rgba(0,0,0,0.03)] border border-b-0 border-gray-200 z-10"
-                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-100/50"
+                    ? "text-[#FABD23]" 
+                    : "text-gray-400 hover:text-gray-200"
                 }
               `}
             >
-              {/* Icon hidden on mobile, shown on medium screens and up */}
-              <Icon
-                size={16}
-                className={`
-                  hidden md:block shrink-0
-                  ${isActive ? "text-purple-600" : "text-gray-400"}
-                `}
-              />
-              
               <span>{tab.label}</span>
 
+              {/* The Amber Underline matches the text color exactly */}
               {isActive && (
-                <div className="absolute top-0 left-0 w-full h-[2px] bg-purple-600 rounded-t-full" />
+                <div 
+                  className="absolute bottom-0 left-0 w-full h-[2.5px] bg-[#FABD23] rounded-t-full shadow-[0_-2px_10px_rgba(250,189,35,0.3)]" 
+                />
               )}
             </button>
           );
