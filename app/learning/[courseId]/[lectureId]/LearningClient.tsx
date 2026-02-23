@@ -216,7 +216,7 @@ export default function LearningClient({ courseId , lectureId  , user }: Learnin
                     
                     {/* --- THE STAGE (Video/Quiz Parent) --- */}
                     <div className="w-full flex justify-center items-center overflow-hidden rounded-2xl bg-transparent shadow-(--amber-glow)">
-                      <div className="w-full aspect-video">
+                      <div className="w-full min-h-[20rem]">
                         {/* --- lecture UI --- */}
                         {currentLecture.type === 'VIDEO' && (
                           <div id="video-stage" className="w-full h-full">
