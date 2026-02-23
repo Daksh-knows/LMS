@@ -12,7 +12,7 @@ import {
   isToday, 
   isSameDay 
 } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 
 interface ProgressStats {
   videoWatchedMins: number;
@@ -26,7 +26,8 @@ interface ProgressSectionProps {
 }
 
 // --- Animation Variants ---
-const containerVariants = {
+// By typing these explicitly as 'Variants', TypeScript knows 'type' is a literal.
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -34,7 +35,7 @@ const containerVariants = {
   },
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 15 },
   show: { 
     opacity: 1, 
@@ -43,7 +44,7 @@ const itemVariants = {
   },
 };
 
-const monthSlideVariants = {
+const monthSlideVariants: Variants = {
   enter: (direction: number) => ({
     x: direction > 0 ? 20 : -20,
     opacity: 0,
@@ -101,7 +102,7 @@ export default function ProgressSection({ stats }: ProgressSectionProps) {
         variants={containerVariants}
         initial="hidden"
         animate="show"
-        className="p-6 md:p-8 rounded-2xl bg-[var(--streak-background)] border border-transparent theme-transition flex flex-col"
+        className="p-6 md:p-8 rounded-[1rem] bg-[var(--streak-background)] border border-transparent theme-transition flex flex-col"
       >
         <motion.h3 variants={itemVariants} className="text-[var(--text-color)] font-bold text-lg mb-6 tracking-tight">
           Today's Progress
@@ -158,7 +159,7 @@ export default function ProgressSection({ stats }: ProgressSectionProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="p-6 md:p-8 rounded-2xl bg-[var(--streak-background)] border border-transparent theme-transition flex flex-col overflow-hidden"
+        className="p-6 md:p-8 rounded-[1rem] bg-[var(--streak-background)] border border-transparent theme-transition flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
