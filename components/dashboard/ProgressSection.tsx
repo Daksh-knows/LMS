@@ -1,167 +1,254 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { Info, Video, FileQuestion, CheckCircle, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths, isToday } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useMemo, useCallback } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { 
+  format, 
+  startOfMonth, 
+  endOfMonth, 
+  eachDayOfInterval, 
+  subMonths, 
+  addMonths, 
+  isToday, 
+  isSameDay 
+} from "date-fns";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 
-interface ProgressSectionProps {
-  stats: {
-    videoWatchedMins: number;
-    quizzesCompleted: number;
-    activeDays: string[];
-    assignmentsSubmitted: number;
-  };
+interface ProgressStats {
+  videoWatchedMins: number;
+  quizzesCompleted: number;
+  activeDays: string[];
+  assignmentsSubmitted: number;
 }
 
+interface ProgressSectionProps {
+  stats: ProgressStats;
+}
+
+// --- Animation Variants ---
+// By typing these explicitly as 'Variants', TypeScript knows 'type' is a literal.
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.1 },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 15 },
+  show: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { type: "spring", stiffness: 300, damping: 24 } 
+  },
+};
+
+const monthSlideVariants: Variants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? 20 : -20,
+    opacity: 0,
+  }),
+  center: {
+    zIndex: 1,
+    x: 0,
+    opacity: 1,
+    transition: { type: "spring", stiffness: 300, damping: 30 }
+  },
+  exit: (direction: number) => ({
+    zIndex: 0,
+    x: direction < 0 ? 20 : -20,
+    opacity: 0,
+    transition: { duration: 0.2 }
+  }),
+};
+
 export default function ProgressSection({ stats }: ProgressSectionProps) {
+  // --- State ---
   const [viewDate, setViewDate] = useState(new Date());
-  const minutesWatched = Math.ceil(stats.videoWatchedMins / 60);
-  // Calculate days for the heatmap based on local viewDate
+  const [slideDirection, setSlideDirection] = useState(0);
+
+  // --- Memoized Data ---
+  const progressData = useMemo(() => [
+    { label: "Videos Watched", value: stats.videoWatchedMins, unit: "min", total: 120 },
+    { label: "Quizzes Completed", value: stats.quizzesCompleted, unit: "done", total: 10 },
+    { label: "Assignments Sent", value: stats.assignmentsSubmitted, unit: "sent", total: 5 },
+  ], [stats]);
+
   const daysInMonth = useMemo(() => {
     return eachDayOfInterval({ start: startOfMonth(viewDate), end: endOfMonth(viewDate) });
   }, [viewDate]);
 
+  // Adjusting to a Monday-start week
+  const daysOfWeek = useMemo(() => ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"], []);
+  
+  // Calculate padding days for the start of the month (Monday = 1, Sunday = 0/7)
+  const paddingDays = useMemo(() => {
+    const startDay = startOfMonth(viewDate).getDay();
+    return startDay === 0 ? 6 : startDay - 1;
+  }, [viewDate]);
+
+  // --- Handlers ---
+  const paginateMonth = useCallback((newDirection: number) => {
+    setSlideDirection(newDirection);
+    setViewDate((prev) => newDirection > 0 ? addMonths(prev, 1) : subMonths(prev, 1));
+  }, []);
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4 px-3 rounded-2xl">
-      {/* Today's Progress - Simplified Display */}
-      <div className="lg:col-span-1 bg-transparent rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm">
-        <h3 className="text-gray-700 font-bold mb-4 sm:mb-6 flex items-center gap-2">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4 w-full">
+      
+      {/* LEFT SECTION: Today's Progress */}
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+        className="p-6 md:p-8 rounded-[1rem] bg-[var(--streak-background)] border border-transparent theme-transition flex flex-col"
+      >
+        <motion.h3 variants={itemVariants} className="text-[var(--text-color)] font-bold text-lg mb-6 tracking-tight">
           Today's Progress
-          <div className="relative group">
-            <Info size={14} className="text-gray-400 cursor-help" />
-          </div>
-        </h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-5">
-          {/* Video Card */}
-          <div className="bg-blue-50/50 p-4 sm:p-6 rounded-2xl border border-blue-100 flex justify-between items-center sm:items-start lg:items-center">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Video className="text-blue-600 shrink-0" size={18} />
-              <span className="text-[10px] sm:text-xs font-semibold text-blue-800 uppercase tracking-wider">Video</span>
-            </div>
-            <p className="flex items-baseline gap-1 text-2xl sm:text-3xl md:text-4xl font-black text-blue-900">
-              {minutesWatched}
-              <span className="text-xs sm:text-sm font-normal"> {minutesWatched === 1 ? "min" : "mins"}</span>
-            </p>
-          </div>
-
-          {/* Quizzes Card */}
-          <div className="bg-yellow-50 p-4 sm:p-6 rounded-2xl border border-yellow-100 flex justify-between items-center sm:items-start lg:items-center">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <FileQuestion className="text-yellow-600 shrink-0" size={18} />
-              <span className="text-[10px] sm:text-xs font-semibold text-yellow-800 uppercase tracking-wider">Quizzes</span>
-            </div>
-            <p className="flex items-baseline gap-1 text-2xl sm:text-3xl md:text-4xl font-black text-yellow-900">
-              {stats.quizzesCompleted || 0}
-              <span className="text-xs sm:text-sm font-normal">done</span>
-            </p>
-          </div>
-
-          {/* Assignments Card */}
-          <div className="bg-green-50 p-4 sm:p-6 rounded-2xl border border-green-100 flex justify-between items-center sm:items-start lg:items-center sm:col-span-2 lg:col-span-1">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <CheckCircle className="text-green-600 shrink-0" size={18} />
-              <span className="text-[10px] sm:text-xs font-semibold text-green-800 uppercase tracking-wider">Assignments</span>
-            </div>
-            <p className="flex items-baseline gap-1 text-2xl sm:text-3xl md:text-4xl font-black text-green-900">
-              {stats.assignmentsSubmitted || 0}
-              <span className="text-xs sm:text-sm font-normal">sent</span>
-            </p>
-          </div>
+        </motion.h3>
+        
+        <div className="space-y-4 flex-1 flex flex-col justify-center">
+          {progressData.map((item, idx) => {
+            const progressPercentage = item.total > 0 ? Math.min((item.value / item.total) * 100, 100) : 0;
+            
+            return (
+              <motion.div 
+                key={idx}
+                variants={itemVariants}
+                className="p-4 md:p-5 rounded-[14px] border border-[var(--banner-border)] bg-transparent flex flex-col gap-3 group hover:border-[var(--colored-text)] transition-colors duration-300"
+              >
+                <div className="flex justify-between items-end">
+                  <span className="text-[var(--text-color)] font-bold text-sm md:text-base transition-colors group-hover:text-[var(--colored-text)]">
+                    {item.label}
+                  </span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xl md:text-2xl font-bold text-[var(--colored-text)] tabular-nums">
+                      {item.value.toString().padStart(2, '0')}
+                    </span>
+                    <span className="text-[var(--colored-text)] font-semibold text-xs md:text-sm">
+                      {item.unit}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Progress Bar */}
+                <div 
+                  className="h-1.5 w-full bg-[var(--progress-unreached)] rounded-full overflow-hidden"
+                  role="progressbar" 
+                  aria-valuenow={progressPercentage} 
+                  aria-valuemin={0} 
+                  aria-valuemax={100}
+                >
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    whileInView={{ width: `${progressPercentage}%` }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{ duration: 1.2, ease: [0.25, 1, 0.5, 1], delay: 0.2 + (idx * 0.1) }}
+                    className="h-full bg-[var(--colored-text)] rounded-full origin-left"
+                  />
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
-      </div>
+      </motion.div>
 
-      {/* Monthly Activity Heatmap */}
-      <motion.div
+      {/* RIGHT SECTION: Activity Calendar */}
+      <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] p-8 border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.04)] relative overflow-hidden"
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="p-6 md:p-8 rounded-[1rem] bg-[var(--streak-background)] border border-transparent theme-transition flex flex-col overflow-hidden"
       >
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-blue-100/40 rounded-full blur-3xl pointer-events-none" />
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-[var(--text-color)] font-bold text-lg tracking-tight">Activity</h3>
+          <span className="text-[var(--text-color)] opacity-60 font-medium text-sm tabular-nums">
+            {format(viewDate, "MMM yyyy")}
+          </span>
+        </div>
 
-        <div className="flex items-center justify-between mb-8 relative z-10">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-br from-gray-50 to-white rounded-2xl text-gray-700 shadow-sm border border-gray-100">
-              <CalendarDays size={22} />
-            </div>
-            <div>
-              <h3 className="text-gray-900 font-black text-xl tracking-tight">Activity</h3>
-              <p className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
-                {format(viewDate, "MMMM yyyy")}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1 bg-gray-100/50 p-1.5 rounded-2xl border border-gray-200/50">
-            <button
-              onClick={() => setViewDate(subMonths(viewDate, 1))}
-              className="p-2 hover:bg-white hover:shadow-sm rounded-xl transition-all active:scale-90 text-gray-600"
+        {/* Month Navigator */}
+        <div className="flex justify-center mb-8 relative z-10">
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => paginateMonth(-1)} 
+              aria-label="Previous month"
+              className="p-1.5 text-[var(--text-color)] hover:text-[var(--colored-text)] transition-colors opacity-70 hover:opacity-100 rounded-full hover:bg-[var(--banner-border)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--colored-text)]"
             >
               <ChevronLeft size={18} />
             </button>
-            <div className="w-[1px] h-4 bg-gray-200 mx-1" />
-            <button
-              onClick={() => setViewDate(addMonths(viewDate, 1))}
-              className="p-2 hover:bg-white hover:shadow-sm rounded-xl transition-all active:scale-90 text-gray-600"
+            
+            <div className="bg-[var(--colored-text)] text-black px-4 py-1.5 rounded-md font-bold text-sm min-w-[100px] text-center shadow-sm select-none">
+              {format(viewDate, "MMMM")}
+            </div>
+            
+            <button 
+              onClick={() => paginateMonth(1)} 
+              aria-label="Next month"
+              className="p-1.5 text-[var(--text-color)] hover:text-[var(--colored-text)] transition-colors opacity-70 hover:opacity-100 rounded-full hover:bg-[var(--banner-border)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--colored-text)]"
             >
               <ChevronRight size={18} />
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-2 sm:gap-3 relative z-10">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-            <div key={day} className="text-[11px] text-center text-gray-400 font-black mb-3 uppercase tracking-widest">
+        {/* Calendar Grid Header */}
+        <div className="grid grid-cols-7 gap-y-4 gap-x-2 text-center mb-2">
+          {daysOfWeek.map(day => (
+            <span key={day} className="text-[var(--text-color)] opacity-40 text-xs font-semibold select-none">
               {day}
-            </div>
+            </span>
           ))}
+        </div>
 
-          <AnimatePresence mode="wait">
+        {/* Animated Calendar Days */}
+        <div className="relative flex-1 min-h-[220px]">
+          <AnimatePresence initial={false} custom={slideDirection} mode="popLayout">
             <motion.div
-              key={format(viewDate, "yyyy-MM")}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              className="contents"
+              key={viewDate.getTime()}
+              custom={slideDirection}
+              variants={monthSlideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              className="grid grid-cols-7 gap-y-4 gap-x-2 text-center absolute inset-0"
             >
-              {Array.from({ length: startOfMonth(viewDate).getDay() }).map((_, i) => (
-                <div key={`pad-${i}`} className="aspect-square w-full" />
+              {/* Empty Padding Cells */}
+              {Array.from({ length: paddingDays }).map((_, i) => (
+                <div key={`empty-${i}`} className="aspect-square" />
               ))}
 
-              {daysInMonth.map((date, idx) => {
+              {/* Days */}
+              {daysInMonth.map((date, i) => {
                 const dateStr = format(date, "yyyy-MM-dd");
-                const isActive = stats.activeDays?.includes(dateStr);
-                const isUserToday = isToday(date);
+                const isTodayDate = isToday(date);
+                const isActive = stats.activeDays?.some(d => isSameDay(new Date(d), date));
 
                 return (
-                  <motion.div
-                    key={dateStr}
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: idx * 0.01 }}
-                    whileHover={{ scale: 1.1, y: -2 }}
-                    className={`
-                      relative aspect-square w-full max-w-[48px] rounded-2xl mx-auto 
-                      flex items-center justify-center text-[13px] font-bold cursor-default
-                      transition-colors duration-300 shadow-sm
-                      ${isActive
-                        ? "bg-gradient-to-br from-green-400 to-green-600 text-white ring-4 ring-green-500/10"
-                        : "bg-white/50 text-gray-500 border border-gray-100/50 hover:border-blue-200"
-                      }
-                      ${isUserToday && !isActive ? "ring-2 ring-blue-500 ring-offset-2" : ""}
-                    `}
-                  >
-                    {format(date, "d")}
-                    {isUserToday && (
-                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full" />
-                    )}
-                  </motion.div>
+                  <div key={i} className="flex flex-col items-center justify-center relative">
+                    <motion.span 
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`
+                        w-8 h-8 flex items-center justify-center rounded-[6px] text-sm font-medium transition-colors select-none
+                        ${isActive 
+                          ? "bg-[var(--colored-text)] text-black font-bold shadow-sm" 
+                          : "text-[var(--text-color)] opacity-60 bg-transparent hover:bg-[var(--banner-border)]"
+                        }
+                        ${isTodayDate && !isActive ? "ring-1 ring-inset ring-[var(--colored-text)] opacity-100" : ""}
+                      `}
+                    >
+                      {format(date, "d")}
+                    </motion.span>
+                  </div>
                 );
               })}
             </motion.div>
           </AnimatePresence>
         </div>
+
       </motion.div>
     </div>
   );

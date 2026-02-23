@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import ProgressSection from "@/components/dashboard/ProgressSection";
 import CourseList from "@/components/dashboard/CourseList";
 
-export default function OverviewClient({ data }: { data: any }) {
+export default function OverviewClient() {
   const { data: session } = useSession();
   
   // Stats State

@@ -1,4 +1,3 @@
-// app/overview/page.tsx
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth-utils";
 import OverviewClient from "./ClientComp";
@@ -9,27 +8,32 @@ export default async function OverviewPage() {
   
   if (!user) return redirect("/login");
 
-  const stats = await db.userStats.findUnique({
-    where: { userId: user.id },
-  });
-
-
-  const coursesDb = await db.course.findMany({
-    where: {
-      isPublished: true,
-    },
-    include: {
-      category: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 6, 
-  });
-
+  const [stats, coursesDb] = await Promise.all([
+    db.userStats.findUnique({
+      where: { userId: user.id },
+    }),
+    db.course.findMany({
+      where: {
+        isPublished: true,
+      },
+      include: {
+        category: true,
+        _count: {
+          select: {
+            modules: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 6,
+    }),
+  ]);
   const formattedCourses = coursesDb.map((course) => ({
     id: course.id,
     title: course.title,
+    modules: course._count.modules,
     // Use description as subtitle, with fallback
     subtitle: course.description || "Start your learning journey today.",
     // Use imageUrl, with fallback
@@ -41,14 +45,7 @@ export default async function OverviewPage() {
   // 5. Pass everything to the client component
   return (
     <div className="min-h-screen bg-transparent">
-    <OverviewClient
-      data={{
-        // Use JSON.parse(JSON.stringify()) to strip non-serializable Dates/Decimals
-        stats: JSON.parse(JSON.stringify(stats)) || { videoWatchedMins: 0, questionsSolved: 0 },
-        user: JSON.parse(JSON.stringify(user)),
-        courses: formattedCourses,
-      }}
-    />
-  </div>
+      <OverviewClient />
+    </div>
   );
 }
