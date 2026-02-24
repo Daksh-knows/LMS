@@ -16,6 +16,8 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useCourse } from "@/context/CourseContext";
 import Loader from "@/utils/Loader";
+import { useRouter } from "next/navigation";
+import { showToast } from "@/utils/Toast";
 
 // --- Types ---
 export type ItemType = "VIDEO" | "TEXT" | "QUIZ" | "ASSIGNMENT" | "LIVE";
@@ -56,6 +58,7 @@ const CourseSidebar: React.FC<Props> = ({
   const [progress, setProgress] = useState<ProgressData | null>(null);
   const [loading, setLoading] = useState(true);
   const {course} = useCourse();
+  const router = useRouter();
 
   // 1. Initial Session Storage Load
   useEffect(() => {
@@ -124,22 +127,32 @@ const CourseSidebar: React.FC<Props> = ({
   useEffect(() => {
     if (!course?.modules || !currentLectureId) return;
     const sections = course.modules;
-
+    // Find the module that contains the current lecture
     const activeSection = sections.find((s) =>
       s.lectures.some((l) => l.id === currentLectureId)
     );
     
-    // Using the functional state update avoids needing to add `openSections` to the dependency array
     if (activeSection) {
       setOpenSections((prev) => {
-        if (!prev.includes(activeSection.id)) {
-          return [...prev, activeSection.id];
-        }
-        return prev;
+        // If the section is already open, do nothing to avoid re-renders
+        if (prev.includes(activeSection.id)) return prev;
+        
+        const newState = [...prev, activeSection.id];
+        // Save to session storage so it persists on manual refresh
+        sessionStorage.setItem("sidebar_state", JSON.stringify(newState));
+        return newState;
       });
+
+      // Optional: Scroll the sidebar to this lecture automatically
+      // Give the UI a tiny moment to render the newly opened module first
+      setTimeout(() => {
+        const element = document.getElementById(`lecture-${currentLectureId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      }, 100);
     }
   }, [currentLectureId, course?.modules]);
-
   // --- ALL HOOKS ARE DONE. NOW YOU CAN RETURN EARLY ---
   if (!course) return <Loader message="Loading lectures" />;
 
@@ -156,7 +169,7 @@ const CourseSidebar: React.FC<Props> = ({
     });
   };
 
-const getStatusIndicator = (item: any, isActive: boolean) => {
+  const getStatusIndicator = (item: any, isActive: boolean) => {
     if (!isEnrolled && !item.isFree) return <Lock size={16} className="text-gray-500" />;
     
     const isCompleted = item.userProgress?.[0]?.isCompleted;
@@ -172,18 +185,37 @@ const getStatusIndicator = (item: any, isActive: boolean) => {
   };
 
   const getTypeIcon = (type: ItemType, isActive: boolean) => {
-      const iconProps = { size: 16, className: isActive ? "text-[#FABD23]" : "text-gray-400" };
-      switch (type) {
-        case "VIDEO": return <TvMinimalPlay {...iconProps} />;
-        case "TEXT": return <FileText {...iconProps} />;
-        case "QUIZ": return <SpellCheck {...iconProps} />;
-        case "ASSIGNMENT": return <ClipboardList {...iconProps} />;
-        case "LIVE": return <LinkIcon {...iconProps} />;
-        default: return <PlayCircle {...iconProps} />;
+    const iconProps = { size: 16, className: isActive ? "text-[#FABD23]" : "text-gray-400" };
+    switch (type) {
+      case "VIDEO": return <TvMinimalPlay {...iconProps} />;
+      case "TEXT": return <FileText {...iconProps} />;
+      case "QUIZ": return <SpellCheck {...iconProps} />;
+      case "ASSIGNMENT": return <ClipboardList {...iconProps} />;
+      case "LIVE": return <LinkIcon {...iconProps} />;
+      default: return <PlayCircle {...iconProps} />;
+    }
+  };
+
+  const handleNext = async () => {
+    try {
+      setLoading(true);
+      const url = `/api/course/next-lecture?courseId=${courseId}&lectureId=${currentLectureId}`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (data.nextId) {
+        router.push(`/learning/${courseId}/${data.nextId}`);
+      } else {
+        showToast.success("Course Completed!");
       }
-    };
+    } catch (error) {
+      showToast.error("Error finding next lesson");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const displayPercentage = progress?.percentage || 0;
-  const displayStats = progress ? `${progress.completedCount}/${progress.totalCount}` : "0/0";
 
    return (
     <div className="flex flex-col h-full rounded-2xl border theme-transition border-(--course-sidebar-border) gap-4 bg-(--course-sidebar-background) p-4">
@@ -255,6 +287,7 @@ const getStatusIndicator = (item: any, isActive: boolean) => {
                           return (
                             <div
                               key={item.id}
+                              id={`lecture-${item.id}`}
                               onClick={() => !isLocked && onSelectLecture(item)}
                               className={`flex items-start gap-4 p-4 rounded-xl transition-all border ${
                                 isActive 
@@ -299,7 +332,7 @@ const getStatusIndicator = (item: any, isActive: boolean) => {
       </div>
 
       {/* 3. NEXT LESSON BUTTON */}
-      <button className="w-full py-4 bg-white text-black font-black rounded-xl flex items-center justify-center gap-3 hover:bg-gray-200 transition-all shadow-xl">
+      <button onClick={()=>handleNext()} className="w-full py-4 bg-white text-black font-black rounded-xl flex items-center justify-center gap-3 hover:bg-gray-200 transition-all shadow-xl">
         Next Lesson <span className="text-xl">→</span>
       </button>
 
