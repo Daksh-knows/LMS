@@ -44,6 +44,15 @@
   --qna-banner-border: #FFCC594D;
   --qna-card-bg:#FBD89D80;
   --qna-card-border: #B28800;
+  /* Reviews Section Light */
+  --rev-overall-bg: #FFEED1;
+  --rev-overall-border: #B28800;
+  --rev-form-bg: #FFFFFF;
+  --rev-input-bg: #FBD89D;
+  --rev-input-border: #F59E0B;
+  --rev-card-bg: #FFFFFF;
+  --sb-thumb: #D8B960;
+  --sb-track: #FEEABF;
 }
 
 .dark {
@@ -124,6 +133,15 @@
   --qna-banner-border: #FFCC594D;
   --qna-card-bg: #282828;
   --qna-card-border: #474747;
+  /* Reviews Section Dark */
+  --rev-overall-bg: #2E2E2ECC;
+  --rev-overall-border: #464646;
+  --rev-form-bg: #2A2A2A;
+  --rev-input-bg: #00000069;
+  --rev-input-border: #FFCC594D;
+  --rev-card-bg: #2A2A2A;
+  --sb-thumb: #B3B3B3;
+  --sb-track: #464646;
 }
 
 .top-shadow-box {
@@ -172,6 +190,19 @@ body {
 .tiptap ul, .tiptap ol {
   margin-top: 0.25em;
   margin-bottom: 0.25em;
+}
+
+/* Custom Scrollbar for Reviews List */
+.review-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.review-scrollbar::-webkit-scrollbar-track {
+  background: var(--sb-track);
+  border-radius: 10px;
+}
+.review-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb);
+  border-radius: 10px;
 }
 
 /* Fix for the "Empty line" height */
