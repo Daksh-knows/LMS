@@ -26,7 +26,7 @@ interface FileAttachment {
 /** Upload a file using Signed URL (Cloud Run safe) */
 async function uploadFileToGCS(file: File): Promise<string> {
   // 1️⃣ Ask backend for signed URL
-  const signRes = await fetch("/api/upload/google/signed", {
+  const signRes = await fetch("/api/upload/google", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
