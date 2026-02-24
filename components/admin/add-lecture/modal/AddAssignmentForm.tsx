@@ -3,46 +3,86 @@
 import React, { useState } from "react";
 import { toast } from "react-hot-toast";
 import { getSession } from "next-auth/react";
-import { 
-  FileText, Loader2, Plus, Trash2, UploadCloud, 
-  Paperclip, X, File as FileIcon 
+import {
+  FileText,
+  Loader2,
+  Plus,
+  Trash2,
+  UploadCloud,
+  Paperclip,
 } from "lucide-react";
 import { showToast } from "@/utils/Toast";
 
-// Unified interface for both existing and new files
+/* ---------------- TYPES ---------------- */
+
 interface FileAttachment {
   title: string;
-  url?: string;      // Present if it's already uploaded/existing
-  file: File | null; // Present if it's a new file waiting to upload
+  url?: string;
+  file: File | null;
 }
 
-export default function AddAssignmentForm({ 
-  courseId, 
-  sectionId, 
-  initialData, 
-  onSuccess, 
-  onCancel 
+/* -------------- HELPERS ---------------- */
+
+/** Upload a file using Signed URL (Cloud Run safe) */
+async function uploadFileToGCS(file: File): Promise<string> {
+  // 1️⃣ Ask backend for signed URL
+  const signRes = await fetch("/api/upload/google/signed", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      filename: file.name,
+      contentType: file.type,
+    }),
+  });
+
+  if (!signRes.ok) {
+    throw new Error("Failed to get signed upload URL");
+  }
+
+  const { uploadUrl, publicUrl } = await signRes.json();
+
+  // 2️⃣ Upload directly to GCS
+  const uploadRes = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Type": file.type,
+    },
+    body: file,
+  });
+
+  if (!uploadRes.ok) {
+    throw new Error("Failed to upload file to storage");
+  }
+
+  // 3️⃣ Return public URL for DB
+  return publicUrl;
+}
+
+/* ------------- COMPONENT --------------- */
+
+export default function AddAssignmentForm({
+  courseId,
+  sectionId,
+  initialData,
+  onSuccess,
+  onCancel,
 }: any) {
   const [loading, setLoading] = useState(false);
 
-  // --- Form Fields ---
   const [title, setTitle] = useState(initialData?.title || "");
   const [description, setDescription] = useState(initialData?.description || "");
   const [isFree, setIsFree] = useState(initialData?.isFree || false);
 
-  // --- Unified Attachment State ---
-  // We map existing data to our interface, setting 'file' to null for them
   const [attachments, setAttachments] = useState<FileAttachment[]>(
     initialData?.attachments?.map((att: any) => ({
       title: att.title,
       url: att.url,
-      file: null
+      file: null,
     })) || []
   );
 
-  // --- Resource Actions ---
-  
-  // Adds a blank row for a new file
+  /* ---------- Attachment Actions ---------- */
+
   const addAttachment = () => {
     setAttachments([...attachments, { title: "", file: null }]);
   };
@@ -51,71 +91,69 @@ export default function AddAssignmentForm({
     setAttachments(attachments.filter((_, i) => i !== index));
   };
 
-  // Updates a specific row (e.g. setting the file or changing the title)
-  const updateAttachment = (index: number, field: keyof FileAttachment, value: any) => {
-    const newAttachments = [...attachments];
-    newAttachments[index] = { ...newAttachments[index], [field]: value };
+  const updateAttachment = (
+    index: number,
+    field: keyof FileAttachment,
+    value: any
+  ) => {
+    const next = [...attachments];
+    next[index] = { ...next[index], [field]: value };
 
-    // UX Improvement: Auto-fill the title with the filename if title is empty
-    if (field === 'file' && value instanceof File && !newAttachments[index].title) {
-      newAttachments[index].title = value.name;
+    if (field === "file" && value instanceof File && !next[index].title) {
+      next[index].title = value.name;
     }
 
-    setAttachments(newAttachments);
+    setAttachments(next);
   };
 
-  // --- Submission Handler ---
+  /* ------------- SUBMIT ---------------- */
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !description) return toast.error("Title and Instructions are required");
-    
-    setLoading(true);
+    if (!title || !description) {
+      toast.error("Title and Instructions are required");
+      return;
+    }
 
-    const savePromise = async () => {
-      // --- STEP 1: Process Attachments (Upload New Files) ---
-      // We map through the list and upload any item that has a 'file' object
+    setLoading(true);
+    toast.loading("Uploading files and saving assignment...");
+
+    try {
+      /* -------- STEP 1: Upload attachments -------- */
+
       const processedAttachments = await Promise.all(
         attachments.map(async (att) => {
-          
-          // Case A: Existing file (Has URL, No new File) -> Keep as is
+          // Existing file
           if (att.url && !att.file) {
             return {
               title: att.title,
               url: att.url,
-              type: "SUPPORTING_DOC"
+              type: "SUPPORTING_DOC",
             };
           }
 
-          // Case B: Empty row (No file selected) -> Skip
+          // Empty row
           if (!att.file) return null;
 
-          // Case C: New File -> Upload to Google Cloud
-          const formData = new FormData();
-          formData.append("file", att.file);
-
-          const response = await fetch("/api/upload/google", {
-            method: "POST",
-            body: formData,
-          });
-
-          if (!response.ok) {
-            throw new Error(`Failed to upload file: ${att.title || att.file.name}`);
-          }
-
-          const data = await response.json();
+          // New file → Signed URL upload
+          const url = await uploadFileToGCS(att.file);
 
           return {
             title: att.title || att.file.name,
-            url: data.url, // The GCS URL returned by your backend
-            type: "SUPPORTING_DOC"
+            url,
+            type: "SUPPORTING_DOC",
           };
         })
       );
 
-      // Filter out any nulls from empty rows
-      const finalAttachments = processedAttachments.filter((item) => item !== null);
+      const finalAttachments = processedAttachments.filter(Boolean);
 
-      // --- STEP 2: Construct Payload ---
+      /* -------- STEP 2: Save assignment -------- */
+
+      const session = await getSession();
+      const adminId = session?.user?.id;
+      if (!adminId) throw new Error("Unauthorized");
+
       const payload = {
         courseId,
         moduleId: sectionId,
@@ -123,50 +161,40 @@ export default function AddAssignmentForm({
         type: "ASSIGNMENT",
         isFree,
         description,
-        attachments: finalAttachments
+        attachments: finalAttachments,
       };
 
-      // --- STEP 3: Save to Database ---
-      const session = await getSession();
-      const adminId = session?.user?.id;
-      if (!adminId) throw new Error("Unauthorized");
-
       const isUpdate = !!initialData;
-      const url = isUpdate 
-        ? `/api/lecture?adminId=${adminId}&itemId=${initialData.id}` 
+      const apiUrl = isUpdate
+        ? `/api/lecture?adminId=${adminId}&itemId=${initialData.id}`
         : `/api/lecture?adminId=${adminId}`;
 
-      const response = await fetch(url, {
+      const res = await fetch(apiUrl, {
         method: isUpdate ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
+      const result = await res.json();
+      if (!res.ok || !result.success) {
         throw new Error(result.error || "Failed to save assignment");
       }
 
-      return result;
-    };
-    try{
-      toast.loading("Uploading files and saving assignment...");
-      await savePromise();
       toast.dismiss();
-      setLoading(false);
       showToast.success("Assignment saved successfully! 📝");
       onSuccess();
-    }catch(err: any){
+    } catch (err: any) {
       toast.dismiss();
+      showToast.error(err.message || "Failed to save assignment");
+    } finally {
       setLoading(false);
-      showToast.error(err.message || "Failed to save assignment.");
     }
   };
 
+  /* ---------------- UI ---------------- */
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      
       {/* Title */}
       <div className="space-y-1">
          <label className="text-xs font-bold text-gray-500 uppercase ml-1">Assignment Title</label>

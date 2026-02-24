@@ -3,46 +3,41 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { storage, bucketName } from "@/lib/google-cloud";
-import { Readable } from "stream";
-import { ReadableStream } from "stream/web";
 
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File;
+    const { filename, contentType } = await req.json();
 
-    if (!file) {
-      return NextResponse.json({ error: "No file" }, { status: 400 });
+    if (!filename || !contentType) {
+      return NextResponse.json(
+        { error: "filename and contentType are required" },
+        { status: 400 }
+      );
     }
 
-    const filename = `course-assets/${Date.now()}-${file.name.replace(/\s+/g, "_")}`;
+    const safeName = filename.replace(/\s+/g, "_");
+    const finalPath = `course-assets/${Date.now()}-${safeName}`;
+
     const bucket = storage.bucket(bucketName);
-    const blob = bucket.file(filename);
+    const file = bucket.file(finalPath);
 
-    // 🔑 Web Stream → Node Stream (TS-safe)
-    const webStream = file.stream() as ReadableStream;
-    const nodeStream = Readable.fromWeb(webStream);
-
-    await new Promise<void>((resolve, reject) => {
-      const gcsStream = blob.createWriteStream({
-        resumable: false,
-        contentType: file.type,
-      });
-
-      nodeStream
-        .on("error", reject)
-        .pipe(gcsStream)
-        .on("error", reject)
-        .on("finish", resolve);
+    const [uploadUrl] = await file.getSignedUrl({
+      version: "v4",
+      action: "write",
+      expires: Date.now() + 15 * 60 * 1000, // 15 minutes
+      contentType,
     });
 
-    const publicUrl = `https://storage.googleapis.com/${bucketName}/${filename}`;
-    return NextResponse.json({ url: publicUrl });
+    const publicUrl = `https://storage.googleapis.com/${bucketName}/${finalPath}`;
 
+    return NextResponse.json({
+      uploadUrl,
+      publicUrl,
+    });
   } catch (err: any) {
-    console.error("Upload API Error:", err);
+    console.error("Signed URL Error:", err);
     return NextResponse.json(
-      { error: err.message || "Upload failed" },
+      { error: err.message || "Failed to generate signed URL" },
       { status: 500 }
     );
   }
