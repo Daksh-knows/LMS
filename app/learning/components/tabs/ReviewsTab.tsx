@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Star, Loader2, Edit2, UserCircle } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { showToast } from "@/utils/Toast";
+import Dropdown from "@/components/ui/Dropdown";
 
 interface Review {
   id?: string;
@@ -15,7 +15,7 @@ interface Review {
     image?: string | null;
   };
   comment?: string | null;
-  createdAt?: Date | string;
+  createdAt?: Date | string | undefined;
 }
 
 interface ReviewsTabProps {
@@ -29,11 +29,17 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const router = useRouter();
 
   // --- NEW STATE: Reviews are now internal ---
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [sortFilter, setSortFilter] = useState<string>("recent");
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortOptions = [
+    { value: "recent", label: "Most Recent" },
+    { value: "highest", label: "Highest Rated" },
+    { value: "lowest", label: "Lowest Rated" },
+  ];
 
   // --- 1. Fetch Reviews on Mount ---
   useEffect(() => {
@@ -83,10 +89,28 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
     reviews.length > 0
       ? reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length
       : 0;
+  
+  
+  const sortedOtherReviews = useMemo(() => {
+    // 1. Filter out the current user's review first
+    const others = reviews.filter((r) => r.userId !== currentUserId);
+
+    // 2. Sort the remaining list based on the active filter
+    return [...others].sort((a, b) => {
+      if (sortFilter === "highest") {
+        return b.rating - a.rating; // Descending
+      }
+      if (sortFilter === "lowest") {
+        return a.rating - b.rating; // Ascending
+      }
+      // Default: "recent" - Newest dates first
+      return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
+    });
+  }, [reviews, sortFilter, currentUserId]);
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      toast.error("Please select a rating before submitting.");
+      showToast.error("Please select a rating before submitting.");
       return;
     }
     setIsSubmitting(true);
@@ -140,169 +164,229 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
         </div>
     );
   }
-  return (
-    <div className="py-6 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* 1. Header Stats */}
-      <section className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 border border-gray-100 flex flex-col items-center shadow-sm">
-        <span className="text-sm font-bold text-purple-600 uppercase tracking-widest mb-2">
-          Average Rating
-        </span>
-        <div className="text-6xl font-black text-gray-900 mb-3">
-          {averageRating.toFixed(1)}
-        </div>
-        <div className="flex gap-1.5 text-yellow-400 mb-3">
-          {[1, 2, 3, 4, 5].map((s) => (
-            <Star
-              key={s}
-              size={24}
-              fill={s <= Math.round(averageRating) ? "currentColor" : "none"}
-              strokeWidth={2}
-            />
-          ))}
-        </div>
-        <p className="text-gray-500 font-medium">
-          Based on {reviews.length} learner reviews
-        </p>
-      </section>
+  return(
+    <div className="py-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* 2-Column Grid Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-[332fr_376fr] gap-[52px] max-w-[760px]">
+        
+        {/* ========================================== */}
+        {/* LEFT COLUMN: Stats & Input Form */}
+        {/* ========================================== */}
+        <div className="space-y-4">
+          
+          {/* 1. Overall Stats Card */}
+          <div className="bg-[var(--rev-overall-bg)] border border-[var(--rev-overall-border)] rounded-2xl p-5 sm:p-6 flex flex-col theme-transition shadow-sm">
+            <div className="flex items-end justify-between w-full mb-2">
+              <div className="flex items-baseline gap-1">
+                <span className="text-4xl sm:text-5xl font-black text-[var(--text-color)] leading-none">
+                  {averageRating.toFixed(1)}
+                </span>
+                <span className="text-sm text-[var(--text-color)] opacity-60 font-bold">
+                  /5.0
+                </span>
+              </div>
+              <span className="text-xs sm:text-sm text-[var(--text-color)] opacity-60 font-medium pb-1">
+                {reviews.length} Total Reviews
+              </span>
+            </div>
+            
+            <div className="flex gap-1 text-[var(--colored-text)]">
+              {[1, 2, 3, 4, 5].map((s) => (
+                <Star
+                  key={s}
+                  size={20}
+                  fill={s <= Math.round(averageRating) ? "currentColor" : "none"}
+                  color="currentColor"
+                  strokeWidth={2}
+                />
+              ))}
+            </div>
+          </div>
 
-      {/* 2. My Review Section */}
-      <section className="space-y-4">
-        <h3 className="text-lg font-bold text-gray-900 px-1">Your Feedback</h3>
-        {myReview && !isEditing ? (
-          <div className="bg-purple-50/50 border border-purple-100 rounded-2xl p-6 relative group">
-            <div className="flex justify-between items-start">
-              <div className="flex flex-col gap-2">
-                <div className="flex text-yellow-400">
+          {/* 2. Add / Edit Review Card */}
+          <div className="bg-[var(--rev-form-bg)] border border-[var(--rev-overall-border)] rounded-2xl p-5 sm:p-6 shadow-sm theme-transition">
+            <h3 className="text-center text-base sm:text-lg font-bold text-[var(--text-color)] mb-4">
+              Share Your Learning Experience
+            </h3>
+
+            {myReview && !isEditing ? (
+              // View My Existing Review State
+              <div className="space-y-4">
+                <div className="flex justify-center text-[var(--colored-text)] gap-1 mb-4">
                   {[1, 2, 3, 4, 5].map((s) => (
                     <Star
                       key={s}
-                      size={16}
+                      size={24}
                       fill={s <= myReview.rating ? "currentColor" : "none"}
+                      color="currentColor"
+                      strokeWidth={1.5}
                     />
                   ))}
                 </div>
-                <p className="text-gray-700 leading-relaxed italic">
-                  "{myReview.comment || "No comment left."}"
+                <div className="bg-[var(--rev-input-bg)] border border-[var(--rev-input-border)] rounded-xl p-4 relative group">
+                  <p className="text-[var(--text-color)] opacity-80 text-sm leading-relaxed italic">
+                    "{myReview.comment || "No comment left."}"
+                  </p>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="absolute top-3 right-3 p-1.5 hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors text-[var(--text-color)] opacity-50 hover:opacity-100"
+                    title="Edit Review"
+                  >
+                    <Edit2 size={16} />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // Form Input State
+              <div className="space-y-5">
+                {/* Interactive Stars */}
+                <div className="flex justify-center gap-1.5">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setRating(s)}
+                      className="p-1 transition-transform hover:scale-110 focus:outline-none"
+                    >
+                      <Star
+                        size={28}
+                        fill={rating >= s ? "var(--colored-text)" : "none"}
+                        color="var(--colored-text)"
+                        strokeWidth={1.5}
+                      />
+                    </button>
+                  ))}
+                </div>
+
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Describe your learning journey, the curriculum depth & what you enjoyed..."
+                  className="w-full p-4 text-sm bg-[var(--rev-input-bg)] border border-[var(--rev-input-border)] text-[var(--text-color)] placeholder:text-[var(--text-color)] placeholder:opacity-50 rounded-xl focus:ring-1 focus:ring-[var(--colored-text)] outline-none min-h-[120px] transition-colors resize-none theme-transition"
+                />
+
+                <div className="flex gap-3">
+                  {isEditing && (
+                    <button
+                      onClick={() => setIsEditing(false)}
+                      className="px-4 py-3 text-sm font-bold text-[var(--text-color)] opacity-60 hover:opacity-100 transition-opacity"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                  <button
+                    onClick={handleSubmit}
+                    disabled={rating === 0 || isSubmitting}
+                    className="flex-1 py-3 bg-[var(--colored-text)] text-black rounded-xl font-bold text-sm hover:brightness-110 disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 size={18} className="animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : myReview ? (
+                      "Update Review"
+                    ) : (
+                      "Post Review"
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ========================================== */}
+        {/* RIGHT COLUMN: Reviews List */}
+        {/* ========================================== */}
+        <div className="flex flex-col h-full">
+          
+          {/* Header & Filter */}
+          <div className="flex items-center justify-between mb-4 px-1">
+            <h3 className="text-xl sm:text-2xl font-bold text-[var(--text-color)] tracking-tight">
+              Latest Reviews
+            </h3>
+            <Dropdown 
+              options={sortOptions}
+              selectedValue={sortFilter}
+              onSelect={(val) => setSortFilter(val)}
+            />
+          </div>
+
+          {/* Scrollable Reviews List */}
+          <div className="space-y-4 overflow-y-auto review-scrollbar pr-2 max-h-[600px] lg:max-h-[calc(100vh-200px)]">
+            {sortedOtherReviews.length === 0 ? (
+              <div className="text-center py-16 bg-transparent border border-dashed border-[var(--rev-overall-border)] rounded-2xl">
+                <p className="text-[var(--text-color)] opacity-50 text-sm font-medium">
+                  No reviews yet. Be the first to share your thoughts!
                 </p>
               </div>
-              <button
-                onClick={() => setIsEditing(true)}
-                className="p-2 hover:bg-purple-100 rounded-full transition-colors text-purple-600"
-              >
-                <Edit2 size={18} />
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-4">
-            <div className="flex flex-col items-center gap-3">
-              <div className="flex gap-2">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setRating(s)}
-                    className={`p-1 transition-transform hover:scale-125 ${
-                      rating >= s ? "text-yellow-400" : "text-gray-200"
-                    }`}
-                  >
-                    <Star
-                      size={32}
-                      fill={rating >= s ? "currentColor" : "none"}
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Tell other students what you thought of this lecture..."
-              className="w-full p-4 text-sm bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-purple-500 outline-none min-h-[120px] transition-all"
-            />
-            <div className="flex justify-end gap-3">
-              {isEditing && (
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-colors"
+            ) : (
+              sortedOtherReviews.map((rev: any, idx: number) => (
+                <div
+                  key={rev.id || idx}
+                  className="bg-[var(--rev-card-bg)] border border-[var(--rev-overall-border)] rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow theme-transition"
                 >
-                  Cancel
-                </button>
-              )}
-              <button
-                onClick={handleSubmit}
-                // 'isSubmitting' is your local useState(false)
-                disabled={rating === 0 || isSubmitting}
-                className="px-8 py-2.5 bg-purple-600 text-white rounded-xl font-bold text-sm hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-purple-200 transition-all active:scale-95"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    <span>Saving...</span>
-                  </>
-                ) : myReview ? (
-                  "Update Review"
-                ) : (
-                  "Post Review"
-                )}
-              </button>
-            </div>
-          </div>
-        )}
-      </section>
-
-      {/* 3. Community Reviews List */}
-      <section className="space-y-4 pt-4">
-        <h3 className="text-lg font-bold text-gray-900 px-1">
-          What others are saying
-        </h3>
-        {otherReviews.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-            <p className="text-gray-400 text-sm">
-              Be the first to leave a community review!
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {otherReviews.map((rev, idx) => (
-              <div
-                key={rev.id || idx}
-                className="bg-white border border-gray-100 rounded-2xl p-5 flex gap-4 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="shrink-0">
-                  {rev.user?.image ? (
-                    <img
-                      src={rev.user.image}
-                      alt={rev.user.name || "User avatar"}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                  ) : (
-                    <UserCircle size={40} className="text-gray-300" />
-                  )}
-                </div>
-                <div className="space-y-1 flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-gray-900">
-                      {rev.user?.name || "Anonymous"}
-                    </span>
-                    <div className="flex text-yellow-400">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star
-                          key={s}
-                          size={12}
-                          fill={s <= rev.rating ? "currentColor" : "none"}
+                  <div className="flex items-start gap-4 mb-3">
+                    <div className="shrink-0">
+                      {rev.user?.image ? (
+                        <img
+                          src={rev.user.image}
+                          alt={rev.user.name || "User"}
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover shadow-sm border border-[var(--rev-overall-border)]"
                         />
-                      ))}
+                      ) : (
+                        <UserCircle size={48} className="text-gray-400" />
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between flex-wrap gap-2">
+                        <div>
+                          <h4 className="text-base sm:text-lg font-bold text-[var(--text-color)] leading-tight">
+                            {rev.user?.name || "Anonymous"}
+                          </h4>
+                          <span className="text-[11px] sm:text-xs text-[var(--text-color)] opacity-50 font-medium">
+                            {/* Assuming you have a formatted date, fallback to standard text */}
+                            {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString() : "2 months ago"}
+                          </span>
+                        </div>
+                        
+                        {/* Review Stars */}
+                        <div className="flex gap-0.5 text-[var(--colored-text)]">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              size={14}
+                              fill={s <= rev.rating ? "currentColor" : "none"}
+                              color="currentColor"
+                              strokeWidth={2}
+                            />
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    {rev.comment || "Rated this lecture."}
+
+                  <p className="text-sm sm:text-base text-[var(--text-color)] opacity-80 leading-relaxed italic mb-4">
+                    "{rev.comment || "Rated this lecture."}"
                   </p>
+
+                  {/* Actions footer (Helpful / Reply placeholders) */}
+                  {/* <div className="flex items-center gap-5 pt-4 border-t border-[var(--text-color)] border-opacity-10">
+                    <button className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-color)] opacity-60 hover:opacity-100 transition-opacity">
+                      <ThumbsUp size={14} /> Helpful (0)
+                    </button>
+                    <button className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-color)] opacity-60 hover:opacity-100 transition-opacity">
+                      <CornerUpLeft size={14} /> Reply
+                    </button>
+                  </div> */}
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-        )}
-      </section>
+        </div>
+
+      </div>
     </div>
   );
-};
+}

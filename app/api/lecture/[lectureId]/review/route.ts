@@ -14,7 +14,12 @@ export async function GET(
       where: {
         lectureId, 
       },
-      include: {
+      select: {
+        id:  true,
+        comment: true,
+        rating : true,
+        createdAt: true,
+        userId: true,
         user: {
           select: {
             name: true,
