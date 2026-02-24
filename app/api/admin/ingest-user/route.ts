@@ -4,7 +4,11 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: NextRequest) {
   try {
-    const { user_email, temp_password, courseId } = await req.json();
+    const { user_email, temp_password, courseId, courseType  } = await req.json();
+    console.log("email = " + user_email);
+    console.log("temp_password = " + temp_password);
+    console.log("courseId = " + courseId);
+    console.log("courseType = " + courseType);
     
     if (!user_email) {
       return NextResponse.json({ error: "Missing credentials - email id" }, { status: 400 });
