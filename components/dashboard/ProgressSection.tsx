@@ -70,9 +70,9 @@ export default function ProgressSection({ stats }: ProgressSectionProps) {
 
   // --- Memoized Data ---
   const progressData = useMemo(() => [
-    { label: "Videos Watched", value: stats.videoWatchedMins, unit: "min", total: 120 },
-    { label: "Quizzes Completed", value: stats.quizzesCompleted, unit: "done", total: 10 },
-    { label: "Assignments Sent", value: stats.assignmentsSubmitted, unit: "sent", total: 5 },
+    { label: "Videos Watched", value: Math.ceil(stats.videoWatchedMins/60), unit: "min", total: 30 },
+    { label: "Quizzes Completed", value: stats.quizzesCompleted, unit: "done", total: 5 },
+    { label: "Assignments Sent", value: stats.assignmentsSubmitted, unit: "sent", total: 3 },
   ], [stats]);
 
   const daysInMonth = useMemo(() => {
@@ -105,7 +105,7 @@ export default function ProgressSection({ stats }: ProgressSectionProps) {
         className="p-6 md:p-8 rounded-[1rem] bg-[var(--streak-background)] border border-transparent dark:border-[#464646] dark:shadow-[0px_10px_40px_-10px_rgba(250,189,35,0.4)]  theme-transition flex flex-col"
       >
         <motion.h3 variants={itemVariants} className="text-[var(--text-color)] font-bold text-lg mb-6 tracking-tight">
-          Today's Progress
+          Weekly Progress
         </motion.h3>
         
         <div className="space-y-4 flex-1 flex flex-col justify-center">
@@ -163,7 +163,7 @@ export default function ProgressSection({ stats }: ProgressSectionProps) {
       >
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-[var(--text-color)] font-bold text-lg tracking-tight">Activity</h3>
+          <h3 className="text-[var(--text-color)] font-bold text-lg tracking-tight">Monthly Activity</h3>
           <span className="text-[var(--text-color)] opacity-60 font-medium text-sm tabular-nums">
             {format(viewDate, "MMM yyyy")}
           </span>

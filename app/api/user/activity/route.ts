@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { startOfMonth, endOfMonth, startOfDay, endOfDay , format } from "date-fns";
+import { startOfMonth, endOfMonth, startOfDay, endOfDay , format, startOfWeek } from "date-fns";
 
 export async function POST(req: Request) {
   try {
@@ -57,11 +57,8 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
-    console.log("Hell" ) ;
-    // 1. Handle Timezone Offset from Client
-    // The client should send: /api/user/activity?userId=...&timezone=Asia/Kolkata
-    const userTimezone = searchParams.get("timezone") || "UTC";
-
+    
+    // 1. Get Month/Year for the Heatmap range
     const month = parseInt(searchParams.get("month") || new Date().getMonth().toString());
     const year = parseInt(searchParams.get("year") || new Date().getFullYear().toString());
 
@@ -69,16 +66,17 @@ export async function GET(req: Request) {
       return new NextResponse("User ID is required", { status: 400 });
     }
 
-    // Target Month Range
+    // 2. Define target ranges
     const targetDate = new Date(year, month);
     const monthStart = startOfMonth(targetDate);
     const monthEnd = endOfMonth(targetDate);
 
-    // 2. Fix "Today" calculation
-    // We use the current system time but ensure we compare dates correctly
+    // Calculate the start of the current week (Sunday)
     const now = new Date();
-    const todayStr = format(now, 'yyyy-MM-dd'); // "2026-02-03"
+    const weekStart = startOfWeek(now, { weekStartsOn: 0 }); // 0 = Sunday
+    const weekEnd = endOfDay(now); // Current moment
 
+    // 3. Fetch all activities for the month (to populate the heatmap)
     const monthActivities = await db.userActivity.findMany({
       where: {
         userId: userId,
@@ -92,27 +90,28 @@ export async function GET(req: Request) {
       }
     });
 
-    console.log("Months activities " , monthActivities) ;
-    
-    // 3. Filter "Today" using string comparison to avoid UTC hour shifts
-    const todayActivities = monthActivities.filter(a => 
-      format(a.createdAt, 'yyyy-MM-dd') === todayStr
-    );
+    // 4. Filter activities specifically for the WEEKLY progress
+    const weeklyActivities = monthActivities.filter(a => {
+      const activityDate = new Date(a.createdAt);
+      return activityDate >= weekStart && activityDate <= weekEnd;
+    });
 
+    // 5. Build the stats using the weekly filtered data
     const stats = {
-      videoWatchedMins: todayActivities
+      // These now represent the sum of the current week
+      videoWatchedMins: weeklyActivities
         .filter((a) => a.type === "VIDEO_WATCH")
         .reduce((sum, a) => sum + (a.duration || 0), 0),
       
-      quizzesCompleted: todayActivities
+      quizzesCompleted: weeklyActivities
         .filter((a) => a.type === "QUIZ_ATTEMPT")
         .length,
 
-      assignmentsSubmitted: todayActivities
+      assignmentsSubmitted: weeklyActivities
         .filter((a) => a.type === "ASSIGNMENT_SUBMISSION")
         .length,
       
-      // Heatmap Data (ISO strings for the frontend heatmap library)
+      // Heatmap Data remains monthly so the calendar looks full
       activeDays: [...new Set(monthActivities.map(a => 
         format(a.createdAt, 'yyyy-MM-dd')
       ))],
