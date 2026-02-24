@@ -133,7 +133,7 @@ export default function ProgressSection({ stats }: ProgressSectionProps) {
                 </div>
                 
                 {/* Progress Bar */}
-                <div 
+                {/* <div 
                   className="h-1.5 w-full bg-[var(--progress-unreached)] rounded-full overflow-hidden"
                   role="progressbar" 
                   aria-valuenow={progressPercentage} 
@@ -147,7 +147,7 @@ export default function ProgressSection({ stats }: ProgressSectionProps) {
                     transition={{ duration: 1.2, ease: [0.25, 1, 0.5, 1], delay: 0.2 + (idx * 0.1) }}
                     className="h-full bg-[var(--colored-text)] rounded-full origin-left"
                   />
-                </div>
+                </div> */}
               </motion.div>
             );
           })}
