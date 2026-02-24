@@ -114,7 +114,7 @@ export default function LearningClient({ courseId , lectureId  , user }: Learnin
     if (lectureId) {
       updateProgress();
     } 
-    console.log("Updating progress for lectureId:", lectureId);
+    // console.log("Updating progress for lectureId:", lectureId);
   }, [lectureId]);
   
 

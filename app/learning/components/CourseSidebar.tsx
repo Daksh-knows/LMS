@@ -34,6 +34,12 @@ export interface Section {
   title: string;
   lectures: any[];
 }
+
+interface ProgressData {
+  completedCount: number;
+  totalCount: number;
+  percentage: number;
+}
 interface Props {
   currentLectureId: string;
   onSelectLecture: (lecture: any) => void;
@@ -47,7 +53,8 @@ const CourseSidebar: React.FC<Props> = ({
 }) => {
   const [openSections, setOpenSections] = useState<string[]>([]);
   const [courseType, setCourseType] = useState<string | null>(null);
-
+  const [progress, setProgress] = useState<ProgressData | null>(null);
+  const [loading, setLoading] = useState(true);
   const {course} = useCourse();
 
   // 1. Initial Session Storage Load
@@ -70,7 +77,25 @@ const CourseSidebar: React.FC<Props> = ({
         console.error("Error fetching course type:", error);
       }
     };
-    fetchType();
+    const fetchProgress = async () => {
+      try {
+        console.log("Check",course) ;
+        const response = await fetch(`/api/course/${course?.id}/progress`);
+        if (!response.ok) throw new Error("Failed to fetch progress");
+        const data = await response.json();
+        console.log("F " , data) ;
+        setProgress(data);
+      } catch (error) {
+        console.error("Progress fetch error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (course?.id){
+      fetchProgress();
+      fetchType();
+    }
   }, [course?.id]); // Safely depend on course?.id
 
   // 3. Handle Sidebar State based on Type
@@ -157,19 +182,27 @@ const getStatusIndicator = (item: any, isActive: boolean) => {
         default: return <PlayCircle {...iconProps} />;
       }
     };
+  const displayPercentage = progress?.percentage || 0;
+  const displayStats = progress ? `${progress.completedCount}/${progress.totalCount}` : "0/0";
 
    return (
     <div className="flex flex-col h-full rounded-2xl border theme-transition border-(--course-sidebar-border) gap-4 bg-(--course-sidebar-background) p-4">
       
       {/* 1. TOP PROGRESS CARD */}
-      <div className="p-2 ">
+      <div className="p-2 w-full animate-in fade-in duration-700">
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-bold text-lg text-(--text-color)">Course Content</h2>
-          <span className="text-xs text-gray-400 font-medium">33% Completed</span>
+          <div className="flex flex-col items-end">
+            <span className="text-xs text-(--text-color) font-bold">
+              {displayPercentage}% Completed
+            </span>
+          </div>
         </div>
+        
         <div className="h-2 w-full bg-(--progress-unreached) rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-[#FABD23] w-1/3 rounded-full shadow-[0_0_8px_rgba(250,189,35,0.4)] transition-all duration-500" 
+          <div
+            style={{ width: `${displayPercentage}%` }}
+            className="h-full bg-[#FABD23] rounded-full shadow-[0_0_8px_rgba(250,189,35,0.4)] transition-all duration-1000 ease-out"
           />
         </div>
       </div>
