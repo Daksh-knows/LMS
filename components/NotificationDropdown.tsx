@@ -36,14 +36,11 @@ export default function NotificationDropdown({ onClose }: { onClose: () => void 
     }
   };
 
-  const markAsRead = async (id: string, url?: string) => {
-    // Optimistic UI update
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-    );
+  const deleteNotification = async (id: string, url?: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
 
     await fetch("/api/notifications", {
-      method: "PATCH",
+      method: "DELETE", 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ notificationId: id }),
     });
@@ -54,12 +51,12 @@ export default function NotificationDropdown({ onClose }: { onClose: () => void 
     }
   };
 
-  const markAllAsRead = async () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+  const deleteAllNotifications = async () => {
+    setNotifications([]); 
     await fetch("/api/notifications", {
-      method: "PATCH",
+      method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ markAllRead: true }),
+      body: JSON.stringify({ deleteAll: true }),
     });
   };
 
@@ -86,7 +83,7 @@ export default function NotificationDropdown({ onClose }: { onClose: () => void 
           <h3 className="font-semibold text-[var(--text-color)]">Notifications</h3>
           {unreadCount > 0 && (
             <button
-              onClick={markAllAsRead}
+              onClick={deleteAllNotifications}
               className="text-xs text-[var(--colored-text)] hover:underline flex items-center gap-1"
             >
               <Check size={14} /> Mark all read
@@ -109,7 +106,7 @@ export default function NotificationDropdown({ onClose }: { onClose: () => void 
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  onClick={() => markAsRead(notification.id, notification.actionUrl)}
+                  onClick={() => deleteNotification(notification.id, notification.actionUrl)}
                   className={`p-3 rounded-lg cursor-pointer transition-colors flex gap-3 items-start ${
                     notification.isRead
                       ? "hover:bg-[var(--sidebar-nav-bg-hover)] opacity-70"
