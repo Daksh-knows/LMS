@@ -71,29 +71,6 @@ export default function LearningClient({ courseId , lectureId  , user }: Learnin
   
   const oneCourse = process.env.NEXT_PUBLIC_ONE_COURSE === "true";
 
-  
-  useEffect(() => {
-    async function fetchCourse(){
-        try {
-          const response = await fetch(`/api/course/${courseId}?userId=${user?.id}`, {
-            cache: 'no-store', 
-          });
-          // console.log("Fetch response status:", response);
-          if (!response.ok) {
-            if (response.status === 404) return notFound();
-            throw new Error("Failed to fetch course");
-          }
-      
-          const newCourse = await response.json();
-          setCourse(newCourse) ;
-        } catch (error) {
-          console.error("Error fetching course in Server Component:", error);
-        }
-
-    }
-    fetchCourse() ;
-  },[courseId]) ;
-
 
   useEffect(() => {
     const updateProgress = async () => {
