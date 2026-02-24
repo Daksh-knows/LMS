@@ -27,6 +27,7 @@ export default function OverviewClient() {
       try {
         const response = await fetch(`/api/user/activity?userId=${session.user.id}`);
         const data = await response.json();
+        console.log(data.id);
         setStats(data);
         // console.log("Fetched stats " , data) ;
       } catch (error) {
