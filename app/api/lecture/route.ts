@@ -118,8 +118,19 @@ export async function POST(req: NextRequest) {
     const course = lecture.module.course;
     const enrollments = course.students;
 
-    if (enrollments.length > 0 && ( data.type !== 'VIDEO')) {
-      // Use Promise.allSettled so one failed email doesn't crash the API response
+    if (enrollments.length > 0 && data.type !== 'VIDEO') {
+      // 1. Prepare Notification Data for Bulk Insert
+      const notificationData = enrollments.map((en) => ({
+        userId: en.userId,
+        courseId: course.id,
+        type: "COURSE_UPDATE" as const, 
+        title: `New ${lecture.type.toLowerCase()} added!`,
+        message: `${lecture.title} is now available in ${course.title}.`,
+        actionUrl: `/learning/${course.id}/${lecture.id}`, 
+        isRead: false,
+      }));
+
+      // 2. Prepare Email Promises
       const emailPromises = enrollments.map((en) => {
         if (en.user.email) {
           return sendLectureNotification(
@@ -131,9 +142,21 @@ export async function POST(req: NextRequest) {
         }
       });
 
-      // Execute emails in the background
-      Promise.allSettled(emailPromises).catch((err) => 
-        console.error("Background Email Error:", err)
+      // 3. Execute both in the background using Promise.allSettled
+      Promise.allSettled([
+        db.notification.createMany({
+          data: notificationData,
+          skipDuplicates: true, 
+        }),
+        ...emailPromises
+      ]).then((results) => {
+        results.forEach((result, index) => {
+          if (result.status === 'rejected') {
+            console.error(`Background Task ${index} failed:`, result.reason);
+          }
+        });
+      }).catch((err) => 
+        console.error("Critical Background Process Error:", err)
       );
     }
     return NextResponse.json({ success: true, lectureId: lecture.id });

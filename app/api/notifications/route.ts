@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db"; // Adjust path to your Prisma client
 import { auth } from "@/auth"
+import { getCurrentUser } from "@/lib/auth-utils";
 
 export async function GET(req: Request) {
   try {
@@ -29,33 +30,27 @@ export async function GET(req: Request) {
   }
 }
 
-export async function PATCH(req: Request) {
+export async function DELETE(req: Request) {
   try {
-    const userId = "YOUR_DYNAMIC_USER_ID_HERE"; // Replace with real auth
-    if (!userId) return new NextResponse("Unauthorized", { status: 401 });
+    const { notificationId, deleteAll } = await req.json();
+    const  user  = await getCurrentUser(); 
 
-    const body = await req.json();
-    const { notificationId, markAllRead } = body;
-
-    if (markAllRead) {
-      await db.notification.updateMany({
-        where: { userId: userId, isRead: false },
-        data: { isRead: true },
+    if (deleteAll) {
+      await db.notification.deleteMany({
+        where: { userId: user?.id }
       });
-      return NextResponse.json({ success: true });
+      return new NextResponse("All notifications deleted", { status: 200 });
     }
 
-    if (notificationId) {
-      const notification = await db.notification.update({
-        where: { id: notificationId, userId: userId },
-        data: { isRead: true },
-      });
-      return NextResponse.json(notification);
-    }
+    await db.notification.delete({
+      where: { 
+        id: notificationId,
+        userId : user?.id,
+      }
+    });
 
-    return new NextResponse("Bad Request", { status: 400 });
+    return new NextResponse("Notification deleted", { status: 200 });
   } catch (error) {
-    console.error("[NOTIFICATIONS_PATCH]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
