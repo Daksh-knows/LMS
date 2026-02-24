@@ -62,10 +62,6 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
     }
   }, [lectureId]);
 
-  useEffect(() => {
-    console.log("Reviews state updated:", reviews);
-  }, [reviews]);
-
 
   // Identify the user's review and other students' reviews
   const myReview = reviews.find((r) => r.userId === currentUserId);

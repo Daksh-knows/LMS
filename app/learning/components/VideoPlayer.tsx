@@ -236,7 +236,7 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
 
    //function to track user activity
     const saveWatchActivity = async () => {
-      if (totalSecondsWatched.current <= 0) return;
+      if (totalSecondsWatched.current < 1) return;
       console.log('----------------------------------------');
       console.log("Attempting to save watch activity...");
       const minutesToSave = totalSecondsWatched.current ;
