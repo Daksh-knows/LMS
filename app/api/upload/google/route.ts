@@ -1,3 +1,6 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import { storage, bucketName } from "@/lib/google-cloud";
 import { Readable } from "stream";
