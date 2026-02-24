@@ -1,46 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
-import{ storage, bucketName } from "@/lib/google-cloud";
-
+import { storage, bucketName } from "@/lib/google-cloud";
+import { Readable } from "stream";
+import { ReadableStream } from "stream/web";
 
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    if (!file) return NextResponse.json({ error: "No file" }, { status: 400 });
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    if (!file) {
+      return NextResponse.json({ error: "No file" }, { status: 400 });
+    }
+
     const filename = `course-assets/${Date.now()}-${file.name.replace(/\s+/g, "_")}`;
-
     const bucket = storage.bucket(bucketName);
     const blob = bucket.file(filename);
 
-    // 1. Wrap the entire stream process in a Promise
-    await new Promise((resolve, reject) => {
-      const blobStream = blob.createWriteStream({
-        resumable: false, // Set to false for small/medium files to avoid metadata overhead
+    // 🔑 Web Stream → Node Stream (TS-safe)
+    const webStream = file.stream() as ReadableStream;
+    const nodeStream = Readable.fromWeb(webStream);
+
+    await new Promise<void>((resolve, reject) => {
+      const gcsStream = blob.createWriteStream({
+        resumable: false,
         contentType: file.type,
       });
 
-      // 2. Attach listeners BEFORE calling .end()
-      blobStream.on("error", (err) => {
-        console.error("GCS Stream Error:", err);
-        reject(err);
-      });
-
-      blobStream.on("finish", () => {
-        resolve(true);
-      });
-
-      // 3. Write the data and close the stream in one go
-      blobStream.end(buffer);
+      nodeStream
+        .on("error", reject)
+        .pipe(gcsStream)
+        .on("error", reject)
+        .on("finish", resolve);
     });
 
-    // 4. ONLY return the response after the promise resolves
     const publicUrl = `https://storage.googleapis.com/${bucketName}/${filename}`;
     return NextResponse.json({ url: publicUrl });
 
-  } catch (error: any) {
-    console.error("Upload API Error:", error);
-    return NextResponse.json({ error: error.message || "Upload failed" }, { status: 500 });
+  } catch (err: any) {
+    console.error("Upload API Error:", err);
+    return NextResponse.json(
+      { error: err.message || "Upload failed" },
+      { status: 500 }
+    );
   }
 }
