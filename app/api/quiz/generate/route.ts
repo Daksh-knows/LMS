@@ -121,6 +121,7 @@ export async function POST(req: Request) {
                 questionCount,
                 status: "READY",
               }),
+              isPublished: true,
             },
           });
 
