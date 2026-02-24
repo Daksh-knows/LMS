@@ -44,6 +44,18 @@
   --qna-banner-border: #FFCC594D;
   --qna-card-bg:#FBD89D80;
   --qna-card-border: #B28800;
+  --bookmark-search-bg: #FBD89DA3;
+  --bookmark-search-border: #B28800;
+  --bookmark-text: #000000;
+  --bookmark-dropdown-border: #FABD23;
+  --bookmark-shadow: 0px 1px 10px 0px #00000040;
+  --bookmark-card-bg: #FFFFFF;
+  --bookmark-card-border: #B28800;
+  --bookmark-icon: #C47E09;
+  --bookmark-subtext: #0000009E;
+  --bookmark-btn: #FABD23;
+  --bookmark-del-bg: #FFCC594D;
+  --bookmark-del-icon: #B28800;
 }
 
 .dark {
@@ -81,6 +93,18 @@
   --course-sidebar-border: #464646 ;
   --course-sidebar-module-header: #333333 ;
   --course-sidebar-lecture-item: #322607 ;
+  --bookmark-search-bg: #000000B2;
+  --bookmark-search-border: #616161;
+  --bookmark-text: #FFFFFF;
+  --bookmark-dropdown-border: #FFFFFF6B;
+  --bookmark-shadow: 0px 1px 10px 0px rgba(245, 158, 11, 0.25);
+  --bookmark-card-bg: #1A1A1A;
+  --bookmark-card-border: #616161;
+  --bookmark-icon: #FABD23;
+  --bookmark-subtext: #FFFFFF99;
+  --bookmark-btn: #FABD23;
+  --bookmark-del-bg: #464646;
+  --bookmark-del-icon: #B3B3B3;
 }
 
 [data-theme='dark'] {
@@ -124,6 +148,19 @@
   --qna-banner-border: #FFCC594D;
   --qna-card-bg: #282828;
   --qna-card-border: #474747;
+
+  --bookmark-search-bg: #000000B2;
+  --bookmark-search-border: #616161;
+  --bookmark-text: #FFFFFF;
+  --bookmark-dropdown-border: #FFFFFF6B;
+  --bookmark-shadow: 0px 1px 10px 0px rgba(245, 158, 11, 0.25);
+  --bookmark-card-bg: #1A1A1A;
+  --bookmark-card-border: #616161;
+  --bookmark-icon: #FABD23;
+  --bookmark-subtext: #FFFFFF99;
+  --bookmark-btn: #FABD23;
+  --bookmark-del-bg: #464646;
+  --bookmark-del-icon: #B3B3B3;
 }
 
 .top-shadow-box {

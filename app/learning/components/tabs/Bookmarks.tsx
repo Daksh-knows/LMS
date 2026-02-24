@@ -1,23 +1,25 @@
 "use client";
-import { showToast } from "@/utils/Toast";
+
 import React, { useState, useEffect, useMemo } from "react";
-import { Lecture } from "../../types";
 import { useParams, useRouter } from "next/navigation";
 import {
-  Loader2,
+  Search,
+  ChevronDown,
   Trash2,
-  PlayCircle,
+  ArrowRight,
   Bookmark as BookmarkIcon,
-  PlusCircle,
-  Filter,
-  ArrowRight
+  AlertCircle,
+  HelpCircle,
+  Clock,
+  Layers,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useConfirm } from "@/context/ConfirmContext";
 import { useBookmarks } from "@/context/BookmarkContext";
 import { useLecture } from "@/context/LectureContext";
+import { showToast } from "@/utils/Toast";
 import Loader from "@/utils/Loader";
 
-// --- Types ---
 interface Bookmark {
   id: string;
   time: number;
@@ -32,125 +34,115 @@ interface Bookmark {
   createdAt: string;
 }
 
-interface BookmarksProps {
-  onBookmarkClick: (time: string) => void;
-  currentUserId?: string; // Optional if not used directly
-}
-
-export const BookmarksTab: React.FC<BookmarksProps> = ({
+export const BookmarksTab: React.FC<{ onBookmarkClick: (time: string) => void }> = ({
   onBookmarkClick,
 }) => {
-  const {lecture} = useLecture() ;
-  if(!lecture) return <Loader message="Loading bookmarks" />
+  const { lecture } = useLecture();
   const router = useRouter();
   const params = useParams();
   const { confirm } = useConfirm();
-
   const { bookmarks, setInitialBookmarks, deleteBookmark } = useBookmarks();
-
-  const courseId = params?.courseId as string; 
-
-  const [allBookmarks, setAllBookmarks] = useState<Bookmark[]>([]);
-  const [loading, setLoading] = useState(true);
   
+  const courseId = params?.courseId as string;
+  const [loading, setLoading] = useState(true);
   const [scope, setScope] = useState<"CURRENT" | "ALL">("CURRENT");
-  const [sortBy, setSortBy] = useState<"TIME" | "RECENT">("TIME");
+  const [sortBy, setSortBy] = useState<"TIME" | "RECENT">("RECENT");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
 
-  useEffect(() => {
-    if(!courseId) return ;
-    const fetchAllCourseBookmarks = async () => {
-      if (!courseId) return;
+    useEffect(() => {
+    // 1. Create the debounce timer
+    const delayDebounceFn = setTimeout(async () => {
       
+      // 2. CHECK: If search bar is cleared, fetch the original full list
+      if (searchQuery.trim() === "") {
+        setIsSearching(true);
+        try {
+          // Re-fetch the standard course bookmarks (no "q" param)
+          const response = await fetch(`/api/lecture/bookmark?courseId=${courseId}`);
+          if (response.ok) {
+            const data = await response.json();
+            setInitialBookmarks(data);
+          }
+        } catch (error) {
+          console.error("Failed to reset bookmarks", error);
+        } finally {
+          setIsSearching(false);
+        }
+        return; // Exit early
+      }
+
+      // 3. PROCEED: If there is text, run the search API
+      setIsSearching(true);
+      try {
+        const response = await fetch(
+          `/api/lecture/bookmark/search?courseId=${courseId}&q=${searchQuery}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setInitialBookmarks(data);
+        }
+      } catch (error) {
+        console.error("Search error:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, courseId, setInitialBookmarks]);
+  
+  useEffect(() => {
+    if (!courseId) return;
+    const fetchBookmarks = async () => {
       setLoading(true);
       try {
         const response = await fetch(`/api/lecture/bookmark?courseId=${courseId}`);
-        
         if (!response.ok) throw new Error("Failed to fetch");
-        
         const data = await response.json();
-        console.log("B " , data) ; 
         setInitialBookmarks(data);
       } catch (error) {
-        console.error("Error fetching bookmarks:", error);
         showToast.error("Could not load bookmarks");
       } finally {
         setLoading(false);
       }
     };
+    fetchBookmarks();
+  }, [courseId]);
 
-    fetchAllCourseBookmarks();
-  }, [courseId]); // Only re-fetch if the COURSE changes, not the lecture
-
-  // --- 3. Client-Side Filtering & Sorting ---
   const visibleBookmarks = useMemo(() => {
     let filtered = [...bookmarks];
-
-    // Filter A: Scope (Current Lecture vs All)
     if (scope === "CURRENT") {
-      filtered = filtered.filter(bm => bm.lectureId === lecture.id);
+      filtered = filtered.filter((bm) => bm.lectureId === lecture?.id);
     }
-
-    // Filter B: Sort
     if (sortBy === "TIME") {
-      // Sort by lecture position first, then timestamp
-      filtered.sort((a, b) => {
-        if (scope === "ALL") {
-           // If different lectures, sort by lecture order first
-           const posA = a.lecture?.position || 0;
-           const posB = b.lecture?.position || 0;
-           if (posA !== posB) return posA - posB;
-        }
-        return a.time - b.time;
-      });
+      filtered.sort((a, b) => a.time - b.time);
     } else {
-      // Sort by creation date (Newest First)
       filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
-
     return filtered;
-  }, [bookmarks, scope, sortBy, lecture.id]);
+  }, [bookmarks, scope, sortBy, lecture?.id]);
 
-  // --- Helpers ---
   const formatTime = (seconds: number) => {
     const date = new Date(seconds * 1000);
     const mm = date.getUTCMinutes();
-    const ss = String(date.getUTCSeconds()).padStart(2, '0');
+    const ss = String(date.getUTCSeconds()).padStart(2, "0");
     return `${mm}:${ss}`;
   };
 
-  const getTypeStyles = (type: string) => {
+  const getBookmarkBadge = (type: string) => {
     switch (type) {
-      case "IMPORTANT": return { backgroundColor: "#fef3c7", color: "#b45309", borderColor: "#fde68a" };
-      case "QUESTION": return { backgroundColor: "#ffe4e6", color: "#be123c", borderColor: "#fecdd3" };
-      default: return { backgroundColor: "#dbeafe", color: "#1d4ed8", borderColor: "#bfdbfe" };
+      case "IMPORTANT":
+        return { label: "Important", icon: <AlertCircle size={24} />, bg: "bg-red-500/20 text-red-500" };
+      case "QUESTION":
+        return { label: "Doubt", icon: <HelpCircle size={24} />, bg: "bg-blue-500/20 text-blue-500" };
+      default:
+        return { label: "Bookmark", icon: <BookmarkIcon size={24} />, bg: "bg-amber-500/20 text-amber-500" };
     }
   };
 
-  // --- Actions ---
-  const handleDelete = async (bookmarkId: string) => {
-    // Optimistic Update on the MASTER list
-    const previousBookmarks = [...allBookmarks];
-    setAllBookmarks((prev) => prev.filter((bm) => bm.id !== bookmarkId));
-
-    confirm(
-      "Delete Bookmark",
-      "Are you sure? This cannot be undone.",
-      async () => {
-        try {
-          deleteBookmark(bookmarkId);
-          const response = await fetch(`/api/lecture/bookmark?bookmarkId=${bookmarkId}`, { method: "DELETE" });
-          if (!response.ok) throw new Error("Failed");
-          showToast.delete("Bookmark removed.");
-        } catch (error) {
-          setAllBookmarks(previousBookmarks); // Revert master list
-          showToast.error("Failed to delete. Restored bookmark.");
-        }
-      }
-    );
-  };
-
-  const handleJump = (bm: Bookmark) => {
-    if (bm.lectureId === lecture.id) {
+   const handleJump = (bm: Bookmark) => {
+    if (bm.lectureId === lecture?.id) {
       // Same lecture: Seek & Scroll
       onBookmarkClick(formatTime(bm.time));
       const stage = document.querySelector("#video-stage");
@@ -167,135 +159,135 @@ export const BookmarksTab: React.FC<BookmarksProps> = ({
     }
   };
 
+
+
+
+  if (!lecture) return <Loader message="Loading bookmarks" />;
+
   return (
-    <div className="max-w-4xl mx-auto animate-in fade-in duration-500">
-      
-      {/* HEADER & CONTROLS */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-2">
-          <BookmarkIcon className="text-purple-600" size={20} />
-          <h2 className="text-md lg:text-xl font-bold text-gray-800">Bookmarks</h2>
-          <span className="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded-full">
-            {visibleBookmarks.length}
-          </span>
+    <div className="max-w-5xl mx-auto p-4 lg:p-8 space-y-8 animate-in fade-in duration-500">
+      <h2 className="text-xl md:text-2xl font-bold text-(--bookmark-text)">
+        Your Saved Lessons & Notes
+      </h2>
+
+      {/* SEARCH & FILTERS SECTION */}
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search 
+            className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${
+              isSearching ? "text-(--colored-text) animate-pulse" : "text-(--bookmark-del-icon)"
+            }`} 
+            size={20} 
+          />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search here..."
+            className="w-full bg-(--bookmark-search-bg) border border-(--bookmark-search-border) rounded-xl py-3.5 pl-12 pr-4 text-(--bookmark-text) focus:outline-none placeholder:text-(--bookmark-subtext) shadow-(--bookmark-shadow)"
+          />
+          {searchQuery && !isSearching && (
+            <button 
+              onClick={() => setSearchQuery("")}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-(--bookmark-subtext) hover:text-(--bookmark-text)"
+            >
+              ✕
+            </button>
+          )}
         </div>
 
-        <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-xl border border-gray-200 self-start md:self-auto">
-          {/* Scope Toggle */}
+        <div className="flex gap-3">
           <button
-            onClick={() => setScope("CURRENT")}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-              scope === "CURRENT" ? "bg-white text-purple-700 shadow-sm" : "text-gray-500 hover:text-gray-900"
-            }`}
+            onClick={() => setScope(scope === "ALL" ? "CURRENT" : "ALL")}
+            className="flex items-center gap-2 px-5 py-2.5 border border-(--bookmark-dropdown-border) rounded-xl bg-(--bookmark-search-bg) text-(--bookmark-text) shadow-(--bookmark-shadow) text-sm font-bold transition-all hover:scale-105"
           >
-            Current Lecture
+            <Layers size={18} />
+            {scope === "ALL" ? "All Lectures" : "Current Lecture"}
+            <ChevronDown size={16} />
           </button>
-          <button
-            onClick={() => setScope("ALL")}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-              scope === "ALL" ? "bg-white text-purple-700 shadow-sm" : "text-gray-500 hover:text-gray-900"
-            }`}
-          >
-            All Lectures
-          </button>
-          
-          {/* Divider */}
-          <div className="w-px h-4 bg-gray-300 mx-1" />
 
-          {/* Sort Toggle */}
           <button
-            onClick={() => setSortBy(sortBy === "TIME" ? "RECENT" : "TIME")}
-            className="px-3 py-1.5 flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-gray-900 hover:bg-white hover:shadow-sm rounded-lg transition-all"
-            title={sortBy === "TIME" ? "Sorted by Time" : "Sorted by Recently Added"}
+            onClick={() => setSortBy(sortBy === "RECENT" ? "TIME" : "RECENT")}
+            className="flex items-center gap-2 px-5 py-2.5 border border-(--bookmark-dropdown-border) rounded-xl bg-(--bookmark-search-bg) text-(--bookmark-text) shadow-(--bookmark-shadow) text-sm font-bold transition-all hover:scale-105"
           >
-            <Filter size={12} />
-            {sortBy === "TIME" ? "Time" : "Newest"}
+            <Clock size={18} />
+            {sortBy === "RECENT" ? "Recent" : "Time"}
+            <ChevronDown size={16} />
           </button>
         </div>
       </div>
 
       {/* BOOKMARKS LIST */}
-      <div className="flex flex-col border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm min-h-[300px]">
-        {loading ? (
-          <div className="flex-1 flex flex-col items-center justify-center gap-4 min-h-[300px]">
-            <Loader2 className="animate-spin text-purple-500" size={32} />
-            <p className="text-gray-400 text-sm">Loading notes...</p>
-          </div>
-        ) : visibleBookmarks.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center gap-3 min-h-[300px] p-8">
-            <div className="p-4 bg-gray-50 rounded-full text-gray-300">
-              <PlusCircle size={40} />
-            </div>
-            <p className="text-gray-500 font-medium">No bookmarks found</p>
-            <p className="text-sm text-gray-400 text-center max-w-[250px]">
-              {scope === "CURRENT" 
-                ? "Add bookmarks while watching this video to see them here."
-                : "You haven't added any bookmarks in this course yet."}
-            </p>
-          </div>
-        ) : (
-          <div className="divide-y divide-gray-100">
-            {visibleBookmarks.map((bm) => {
-              const isDifferentLecture = bm.lectureId !== lecture.id;
-
-              return (
-                <div 
-                  key={bm.id} 
-                  className="group flex flex-col sm:flex-row sm:items-center justify-between p-5 hover:bg-gray-50/50 transition-colors gap-3"
-                >
-                  {/* Left: Content */}
-                  <div className="flex-1 min-w-0">
-                    {/* Context Header (If viewing all lectures OR if sorted by recent) */}
-                    {(scope === "ALL" || sortBy === "RECENT") && isDifferentLecture && bm.lecture && (
-                      <div className="flex items-center gap-2 mb-1.5 text-[10px] uppercase font-bold text-gray-400 tracking-wider">
-                        <span className="bg-gray-100 px-1.5 py-0.5 rounded">Lecture {bm.lecture.position}</span>
-                        <span className="truncate max-w-[200px]">{bm.lecture.title}</span>
-                      </div>
-                    )}
-
-                    <h4 className="text-sm font-semibold text-gray-700 break-words group-hover:text-purple-700 transition-colors">
-                      {bm.label || "Untitled Bookmark"}
-                    </h4>
-                  </div>
-
-                  {/* Right: Actions */}
-                  <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 w-full sm:w-auto">
-                    
-                    {/* Timestamp Button */}
-                    <button 
-                      onClick={() => handleJump(bm)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full transition-all shadow-sm active:scale-95 border ${
-                        isDifferentLecture 
-                          ? "bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-600"
-                          : "bg-blue-600 text-white border-transparent hover:bg-blue-700"
-                      }`}
-                    >
-                      {isDifferentLecture ? <ArrowRight size={14} /> : <PlayCircle size={14} />}
-                      {formatTime(bm.time)}
-                    </button>
-                    
-                    <div className="flex items-center gap-3">
-                      {/* Type Badge */}
-                      <span 
-                        style={getTypeStyles(bm.type)}
-                        className="px-3 py-1 border text-[10px] font-black uppercase tracking-wider rounded-full"
-                      >
-                        {bm.type}
-                      </span>
-
-                      {/* Delete */}
-                      <button 
-                        onClick={() => handleDelete(bm.id)} 
-                        className="p-2 bg-transparent text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
-                        title="Delete bookmark"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+      <div className="grid gap-4">
+        <AnimatePresence mode="popLayout">
+          {visibleBookmarks.map((bm) => {
+            const badge = getBookmarkBadge(bm.type);
+            return (
+              <motion.div
+                key={bm.id}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="group relative bg-(--bookmark-card-bg) border border-(--bookmark-card-border) rounded-2xl p-5 md:p-7 flex flex-col md:flex-row items-center gap-6 theme-transition transition-all hover:shadow-lg"
+              >
+                {/* Visual Icon Box */}
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-(--bookmark-icon)/10 border border-(--bookmark-icon)/20 flex items-center justify-center shrink-0 shadow-inner">
+                  <div className="text-(--bookmark-icon) drop-shadow-sm">
+                    {badge.icon}
                   </div>
                 </div>
-              );
-            })}
+
+                {/* Content Area */}
+                <div className="flex-1 text-center md:text-left min-w-0">
+                  <div className="flex flex-wrap justify-center md:justify-start items-center gap-3 mb-3">
+                    <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter ${badge.bg}`}>
+                      {badge.label}
+                    </span>
+                    <span className="text-xs font-medium text-(--bookmark-subtext)">
+                      Saved at {formatTime(bm.time)}
+                    </span>
+                  </div>
+                  
+                  <h3 className="text-lg md:text-xl font-black text-(--bookmark-text) truncate mb-1">
+                    {bm.label || "Untitled Bookmark"}
+                  </h3>
+                  
+                  <p className="text-sm font-medium text-(--bookmark-subtext)">
+                    Module 1: {bm.lecture?.title || "What is AI Really?"}
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-4 w-full md:w-auto justify-center md:justify-end">
+                  <button
+                    onClick={() => handleJump(bm)}
+                    className="flex-1 md:flex-none bg-(--bookmark-btn) text-[#000000] font-black px-8 py-3 rounded-xl flex items-center justify-center gap-2 transition-all hover:brightness-95 active:scale-95 shadow-md"
+                  >
+                    Go to Timestamp <ArrowRight size={20} />
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                        confirm("Delete Bookmark", "Remove this note?", () => {
+                            deleteBookmark(bm.id);
+                            showToast.delete("Bookmark removed.");
+                        });
+                    }}
+                    className="p-3.5 bg-(--bookmark-del-bg) text-(--bookmark-del-icon) rounded-2xl transition-all hover:scale-110 hover:bg-red-500/10 active:scale-90"
+                  >
+                    <Trash2 size={22} />
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+
+        {!loading && visibleBookmarks.length === 0 && (
+          <div className="py-20 text-center bg-(--bookmark-card-bg)/30 rounded-3xl border-2 border-dashed border-(--bookmark-card-border)/20">
+            <BookmarkIcon className="mx-auto text-(--bookmark-subtext) opacity-20 mb-4" size={48} />
+            <p className="text-(--bookmark-subtext) font-bold">No bookmarks found in this section.</p>
           </div>
         )}
       </div>
