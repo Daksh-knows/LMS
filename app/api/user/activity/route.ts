@@ -13,52 +13,42 @@ export async function POST(req: Request) {
 
     const { type, duration } = await req.json();
     
-    // 1. Get the start and end of the CURRENT day in UTC
+    // 1. Normalize the date to MIDNIGHT UTC
+    // This makes the 'createdAt' part of the unique key predictable
     const now = new Date();
-    const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
-    const endOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+    const todayAtMidnight = new Date(Date.UTC(
+      now.getUTCFullYear(), 
+      now.getUTCMonth(), 
+      now.getUTCDate(), 
+      0, 0, 0, 0
+    ));
 
-    // 2. Find if an entry already exists for this user, activity type, and TODAY
-    const existingActivity = await db.userActivity.findFirst({
+    // 2. Use UPSERT with the unique constraint
+    // This is atomic and prevents race conditions
+    const activity = await db.userActivity.upsert({
       where: {
+        userId_type_createdAt: {
+          userId,
+          type,
+          createdAt: todayAtMidnight,
+        },
+      },
+      update: {
+        duration: {
+          increment: Math.round(duration) || 0,
+        },
+      },
+      create: {
         userId,
         type,
-        createdAt: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
+        duration: Math.round(duration) || 0,
+        createdAt: todayAtMidnight,
       },
     });
 
-    let activity;
-
-    if (existingActivity) {
-      // 3a. If it exists, UPDATE it by adding the new duration to the previous one
-      activity = await db.userActivity.update({
-        where: { 
-          id: existingActivity.id 
-        },
-        data: {
-          duration: {
-            increment: duration || 0, 
-          },
-        },
-      });
-    } else {
-      // 3b. If it doesn't exist, CREATE a new entry
-      activity = await db.userActivity.create({
-        data: {
-          userId,
-          type,
-          duration: duration || 0,
-          createdAt: startOfDay, 
-        },
-      });
-    }
-
     return NextResponse.json(activity);
   } catch (error) {
-    console.error("[USER_ACTIVITY_UPDATE]", error);
+    console.error("[USER_ACTIVITY_UPSERT_ERROR]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
