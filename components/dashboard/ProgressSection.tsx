@@ -102,9 +102,9 @@ export default function ProgressSection({ stats }: ProgressSectionProps) {
         variants={containerVariants}
         initial="hidden"
         animate="show"
-        className="p-6 md:p-8 rounded-[1rem] bg-[var(--streak-background)] border border-transparent dark:border-[#464646] dark:shadow-[0px_10px_40px_-10px_rgba(250,189,35,0.4)]  theme-transition flex flex-col"
+        className="p-6 md:p-8 rounded-[1rem] bg-(--streak-background) border border-transparent dark:border-[#464646] dark:shadow-[0px_10px_40px_-10px_rgba(250,189,35,0.4)]  theme-transition flex flex-col"
       >
-        <motion.h3 variants={itemVariants} className="text-[var(--text-color)] font-bold text-lg mb-6 tracking-tight">
+        <motion.h3 variants={itemVariants} className="text-(--text-color) font-bold text-lg mb-6 tracking-tight">
           Weekly Progress
         </motion.h3>
         
@@ -116,17 +116,17 @@ export default function ProgressSection({ stats }: ProgressSectionProps) {
               <motion.div 
                 key={idx}
                 variants={itemVariants}
-                className="p-4 md:p-5 rounded-[14px] border border-[var(--banner-border)] bg-transparent flex flex-col gap-3 group hover:border-[var(--colored-text)] transition-colors duration-300"
+                className="p-4 md:p-5 rounded-[14px] border border-(--banner-border) bg-transparent flex flex-col gap-3 group hover:border-(--colored-text) transition-colors duration-300"
               >
                 <div className="flex justify-between items-end">
-                  <span className="text-[var(--text-color)] font-bold text-sm md:text-base transition-colors group-hover:text-[var(--colored-text)]">
+                  <span className="text-(--text-color) font-bold text-sm md:text-base transition-colors group-hover:text-(--colored-text)">
                     {item.label}
                   </span>
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-xl md:text-2xl font-bold text-[var(--colored-text)] tabular-nums">
+                    <span className="text-xl md:text-2xl font-bold text-(--colored-text) tabular-nums">
                       {item.value.toString().padStart(2, '0')}
                     </span>
-                    <span className="text-[var(--colored-text)] font-semibold text-xs md:text-sm">
+                    <span className="text-(--colored-text) font-semibold text-xs md:text-sm">
                       {item.unit}
                     </span>
                   </div>
@@ -134,7 +134,7 @@ export default function ProgressSection({ stats }: ProgressSectionProps) {
                 
                 {/* Progress Bar */}
                 {/* <div 
-                  className="h-1.5 w-full bg-[var(--progress-unreached)] rounded-full overflow-hidden"
+                  className="h-1.5 w-full bg-(--progress-unreached) rounded-full overflow-hidden"
                   role="progressbar" 
                   aria-valuenow={progressPercentage} 
                   aria-valuemin={0} 
@@ -145,7 +145,7 @@ export default function ProgressSection({ stats }: ProgressSectionProps) {
                     whileInView={{ width: `${progressPercentage}%` }}
                     viewport={{ once: true, margin: "-50px" }}
                     transition={{ duration: 1.2, ease: [0.25, 1, 0.5, 1], delay: 0.2 + (idx * 0.1) }}
-                    className="h-full bg-[var(--colored-text)] rounded-full origin-left"
+                    className="h-full bg-(--colored-text) rounded-full origin-left"
                   />
                 </div> */}
               </motion.div>
@@ -159,12 +159,12 @@ export default function ProgressSection({ stats }: ProgressSectionProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="p-6 md:p-8 rounded-[1rem] bg-[var(--streak-background)] border border-transparent dark:border-[#464646] dark:shadow-[0px_10px_40px_-10px_rgba(250,189,35,0.4)] theme-transition flex flex-col overflow-hidden"
+        className="p-6 md:p-8 rounded-[1rem] bg-(--streak-background) border border-transparent dark:border-[#464646] dark:shadow-[0px_10px_40px_-10px_rgba(250,189,35,0.4)] theme-transition flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-[var(--text-color)] font-bold text-lg tracking-tight">Monthly Activity</h3>
-          <span className="text-[var(--text-color)] opacity-60 font-medium text-sm tabular-nums">
+          <h3 className="text-(--text-color) font-bold text-lg tracking-tight">Monthly Activity</h3>
+          <span className="text-(--text-color) opacity-60 font-medium text-sm tabular-nums">
             {format(viewDate, "MMM yyyy")}
           </span>
         </div>
@@ -175,19 +175,19 @@ export default function ProgressSection({ stats }: ProgressSectionProps) {
             <button 
               onClick={() => paginateMonth(-1)} 
               aria-label="Previous month"
-              className="p-1.5 text-[var(--text-color)] hover:text-[var(--colored-text)] transition-colors opacity-70 hover:opacity-100 rounded-full hover:bg-[var(--banner-border)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--colored-text)]"
+              className="p-1.5 text-(--text-color) hover:text-(--colored-text) transition-colors opacity-70 hover:opacity-100 rounded-full hover:bg-(--banner-border) focus:outline-none focus-visible:ring-2 focus-visible:ring-(--colored-text)"
             >
               <ChevronLeft size={18} />
             </button>
             
-            <div className="bg-[var(--colored-text)] text-black px-4 py-1.5 rounded-md font-bold text-sm min-w-[100px] text-center shadow-sm select-none">
+            <div className="bg-(--colored-text) text-black px-4 py-1.5 rounded-md font-bold text-sm min-w-[100px] text-center shadow-sm select-none">
               {format(viewDate, "MMMM")}
             </div>
             
             <button 
               onClick={() => paginateMonth(1)} 
               aria-label="Next month"
-              className="p-1.5 text-[var(--text-color)] hover:text-[var(--colored-text)] transition-colors opacity-70 hover:opacity-100 rounded-full hover:bg-[var(--banner-border)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--colored-text)]"
+              className="p-1.5 text-(--text-color) hover:text-(--colored-text) transition-colors opacity-70 hover:opacity-100 rounded-full hover:bg-(--banner-border) focus:outline-none focus-visible:ring-2 focus-visible:ring-(--colored-text)"
             >
               <ChevronRight size={18} />
             </button>
@@ -197,7 +197,7 @@ export default function ProgressSection({ stats }: ProgressSectionProps) {
         {/* Calendar Grid Header */}
         <div className="grid grid-cols-7 gap-y-4 gap-x-2 text-center mb-2">
           {daysOfWeek.map(day => (
-            <span key={day} className="text-[var(--text-color)] opacity-40 text-xs font-semibold select-none">
+            <span key={day} className="text-(--text-color) opacity-40 text-xs font-semibold select-none">
               {day}
             </span>
           ))}
@@ -234,10 +234,10 @@ export default function ProgressSection({ stats }: ProgressSectionProps) {
                       className={`
                         w-8 h-8 flex items-center justify-center rounded-[6px] text-sm font-medium transition-colors select-none
                         ${isActive 
-                          ? "bg-[var(--colored-text)] text-black font-bold shadow-sm" 
-                          : "text-[var(--text-color)] opacity-60 bg-transparent hover:bg-[var(--banner-border)]"
+                          ? "bg-(--colored-text) text-black font-bold shadow-sm" 
+                          : "text-(--text-color) opacity-60 bg-transparent hover:bg-(--banner-border)"
                         }
-                        ${isTodayDate && !isActive ? "ring-1 ring-inset ring-[var(--colored-text)] opacity-100" : ""}
+                        ${isTodayDate && !isActive ? "ring-1 ring-inset ring-(--colored-text) opacity-100" : ""}
                       `}
                     >
                       {format(date, "d")}

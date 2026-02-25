@@ -44,7 +44,7 @@ export default function Dropdown({
     <div className="relative flex items-center" ref={dropdownRef}>
       {/* Optional Label Prefix */}
       {labelPrefix && (
-        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[var(--text-color)] opacity-50 mr-3 select-none">
+        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-(--text-color) opacity-50 mr-3 select-none">
           {labelPrefix}
         </span>
       )}
@@ -54,14 +54,14 @@ export default function Dropdown({
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-transparent hover:border-[var(--rev-input-border)] hover:bg-[var(--rev-overall-bg)] transition-all duration-200"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-transparent hover:border-(--rev-input-border) hover:bg-(--rev-overall-bg) transition-all duration-200"
         >
-          <span className="text-sm font-bold text-[var(--text-color)] whitespace-nowrap">
+          <span className="text-sm font-bold text-(--text-color) whitespace-nowrap">
             {currentLabel}
           </span>
           <ChevronDown 
             size={14} 
-            className={`text-[var(--text-color)] opacity-50 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} 
+            className={`text-(--text-color) opacity-50 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} 
           />
         </button>
 
@@ -73,7 +73,7 @@ export default function Dropdown({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className={`absolute right-0 mt-2 ${width} bg-[var(--rev-form-bg)] border border-[var(--rev-overall-border)] rounded-xl shadow-xl z-50 overflow-hidden theme-transition`}
+              className={`absolute right-0 mt-2 ${width} bg-(--rev-form-bg) border border-(--rev-overall-border) rounded-xl shadow-xl z-50 overflow-hidden theme-transition`}
             >
               <div className="p-1.5 space-y-1">
                 {options.map((option) => (
@@ -87,14 +87,14 @@ export default function Dropdown({
                     className={`
                       w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors
                       ${selectedValue === option.value 
-                        ? 'bg-[var(--rev-input-bg)] text-[var(--text-color)]' 
-                        : 'text-[var(--text-color)] opacity-70 hover:bg-[var(--rev-overall-bg)] hover:opacity-100'
+                        ? 'bg-(--rev-input-bg) text-(--text-color)' 
+                        : 'text-(--text-color) opacity-70 hover:bg-(--rev-overall-bg) hover:opacity-100'
                       }
                     `}
                   >
                     {option.label}
                     {selectedValue === option.value && (
-                      <Check size={14} className="text-[var(--colored-text)]" />
+                      <Check size={14} className="text-(--colored-text)" />
                     )}
                   </button>
                 ))}

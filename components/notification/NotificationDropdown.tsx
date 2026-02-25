@@ -91,15 +91,15 @@ export default function NotificationDropdown({ onClose , setNotifications , setL
         className="absolute right-0 mt-2 w-80 bg-white shadow-lg rounded-lg z-50"
       >
         
-        <div className="absolute right-0 sm:-right-4 mt-3 w-80 sm:w-96 bg-[var(--background)] border border-[var(--banner-border)] rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col max-h-[80vh]">
+        <div className="absolute right-0 sm:-right-4 mt-3 w-80 sm:w-96 bg-(--background) border border-(--banner-border) rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col max-h-[80vh]">
           
           {/* Header */}
-          <div className="p-4 border-b border-[var(--banner-border)] flex items-center justify-between bg-[var(--start-background)]">
-            <h3 className="font-semibold text-[var(--text-color)]">Notifications</h3>
+          <div className="p-4 border-b border-(--banner-border) flex items-center justify-between bg-(--start-background)">
+            <h3 className="font-semibold text-(--text-color)">Notifications</h3>
             {unreadCount > 0 && (
               <button
                 onClick={deleteAllNotifications}
-                className="text-xs text-[var(--colored-text)] hover:underline flex items-center gap-1"
+                className="text-xs text-(--colored-text) hover:underline flex items-center gap-1"
               >
                 <Check size={14} /> Mark all read
               </button>
@@ -110,7 +110,7 @@ export default function NotificationDropdown({ onClose , setNotifications , setL
           <div className="overflow-y-auto flex-1 p-2">
             {loading ? (
               <div className="flex justify-center py-8">
-                <Loader2 className="animate-spin text-[var(--colored-text)]" />
+                <Loader2 className="animate-spin text-(--colored-text)" />
               </div>
             ) : notifications.length === 0 ? (
               <div className="text-center py-8 text-gray-500 text-sm">
@@ -124,15 +124,15 @@ export default function NotificationDropdown({ onClose , setNotifications , setL
                     onClick={() => deleteNotification(notification.id, notification.actionUrl)}
                     className={`p-3 rounded-lg cursor-pointer transition-colors flex gap-3 items-start ${
                       notification.isRead
-                        ? "hover:bg-[var(--sidebar-nav-bg-hover)] opacity-70"
-                        : "bg-[var(--start-background)] hover:brightness-95"
+                        ? "hover:bg-(--sidebar-nav-bg-hover) opacity-70"
+                        : "bg-(--start-background) hover:brightness-95"
                     }`}
                   >
                     <div className="mt-1 flex-shrink-0">
                       {getIcon(notification.type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm ${notification.isRead ? "font-medium" : "font-bold"} text-[var(--text-color)] truncate`}>
+                      <p className={`text-sm ${notification.isRead ? "font-medium" : "font-bold"} text-(--text-color) truncate`}>
                         {notification.title}
                       </p>
                       <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">
@@ -144,7 +144,7 @@ export default function NotificationDropdown({ onClose , setNotifications , setL
                     </div>
                     {!notification.isRead && (
                       <div className="flex-shrink-0 mt-1.5">
-                        <div className="w-2 h-2 rounded-full bg-[var(--colored-text)]" />
+                        <div className="w-2 h-2 rounded-full bg-(--colored-text)" />
                       </div>
                     )}
                   </div>

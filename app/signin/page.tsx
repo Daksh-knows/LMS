@@ -46,7 +46,7 @@ export default function SignInPage() {
 
   return (
     <AnimatePresence>
-      <div className="theme-transition min-h-screen bg-[var(--start-background)] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      <div className="theme-transition min-h-screen bg-(--start-background) flex flex-col items-center justify-center p-6 relative overflow-hidden">
         <ThemeSwitcher className="fixed bottom-6 right-6 z-50" />
         
         {/* Background Glow Shade */}
@@ -93,7 +93,7 @@ export default function SignInPage() {
                     type="email"
                     required
                     placeholder="name@example.com"
-                    className="w-full pl-12 pr-4 py-3.5 bg-[var(--start-background)] border border-(--input-border) rounded-xl focus:border-amber-500/50 transition-all outline-none text-custom placeholder:text-[#464646]"
+                    className="w-full pl-12 pr-4 py-3.5 bg-(--start-background) border border-(--input-border) rounded-xl focus:border-amber-500/50 transition-all outline-none text-custom placeholder:text-[#464646]"
                   />
                 </div>
               </div>
@@ -108,7 +108,7 @@ export default function SignInPage() {
                     type={showPassword ? "text" : "password"}
                     required
                     placeholder="••••••••"
-                    className="w-full pl-12 pr-12 py-3.5 bg-[var(--start-background)] border border-(--input-border) rounded-xl focus:border-amber-500/50 transition-all outline-none text-custom placeholder:text-[#464646]"
+                    className="w-full pl-12 pr-12 py-3.5 bg-(--start-background) border border-(--input-border) rounded-xl focus:border-amber-500/50 transition-all outline-none text-custom placeholder:text-[#464646]"
                   />
                   <button
                     type="button" 
@@ -135,7 +135,7 @@ export default function SignInPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8 }}
-              className="mt-8 p-2 rounded-xl border border-[var(--banner-border)] bg-[var(--banner-color)] flex items-center gap-4"
+              className="mt-8 p-2 rounded-xl border border-(--banner-border) bg-(--banner-color) flex items-center gap-4"
             >
               <Info className="text-[#FFCC59] shrink-0" size={36} />
               <p className="text-[13px] text-[#FFFFFFB2] opacity-70 leading-snug text-custom-muted">

@@ -230,20 +230,20 @@ const getStatusIndicator = (item: any, isActive: boolean, isLocked: boolean) => 
   const displayPercentage = progress?.percentage || 0;
 
    return (
-    <div className="flex flex-col h-full rounded-2xl border theme-transition border-[var(--course-sidebar-border)] gap-4 bg-[var(--course-sidebar-background)] pt-2">
+    <div className="flex flex-col h-full rounded-2xl border theme-transition border-(--course-sidebar-border) gap-4 bg-(--course-sidebar-background) pt-2">
       
       {/* 1. TOP PROGRESS CARD */}
       <div className="p-2 w-full animate-in fade-in duration-700">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="font-bold text-lg text-[var(--text-color)] pl-4">Course Content</h2>
+          <h2 className="font-bold text-lg text-(--text-color) pl-4">Course Content</h2>
           <div className="flex flex-col items-end">
-            <span className="text-xs text-[var(--text-color)] font-bold">
+            <span className="text-xs text-(--text-color) font-bold">
               {displayPercentage}% Completed
             </span>
           </div>
         </div>
         
-        <div className="h-2 w-full bg-[var(--progress-unreached)] rounded-full overflow-hidden">
+        <div className="h-2 w-full bg-(--progress-unreached) rounded-full overflow-hidden">
           <div
             style={{ width: `${displayPercentage}%` }}
             className="h-full bg-[#FABD23] rounded-full shadow-[0_0_8px_rgba(250,189,35,0.4)] transition-all duration-1000 ease-out"
@@ -259,10 +259,10 @@ const getStatusIndicator = (item: any, isActive: boolean, isLocked: boolean) => 
             return (
               <div key={section.id} className=" overflow-hidden">
                 {/* Module Header */}         
-                <div className="bg-[var(--course-sidebar-module-header)] theme-transition">
+                <div className="bg-(--course-sidebar-module-header) theme-transition">
                   <button 
                     onClick={() => toggleSection(section.id)}
-                    className={`w-full flex items-center justify-between p-4 transition-all bg-[var(--course-sidebar-module-header)] ${
+                    className={`w-full flex items-center justify-between p-4 transition-all bg-(--course-sidebar-module-header) ${
                       courseType === "CRASH" ? "cursor-default" : "cursor-pointer"
                     }`}
                   >
@@ -298,27 +298,27 @@ const getStatusIndicator = (item: any, isActive: boolean, isLocked: boolean) => 
                           const isCompleted = item.userProgress?.[0]?.isCompleted;
 
                           // Dynamic styling based on lecture state
-                          let stateStyles = "bg-[var(--lec-unwatched-bg)] border-[var(--lec-unwatched-border)]";
+                          let stateStyles = "bg-(--lec-unwatched-bg) border-(--lec-unwatched-border)";
                           let textStyles = "text-[#999999]"; // Gray text for unwatched
                           
                           if (isActive) {
-                            stateStyles = "bg-[var(--lec-active-bg)] border-[var(--lec-active-border)]";
-                            textStyles = "text-[var(--text-color)] font-bold";
+                            stateStyles = "bg-(--lec-active-bg) border-(--lec-active-border)";
+                            textStyles = "text-(--text-color) font-bold";
                           } else if (isCompleted) {
-                            stateStyles = "bg-[var(--lec-completed-bg)] border-[var(--lec-completed-border)]";
-                            textStyles = "text-[var(--text-color)] font-medium";
+                            stateStyles = "bg-(--lec-completed-bg) border-(--lec-completed-border)";
+                            textStyles = "text-(--text-color) font-medium";
                           }
 
                           // Circle indicator logic matching your new design
                           const renderCircle = () => {
                             if (isLocked) return <Lock size={16} className="text-gray-500" />;
                             if (isCompleted && !isActive) {
-                              return <div className="w-4 h-4 rounded-full border-2 bg-[var(--circle-completed-bg)] border-[var(--circle-completed-border)]" />;
+                              return <div className="w-4 h-4 rounded-full border-2 bg-(--circle-completed-bg) border-(--circle-completed-border)" />;
                             }
                             if (isActive) {
-                              return <div className="w-4 h-4 rounded-full border-2 bg-transparent border-[var(--circle-active-border)]" />;
+                              return <div className="w-4 h-4 rounded-full border-2 bg-transparent border-(--circle-active-border)" />;
                             }
-                            return <div className="w-4 h-4 rounded-full border-2 bg-transparent border-[var(--circle-unwatched-border)]" />;
+                            return <div className="w-4 h-4 rounded-full border-2 bg-transparent border-(--circle-unwatched-border)" />;
                           };
 
                           return (
@@ -372,7 +372,7 @@ const getStatusIndicator = (item: any, isActive: boolean, isLocked: boolean) => 
       <button 
         onClick={() => handleNext()} 
         style={{ boxShadow: "var(--btn-next-shadow)" }}
-        className="m-3 py-4 bg-[var(--btn-next-bg)] text-[var(--btn-next-text)] font-black rounded-xl flex items-center justify-center gap-3 hover:brightness-110 transition-all"
+        className="m-3 py-4 bg-(--btn-next-bg) text-(--btn-next-text) font-black rounded-xl flex items-center justify-center gap-3 hover:brightness-110 transition-all"
       >
         Next Lesson <span className="text-xl">→</span>
       </button>
