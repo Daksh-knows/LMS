@@ -302,7 +302,7 @@ const getStatusIndicator = (item: any, isActive: boolean, isLocked: boolean) => 
                           let textStyles = "text-[#999999]"; // Gray text for unwatched
                           
                           if (isActive) {
-                            stateStyles = "bg-(--lec-active-bg) border-(--lec-active-border)";
+                            stateStyles = "bg-(--lec-active-bg) border-(--lec-active-border) border-[2px]";
                             textStyles = "text-(--text-color) font-bold";
                           } else if (isCompleted) {
                             stateStyles = "bg-(--lec-completed-bg) border-(--lec-completed-border)";

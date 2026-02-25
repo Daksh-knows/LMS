@@ -60,7 +60,7 @@ function NotificationButton() {
     <div className="relative">
       <button 
         onClick={() => setShowNotifications(!showNotifications)}
-        className="relative rounded-full theme-transition bg-(--sidebar-nav-bg-hover) text-(--text-color) hover:opacity-80 transition-opacity flex items-center justify-center"
+        className="relative rounded-full theme-transition  text-(--text-color) hover:opacity-80 transition-opacity flex items-center justify-center"
       >
         <div className="w-10 h-10 sm:w-12 sm:h-12">
           <DotLottieReact
