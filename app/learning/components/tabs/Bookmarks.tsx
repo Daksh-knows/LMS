@@ -12,6 +12,7 @@ import {
   HelpCircle,
   Clock,
   Layers,
+  PlayCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useConfirm } from "@/context/ConfirmContext";
@@ -22,7 +23,8 @@ import Loader from "@/utils/Loader";
 
 interface Bookmark {
   id: string;
-  time: number;
+  startTime: number;
+  endTime: number | null; // Changed from endTime: number
   label: string;
   type: "BOOKMARK" | "IMPORTANT" | "QUESTION";
   lectureId: string;
@@ -50,15 +52,12 @@ export const BookmarksTab: React.FC<{ onBookmarkClick: (time: string) => void }>
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
 
-    useEffect(() => {
-    // 1. Create the debounce timer
+  // Search Logic (Debounced)
+  useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
-      
-      // 2. CHECK: If search bar is cleared, fetch the original full list
       if (searchQuery.trim() === "") {
         setIsSearching(true);
         try {
-          // Re-fetch the standard course bookmarks (no "q" param)
           const response = await fetch(`/api/lecture/bookmark?courseId=${courseId}`);
           if (response.ok) {
             const data = await response.json();
@@ -69,10 +68,9 @@ export const BookmarksTab: React.FC<{ onBookmarkClick: (time: string) => void }>
         } finally {
           setIsSearching(false);
         }
-        return; // Exit early
+        return;
       }
 
-      // 3. PROCEED: If there is text, run the search API
       setIsSearching(true);
       try {
         const response = await fetch(
@@ -92,6 +90,7 @@ export const BookmarksTab: React.FC<{ onBookmarkClick: (time: string) => void }>
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery, courseId, setInitialBookmarks]);
   
+  // Initial Fetch
   useEffect(() => {
     if (!courseId) return;
     const fetchBookmarks = async () => {
@@ -108,15 +107,17 @@ export const BookmarksTab: React.FC<{ onBookmarkClick: (time: string) => void }>
       }
     };
     fetchBookmarks();
-  }, [courseId]);
+  }, [courseId, setInitialBookmarks]);
 
+  // Sorting and Filtering
   const visibleBookmarks = useMemo(() => {
     let filtered = [...bookmarks];
     if (scope === "CURRENT") {
       filtered = filtered.filter((bm) => bm.lectureId === lecture?.id);
     }
     if (sortBy === "TIME") {
-      filtered.sort((a, b) => a.time - b.time);
+      // Changed to use startTime for chronological sorting
+      filtered.sort((a, b) => a.startTime - b.startTime);
     } else {
       filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
@@ -141,26 +142,17 @@ export const BookmarksTab: React.FC<{ onBookmarkClick: (time: string) => void }>
     }
   };
 
-   const handleJump = (bm: Bookmark) => {
+  const handleJump = (bm: Bookmark) => {
+    const jumpTime = bm.startTime; // Always jump to start of range
     if (bm.lectureId === lecture?.id) {
-      // Same lecture: Seek & Scroll
-      onBookmarkClick(formatTime(bm.time));
+      onBookmarkClick(formatTime(jumpTime));
       const stage = document.querySelector("#video-stage");
-      if (stage) {
-        stage.scrollIntoView({ behavior: "smooth", block: "start" });
-      } else {
-        // Fallback to top of window
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
+      if (stage) stage.scrollIntoView({ behavior: "smooth", block: "start" });
+      else window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      // Different lecture: Navigate to it
-      // The video player on the new page will read the 'seek' param
-      router.push(`/learning/${courseId}/${bm.lectureId}?seek=${bm.time}`);
+      router.push(`/learning/${courseId}/${bm.lectureId}?seek=${jumpTime}`);
     }
   };
-
-
-
 
   if (!lecture) return <Loader message="Loading bookmarks" />;
 
@@ -186,14 +178,6 @@ export const BookmarksTab: React.FC<{ onBookmarkClick: (time: string) => void }>
             placeholder="Search here..."
             className="w-full bg-(--bookmark-search-bg) border border-(--bookmark-search-border) rounded-xl py-3.5 pl-12 pr-4 text-(--bookmark-text) focus:outline-none placeholder:text-(--bookmark-subtext) shadow-(--bookmark-shadow)"
           />
-          {searchQuery && !isSearching && (
-            <button 
-              onClick={() => setSearchQuery("")}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-(--bookmark-subtext) hover:text-(--bookmark-text)"
-            >
-              ✕
-            </button>
-          )}
         </div>
 
         <div className="flex gap-3">
@@ -222,6 +206,8 @@ export const BookmarksTab: React.FC<{ onBookmarkClick: (time: string) => void }>
         <AnimatePresence mode="popLayout">
           {visibleBookmarks.map((bm) => {
             const badge = getBookmarkBadge(bm.type);
+            const isRange = bm.endTime && bm.endTime > bm.startTime;
+
             return (
               <motion.div
                 key={bm.id}
@@ -244,9 +230,15 @@ export const BookmarksTab: React.FC<{ onBookmarkClick: (time: string) => void }>
                     <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter ${badge.bg}`}>
                       {badge.label}
                     </span>
-                    <span className="text-xs font-medium text-(--bookmark-subtext)">
-                      Saved at {formatTime(bm.time)}
-                    </span>
+                    
+                    {/* Updated Time Display for Ranges */}
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-(--bookmark-subtext) bg-slate-100 dark:bg-white/5 px-2 py-1 rounded-md">
+                      <PlayCircle size={12} className="text-(--colored-text)" />
+                      <span>
+                        {formatTime(bm.startTime)}
+                        {isRange && ` — ${formatTime(bm.endTime as number)}`}
+                      </span>
+                    </div>
                   </div>
                   
                   <h3 className="text-lg md:text-xl font-black text-(--bookmark-text) truncate mb-1">
@@ -254,7 +246,7 @@ export const BookmarksTab: React.FC<{ onBookmarkClick: (time: string) => void }>
                   </h3>
                   
                   <p className="text-sm font-medium text-(--bookmark-subtext)">
-                    Module 1: {bm.lecture?.title || "What is AI Really?"}
+                    {bm.lecture?.title || "Unnamed Lecture"}
                   </p>
                 </div>
 
@@ -264,15 +256,15 @@ export const BookmarksTab: React.FC<{ onBookmarkClick: (time: string) => void }>
                     onClick={() => handleJump(bm)}
                     className="flex-1 md:flex-none bg-(--bookmark-btn) text-[#000000] font-black px-8 py-3 rounded-xl flex items-center justify-center gap-2 transition-all hover:brightness-95 active:scale-95 shadow-md"
                   >
-                    Go to Timestamp <ArrowRight size={20} />
+                    Jump to {isRange ? "Start" : "Point"} <ArrowRight size={20} />
                   </button>
                   
                   <button
                     onClick={() => {
-                        confirm("Delete Bookmark", "Remove this note?", () => {
-                            deleteBookmark(bm.id);
-                            showToast.delete("Bookmark removed.");
-                        });
+                      confirm("Delete Bookmark", "Remove this note?", () => {
+                        deleteBookmark(bm.id);
+                        showToast.delete("Bookmark removed.");
+                      });
                     }}
                     className="p-3.5 bg-(--bookmark-del-bg) text-(--bookmark-del-icon) rounded-2xl transition-all hover:scale-110 hover:bg-red-500/10 active:scale-90"
                   >

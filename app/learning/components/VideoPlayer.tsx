@@ -47,7 +47,7 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
   const params = useParams();
   const [isMounted, setIsMounted] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [bookmark, setBookmark] = useState({ label: '', type: 'BOOKMARK', time: 0 });
+  const [bookmark, setBookmark] = useState({ label: '', type: 'BOOKMARK', startTime: 0 , endTime : 0 });
   const [isPlaying, setIsPlaying] = useState(false);
   const [originalControl, setOriginalControl] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -289,69 +289,104 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
     };
     
     //handlers for bookmark form
-    const handleOpenForm = () => {
-      if (controllerRef.current) {
-        const wasPaused = !isPlaying;
-        setOriginalControl(wasPaused);
+      const handleOpenForm = () => {
+        if (controllerRef.current) {
+          // 1. Store the original play state to resume correctly later
+          const wasPaused = !isPlaying;
+          setOriginalControl(wasPaused);
 
-        const mediaElement = controllerRef.current.media;
-        const rawTime = mediaElement ? mediaElement.currentTime : 0;
-        const safeTime = isNaN(rawTime) ? 0 : rawTime;
+          // 2. Extract and sanitize the current video time
+          const mediaElement = controllerRef.current.media;
+          const rawTime = mediaElement ? mediaElement.currentTime : 0;
+          const safeTime = isNaN(rawTime) ? 0 : rawTime;
 
-        controllerRef.current.paused = true;
-        setIsPlaying(false);
+          // 3. Pause the video to let the user type their note
+          controllerRef.current.paused = true;
+          setIsPlaying(false);
 
-        setBookmark(prev => ({ ...prev, time: safeTime }));
-        setShowForm(true);
-      }
-    };
+          // 4. Set the startTime to the current playback position
+          // We reset endTime to an empty string so the user can choose to fill it
+          setBookmark(prev => ({ 
+            ...prev, 
+            startTime: safeTime,
+            endTime: 0
+          }));
+          
+          setShowForm(true);
+        }
+      };
     
     //handler to save bookmark
     const handleSave = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setIsSubmitting(true);
+        e.preventDefault();
+        setIsSubmitting(true);
 
-      try {
-        const response = await fetch("/api/lecture/bookmark", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            lectureId,
-            time: bookmark.time,
-            label: bookmark.label,
-            type: bookmark.type,
-          }),
-        });
+        // 1. Convert and Validate Range
+        const start = parseFloat(bookmark.startTime.toString());
+        const end = bookmark.endTime ? parseFloat(bookmark.endTime.toString()) : null;
 
-        if (!response.ok) throw new Error("Failed to save");
-
-        const data = await response.json();
-        addBookmark(data);
-
-        showToast.success(`Bookmark saved at ${Math.floor(bookmark.time)}s`);
-
-        setShowForm(false);
-        setBookmark({ label: '', type: 'BOOKMARK', time: 0 });
-
-        if (controllerRef.current) {
-          const shouldResume = originalControl === false;
-          controllerRef.current.paused = !shouldResume;
-          setIsPlaying(shouldResume);
+        if (end !== null && end <= start) {
+          showToast.error("End time must be greater than start time");
+          setIsSubmitting(false);
+          return;
         }
-      } catch (error) {
-        console.error("Save error:", error);
-        showToast.error("Could not save bookmark. Please try again.");
-      } finally {
-        setIsSubmitting(false);
-      }
-    };
+
+        try {
+          const response = await fetch("/api/lecture/bookmark", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              lectureId,
+              startTime: start,
+              endTime: end, // This will be null if no end time was set
+              label: bookmark.label,
+              type: bookmark.type,
+            }),
+          });
+
+          if (!response.ok) throw new Error("Failed to save");
+
+          const data = await response.json();
+          addBookmark(data);
+
+          // Success Message
+          const timeDisplay = end 
+            ? `${Math.floor(start)}s - ${Math.floor(end)}s` 
+            : `${Math.floor(start)}s`;
+          showToast.success(`Bookmark saved: ${timeDisplay}`);
+
+          // Reset Form
+          setShowForm(false);
+          setBookmark({ label: '', type: 'BOOKMARK', startTime: 0, endTime: 0 });
+
+          // Handle Video Playback Resume
+          if (controllerRef.current) {
+            const shouldResume = originalControl === false;
+            controllerRef.current.paused = !shouldResume;
+            setIsPlaying(shouldResume);
+          }
+        } catch (error) {
+          console.error("Save error:", error);
+          showToast.error("Could not save bookmark. Please try again.");
+        } finally {
+          setIsSubmitting(false);
+        }
+      };
     
     //handler to cancel bookmark
     const handleCancel = () => {
       setShowForm(false);
-      setBookmark({ label: '', type: 'BOOKMARK', time: 0 });
+      
+      // Update state keys to match new schema
+      setBookmark({ 
+        label: '', 
+        type: 'BOOKMARK', 
+        startTime: 0, 
+        endTime: 0 
+      });
 
       if (controllerRef.current) {
+        // If the video was playing before the form opened, resume it
         const shouldResume = originalControl === false;
         controllerRef.current.paused = !shouldResume;
         setIsPlaying(shouldResume);
