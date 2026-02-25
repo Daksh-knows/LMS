@@ -5,20 +5,10 @@ import { formatDistanceToNow } from "date-fns";
 import { Check, CheckCircle2, Circle, Loader2, BookOpen, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  actionUrl?: string;
-  isRead: boolean;
-  type: string;
-  createdAt: string;
-}
 
-export default function NotificationDropdown({ onClose }: { onClose: () => void }) {
+
+export default function NotificationDropdown({ onClose , setNotifications , setLoading , notifications , loading}: any) {
   const router = useRouter();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
    const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -56,7 +46,7 @@ export default function NotificationDropdown({ onClose }: { onClose: () => void 
   
 
   const deleteNotification = async (id: string, url?: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    setNotifications((prev : any) => prev.filter((n :any) => n.id !== id));
 
     await fetch("/api/notifications", {
       method: "DELETE", 
@@ -72,6 +62,7 @@ export default function NotificationDropdown({ onClose }: { onClose: () => void 
 
   const deleteAllNotifications = async () => {
     setNotifications([]); 
+    console.log("LL")
     await fetch("/api/notifications", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -79,7 +70,7 @@ export default function NotificationDropdown({ onClose }: { onClose: () => void 
     });
   };
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const unreadCount = notifications.filter((n : any) => !n.isRead).length;
 
   
 
@@ -127,7 +118,7 @@ export default function NotificationDropdown({ onClose }: { onClose: () => void 
               </div>
             ) : (
               <div className="flex flex-col gap-1">
-                {notifications.map((notification) => (
+                {notifications.map((notification :any) => (
                   <div
                     key={notification.id}
                     onClick={() => deleteNotification(notification.id, notification.actionUrl)}

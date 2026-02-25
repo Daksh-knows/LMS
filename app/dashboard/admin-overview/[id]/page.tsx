@@ -67,7 +67,7 @@ export default function AssignmentGradingPage({ params }: { params: Promise<{ id
         const res = await fetch(`/api/admin/assignments/grade`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ submissionId, grade, feedback }),
+        body: JSON.stringify({ submissionId, grade, feedback , lectureId : id }),
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
