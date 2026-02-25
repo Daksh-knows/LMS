@@ -118,35 +118,47 @@ export async function POST(req: NextRequest) {
     const course = lecture.module.course;
     const enrollments = course.students;
 
-    if (enrollments.length > 0 && data.type !== 'VIDEO') {
-      // 1. Prepare Notification Data for Bulk Insert
-      const notificationData = enrollments.map((en) => ({
-        userId: en.userId,
+    let recipients: { userId: string; email?: string | null }[] = [];
+
+    if (course.type === 'CRASH') {
+      const allUsers = await db.user.findMany({
+        select: {
+          id: true,
+          email: true,
+        }
+      });
+      recipients = allUsers.map(u => ({ userId: u.id, email: u.email }));
+    } else {
+      recipients = enrollments.map(en => ({ 
+        userId: en.userId, 
+        email: en.user.email 
+      }));
+    }
+
+    if (recipients.length > 0) {
+      const notificationData = recipients.map((r) => ({
+        userId: r.userId,
         courseId: course.id,
-        type: "COURSE_UPDATE" as const, 
+        type: "COURSE_UPDATE" as const,
         title: `New ${lecture.type.toLowerCase()} added!`,
         message: `${lecture.title} is now available in ${course.title}.`,
-        actionUrl: `/learning/${course.id}/${lecture.id}`, 
+        actionUrl: `/learning/${course.id}/${lecture.id}`,
         isRead: false,
       }));
 
-      // 2. Prepare Email Promises
-      const emailPromises = enrollments.map((en) => {
-        if (en.user.email) {
-          return sendLectureNotification(
-            en.user.email,
-            course.title,
-            lecture.title,
-            lecture.type
-          );
-        }
-      });
+      const emailPromises = recipients
+        .filter(r => r.email)
+        .map((r) => sendLectureNotification(
+          r.email!,
+          course.title,
+          lecture.title,
+          lecture.type
+        ));
 
-      // 3. Execute both in the background using Promise.allSettled
       Promise.allSettled([
         db.notification.createMany({
           data: notificationData,
-          skipDuplicates: true, 
+          skipDuplicates: true,
         }),
         ...emailPromises
       ]).then((results) => {
