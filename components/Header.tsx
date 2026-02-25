@@ -7,7 +7,8 @@ import { signOut } from "next-auth/react";
 import { motion } from "framer-motion";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import ThemeSwitcher from "@/components/Theme/ThemeSwitcher";
-import NotificationDropdown from "./NotificationDropdown";
+import NotificationDropdown from "./notification/NotificationDropdown";
+import NotificationButton from "./notification/NotificationButton";
 
 export default function Header({ 
   user, 
@@ -132,20 +133,7 @@ export default function Header({
         <ThemeSwitcher />
 
         {/* Notification Bell Wrapper */}
-        <div className="relative">
-          <button 
-            onClick={() => setShowNotifications(!showNotifications)}
-            className="relative p-1.5 sm:p-2 rounded-full bg-[var(--sidebar-nav-bg-hover)] text-[var(--text-color)] hover:opacity-80 transition-opacity"
-          >
-            <Bell size={20} className="sm:w-5 sm:h-5 w-4 h-4" />
-            <span className="absolute top-1 sm:top-1.5 right-1 sm:right-1.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-[#FABD23] rounded-full border-2 border-[var(--sidebar-nav-bg-hover)]"></span>
-          </button>
-          
-          {/* Render the Dropdown */}
-          {showNotifications && (
-            <NotificationDropdown onClose={() => setShowNotifications(false)} />
-          )}
-        </div>
+        <NotificationButton />
 
         <div className="h-6 sm:h-8 w-px bg-gray-200 dark:bg-gray-800 transition-colors"></div>
 

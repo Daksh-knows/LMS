@@ -13,38 +13,71 @@ export async function POST(req: Request) {
     const { submissionId, grade, feedback } = await req.json();
     const numericGrade = parseFloat(grade);
 
-    // 1. Fetch data including Student Email and Lecture Title
+    // 1. Fetch data including Student details, Lecture details, and the Course ID
     const submission = await db.assignmentSubmission.findUnique({
       where: { id: submissionId },
       include: {
-        User: { select: { email: true, name: true } },
-        lecture: { select: { title: true } }
+        User: { select: { email: true, name: true, id: true } },
+        lecture: { 
+          select: { 
+            title: true, 
+            id: true,
+            module: { select: { courseId: true } } // Traverse to get courseId
+          } 
+        }
       }
     });
 
     if (!submission) return new NextResponse("Not Found", { status: 404 });
 
+    const courseId = submission.lecture.module.courseId;
+    const lectureId = submission.lecture.id;
+    const studentId = submission.User.id;
+
     // 2. Database Transaction
     await db.$transaction([
+      // 1. Keep this as UPDATE (because we know submissionId exists)
       db.assignmentSubmission.update({
         where: { id: submissionId },
-        data: { grade: numericGrade, feedback, status : "GRADED" },
+        data: { grade: numericGrade, feedback, status: "GRADED" },
       }),
-      db.userProgress.update({
+      
+      // 2. This is the one that needs UPSERT logic
+      // Note: UPSERT does not use "data", it uses "update" and "create"
+      db.userProgress.upsert({
         where: {
           userId_lectureId: {
-            userId: submission.studentId,
-            lectureId: submission.lectureId,
+            userId: studentId,
+            lectureId: lectureId,
           },
         },
-        data: {
+        update: {
+          assignmentStatus: "GRADED",
+          isCompleted: true,
+        },
+        create: {
+          userId: studentId,
+          lectureId: lectureId,
+          courseId: courseId,
           assignmentStatus: "GRADED",
           isCompleted: true,
         },
       }),
+
+      // 3. Keep this as CREATE (uses "data")
+      db.notification.create({
+        data: {
+          userId: studentId,
+          courseId: courseId,
+          type: "ASSIGNMENT",
+          title: "Assignment Graded",
+          message: `Your assignment for "${submission.lecture.title}" has been graded. Grade: ${numericGrade}%`,
+          actionUrl: `/learning/${courseId}/${lectureId}`,
+        },
+      }),
     ]);
 
-    // 3. Send Email (Background task - don't await if you want faster API response)
+    // 4. Send Email
     if (submission.User.email) {
       sendGradingNotification(
         submission.User.email,
