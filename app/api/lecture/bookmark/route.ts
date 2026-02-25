@@ -7,15 +7,16 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser()
     const userId = user?.id;
-    const { lectureId, time, label, type } = await req.json();
-    console.log("Received bookmark data:", { lectureId, time, label, type });
+    const { lectureId, startTime , endTime, label, type } = await req.json();
+    // console.log("Received bookmark data:", { lectureId, time, label, type });
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
 
     const bookmark = await db.bookmark.create({
       data: {
         userId,
         lectureId,
-        time,
+        startTime,
+        endTime ,
         label,
         type ,
       }
@@ -39,17 +40,15 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const lectureId = searchParams.get("lectureId");
     const courseId = searchParams.get("courseId");
-    const sort = searchParams.get("sort"); // 'time' or 'recent'
+    const sort = searchParams.get("sort"); // 'TIME' or 'RECENT'
 
     let whereClause: any = { userId };
     let orderByClause: any = {};
 
     // 1. Filter Logic
     if (lectureId) {
-      // Specific lecture only
       whereClause.lectureId = lectureId;
     } else if (courseId) {
-      // All bookmarks in the course (Bookmark -> Lecture -> Module -> Course)
       whereClause.lecture = {
         module: {
           courseId: courseId
@@ -59,12 +58,13 @@ export async function GET(req: NextRequest) {
       return new NextResponse("Missing Context (lectureId or courseId)", { status: 400 });
     }
 
-    // 2. Sort Logic
-    if (sort === "recent") {
+    // 2. Updated Sort Logic
+    // Note: Use 'TIME' and 'RECENT' (uppercase) to match your frontend state
+    if (sort === "RECENT") {
       orderByClause = { createdAt: "desc" };
     } else {
-      // Default: Chronological order
-      orderByClause = { time: "asc" };
+      // Default: Chronological order based on START time
+      orderByClause = { startTime: "asc" }; 
     }
 
     const bookmarks = await db.bookmark.findMany({
