@@ -313,7 +313,8 @@ model Reply {
 
 model Bookmark {
   id        String       @id @default(cuid())
-  time      Float
+  startTime      Float
+  endTime      Float
   label     String?
   type      BookmarkType @default(BOOKMARK)
   userId    String

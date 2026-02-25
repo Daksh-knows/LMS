@@ -4,7 +4,8 @@ import React, { createContext, useCallback, useContext, useState } from "react";
 
 interface Bookmark {
   id: string;
-  time: number;
+  startTime: number;
+  endTime: number;
   label: string;
   type: "BOOKMARK" | "IMPORTANT" | "QUESTION";
   lectureId: string;
