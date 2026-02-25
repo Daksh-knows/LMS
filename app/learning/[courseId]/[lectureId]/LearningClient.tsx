@@ -19,6 +19,7 @@ import { useCourse } from "@/context/CourseContext";
 import { LectureProvider, useLecture } from "@/context/LectureContext";
 import Loader from "@/utils/Loader";
 import ThemeSwitcher from "@/components/Theme/ThemeSwitcher";
+import NotificationButton from "@/components/notification/NotificationButton";
 
 interface LearningClientProps {
   user: any ;
@@ -156,7 +157,10 @@ export default function LearningClient({ courseId , lectureId  , user }: Learnin
               <span className="text-sm text-(--text-color) theme-transition font-medium hidden sm:inline">Back to dashboard</span>
             </Link>
           </div>
-          <ThemeSwitcher />
+          <div className="flex gap-4">
+            <NotificationButton />
+            <ThemeSwitcher />
+          </div>
         </nav>
          
           {/* Main Content Area */}

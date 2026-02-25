@@ -60,7 +60,7 @@ function NotificationButton() {
     <div className="relative">
       <button 
         onClick={() => setShowNotifications(!showNotifications)}
-        className="relative rounded-full bg-[var(--sidebar-nav-bg-hover)] text-[var(--text-color)] hover:opacity-80 transition-opacity flex items-center justify-center"
+        className="relative rounded-full theme-transition bg-[var(--sidebar-nav-bg-hover)] text-[var(--text-color)] hover:opacity-80 transition-opacity flex items-center justify-center"
       >
         <div className="w-10 h-10 sm:w-12 sm:h-12">
           <DotLottieReact
@@ -82,8 +82,8 @@ function NotificationButton() {
           notifications={notifications} // Pass data to dropdown
           onClose={() => setShowNotifications(false)} 
           refresh={fetchNotifications} // Pass refresh function to call after marking as read
-          setNotifications
-          setLoading
+          setNotifications={setNotifications}
+          setLoading={setLoading}
         />
       )}
     </div>
