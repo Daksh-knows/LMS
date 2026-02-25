@@ -19,8 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body 
+    <body 
         className={`${inter.className} antialiased`} 
         suppressHydrationWarning
       > 
@@ -61,8 +60,7 @@ export default function RootLayout({
           </AuthProvider>
         </ConfirmProvider>
       </ThemeProvider>
-      </body>
-    </html>
+    </body>
   );
 }
 
