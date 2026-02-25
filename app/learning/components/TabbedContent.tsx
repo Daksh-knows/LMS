@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import React, { useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { OverviewTab } from "./tabs/OverviewTab";
@@ -61,27 +62,15 @@ const TabbedContent: React.FC<Props> = ({
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
-              className={`
-                relative flex items-center gap-2 
-                /* Vertical padding to give height, horizontal for spacing */
-                px-4 lg:px-6 py-5 
-                /* Font styling with the requested color */
-                text-xs lg:text-sm font-bold tracking-wide
-                transition-all duration-200
-                whitespace-nowrap
-                ${
-                  isActive
-                    ? "text-[#FABD23]" 
-                    : "text-gray-400 hover:text-gray-200"
-                }
-              `}
+              className={`relative flex items-center gap-2 px-4 lg:px-6 py-5 ...`}
             >
-              <span>{tab.label}</span>
+              <span className="relative z-10">{tab.label}</span>
 
-              {/* The Amber Underline matches the text color exactly */}
               {isActive && (
-                <div 
-                  className="absolute bottom-0 left-0 w-full h-[2.5px] bg-[#FABD23] rounded-t-full shadow-[0_-2px_10px_rgba(250,189,35,0.3)]" 
+                <motion.div 
+                  layoutId="activeTabUnderline"
+                  className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#FABD23] rounded-t-full shadow-[0_-2px_10px_rgba(250,189,35,0.3)]"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
               )}
             </button>
