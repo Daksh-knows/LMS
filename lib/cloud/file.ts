@@ -78,27 +78,36 @@ export const uploadFileToGCS = async (
   signal?: AbortSignal
 ): Promise<string> => {
   try {
-    // 1. Get a Signed URL from your own API
-    const response = await fetch("/api/upload/signed-url", {
+    const contentType = file.type || "application/octet-stream";
+
+    // 1️⃣ Get Signed URL
+    const response = await fetch("/api/upload/video", {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         fileName: file.name,
-        contentType: file.type,
+        contentType,
       }),
+      signal,
     });
 
-    if (!response.ok) throw new Error("Failed to get upload URL");
-    const { url, publicUrl } = await response.json();
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to get signed upload URL");
+    }
 
-    // 2. Perform the upload to GCS via XMLHttpRequest
+    const { uploadUrl, publicUrl } = await response.json();
+
+    // 2️⃣ Upload file to GCS
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      
-      // GCS Signed URL uploads typically use PUT
-      xhr.open("PUT", url, true);
-      xhr.setRequestHeader("Content-Type", file.type);
 
-      // --- Handle Abort ---
+      xhr.open("PUT", uploadUrl, true);
+      xhr.setRequestHeader("Content-Type", contentType);
+
+      // Abort support
       if (signal) {
         signal.addEventListener("abort", () => {
           xhr.abort();
@@ -106,33 +115,31 @@ export const uploadFileToGCS = async (
         });
       }
 
-      // --- Track Upload Progress ---
+      // Progress tracking
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable && onProgress) {
-          const percentComplete = Math.round((event.loaded / event.total) * 100);
-          onProgress(percentComplete);
+          const percent = Math.round((event.loaded / event.total) * 100);
+          onProgress(percent);
         }
       };
 
-      // --- Handle Success / Error ---
       xhr.onload = () => {
         if (xhr.status === 200 || xhr.status === 201) {
-          // GCS doesn't return the URL in the body; we use the publicUrl 
-          // generated during the signed-url request phase.
           resolve(publicUrl);
         } else {
-          reject(new Error(`GCS upload failed with status: ${xhr.status}`));
+          reject(
+            new Error(`GCS upload failed with status ${xhr.status}`)
+          );
         }
       };
 
-      xhr.onerror = () => reject(new Error("Network error during GCS upload"));
+      xhr.onerror = () =>
+        reject(new Error("Network error during GCS upload"));
 
-      // Send the raw file binary
       xhr.send(file);
     });
   } catch (error) {
     console.error("GCS Upload Error:", error);
-   //  showToast.error(`Failed to upload ${file.name} to GCS`);
     throw error;
   }
 };

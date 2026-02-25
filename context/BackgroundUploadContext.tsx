@@ -69,19 +69,19 @@ export const BackgroundUploadProvider = ({ children }: { children: ReactNode }) 
         }));
 
         // Pass signal here too
-        const publicUrl = await uploadFileToCloudinary(videoFile, (p) => {
-          setUploads((prev) => ({
-            ...prev,
-            [lectureId]: { ...prev[lectureId], progress: p },
-          }));
-        }, signal);
-
-        // const publicUrl = await uploadFileToGCS(videoFile, (p) => {
+        // const publicUrl = await uploadFileToCloudinary(videoFile, (p) => {
         //   setUploads((prev) => ({
         //     ...prev,
         //     [lectureId]: { ...prev[lectureId], progress: p },
         //   }));
         // }, signal);
+
+        const publicUrl = await uploadFileToGCS(videoFile, (p) => {
+          setUploads((prev) => ({
+            ...prev,
+            [lectureId]: { ...prev[lectureId], progress: p },
+          }));
+        }, signal);
 
         if (!signal.aborted) {
           await fetch(`/api/lecture/${lectureId}`, {

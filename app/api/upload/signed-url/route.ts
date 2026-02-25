@@ -1,39 +1,48 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
-// import { storage, bucketName, parsePrivateKey } from "@/lib/google-cloud";
+import { storage, bucketName } from "@/lib/google-cloud";
 
 export async function POST(req: Request) {
   try {
-    console.log("Hi");
-  
-  //   const { fileName, contentType } = await req.json();
-  //   console.log('****************************************')
-  //   const parsed = parsePrivateKey(process.env.GCS_PRIVATE_KEY);
-  //   console.log("Parsed key first 80 chars:", parsed?.substring(0, 80));
-  //   console.log("Has real newline:", parsed?.includes('\n'));
-  //   console.log('****************************************')
+    const { fileName, contentType } = await req.json();
 
-  //   // Create a unique filename for the bucket
-  //   const uniqueFilename = `course-videos/${Date.now()}-${fileName.replace(/\s/g, "_")}`;
+    if (!fileName || !contentType) {
+      return NextResponse.json(
+        { error: "fileName and contentType are required" },
+        { status: 400 }
+      );
+    }
 
-  //   // Generate a Signed URL that expires in 15 minutes
-  //   // This URL allows a specific "PUT" operation for this specific file
-  //   const [url] = await storage
-  //     .bucket(bucketName)
-  //     .file(uniqueFilename)
-  //     .getSignedUrl({
-  //       version: "v4",
-  //       action: "write",
-  //       expires: Date.now() + 15 * 60 * 1000,
-  //       contentType: contentType,
-  //     });
+    // Sanitize filename
+    const safeName = fileName.replace(/\s+/g, "_");
 
-  //   return NextResponse.json({
-  //     url: url, // The secret temporary URL to upload to
-  //     publicUrl: `https://storage.googleapis.com/${bucketName}/${uniqueFilename}` // The permanent URL to save in DB
-  //   });
+    // Unique object path
+    const objectPath = `course-videos/${Date.now()}-${safeName}`;
+
+    const file = storage
+      .bucket(bucketName)
+      .file(objectPath);
+
+    // Generate V4 signed URL (WRITE)
+    const [uploadUrl] = await file.getSignedUrl({
+      version: "v4",
+      action: "write",
+      expires: Date.now() + 15 * 60 * 1000, // 15 minutes
+      contentType,
+    });
+
+    return NextResponse.json({
+      uploadUrl, // temporary PUT URL
+      publicUrl: `https://storage.googleapis.com/${bucketName}/${objectPath}`, // save this in DB
+    });
 
   } catch (error) {
     console.error("Signed URL Error:", error);
-    return NextResponse.json({ error: "Failed to sign URL" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to generate signed URL" },
+      { status: 500 }
+    );
   }
 }
