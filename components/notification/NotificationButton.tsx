@@ -60,7 +60,7 @@ function NotificationButton() {
     <div className="relative">
       <button 
         onClick={() => setShowNotifications(!showNotifications)}
-        className="relative rounded-full theme-transition bg-[var(--sidebar-nav-bg-hover)] text-[var(--text-color)] hover:opacity-80 transition-opacity flex items-center justify-center"
+        className="relative rounded-full theme-transition bg-(--sidebar-nav-bg-hover) text-(--text-color) hover:opacity-80 transition-opacity flex items-center justify-center"
       >
         <div className="w-10 h-10 sm:w-12 sm:h-12">
           <DotLottieReact
@@ -73,7 +73,7 @@ function NotificationButton() {
         </div>
 
         {hasUnread && (
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-[#FABD23] rounded-full border-2 border-[var(--sidebar-nav-bg-hover)] z-10"></span>
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-[#FABD23] rounded-full border-2 border-(--sidebar-nav-bg-hover) z-10"></span>
         )}
       </button>
       

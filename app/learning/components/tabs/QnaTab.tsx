@@ -181,7 +181,7 @@ export default function QnaTab({ courseId, adminId }: QnaTabProps) {
         className="py-4 md:py-6 space-y-4 md:space-y-6 w-full"
     >
       {/* 1. Header Banner */}
-      <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between bg-[var(--qna-banner-bg)] border border-[var(--qna-banner-border)] rounded-xl p-3 sm:px-4 sm:py-2 shadow-sm theme-transition gap-3 sm:gap-4 sm:min-h-[52px]">
+      <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between bg-(--qna-banner-bg) border border-(--qna-banner-border) rounded-xl p-3 sm:px-4 sm:py-2 shadow-sm theme-transition gap-3 sm:gap-4 sm:min-h-[52px]">
             {/* Left Side: Title & Sort */}
             <div className="flex items-center justify-between sm:justify-start gap-4 w-full sm:w-auto">
               <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white tracking-wide">Q&A</h3>
@@ -212,8 +212,8 @@ export default function QnaTab({ courseId, adminId }: QnaTabProps) {
                 onClick={() => setIsAllLectures(!isAllLectures)}
                 className="flex items-center gap-1.5 sm:gap-2 text-white text-[11px] sm:text-sm font-medium hover:opacity-80 transition-opacity whitespace-nowrap"
               >
-                <div className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border-[1.5px] border-[var(--colored-text)] flex items-center justify-center shrink-0`}>
-                  {!isAllLectures && <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[var(--colored-text)]" />}
+                <div className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border-[1.5px] border-(--colored-text) flex items-center justify-center shrink-0`}>
+                  {!isAllLectures && <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-(--colored-text)" />}
                 </div>
                 This Lecture
               </button>
@@ -221,7 +221,7 @@ export default function QnaTab({ courseId, adminId }: QnaTabProps) {
               {/* Ask Question Button */}
               <button 
                 onClick={() => setShowForm(!showForm)}
-                className="flex items-center justify-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-black text-white dark:bg-[var(--colored-text)] dark:text-black rounded-lg text-[11px] sm:text-sm font-bold hover:brightness-110 transition-all active:scale-95 shadow-sm whitespace-nowrap shrink-0 sm:max-h-[32px]"
+                className="flex items-center justify-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-black text-white dark:bg-(--colored-text) dark:text-black rounded-lg text-[11px] sm:text-sm font-bold hover:brightness-110 transition-all active:scale-95 shadow-sm whitespace-nowrap shrink-0 sm:max-h-[32px]"
               >
                 <MessageSquarePlus size={14} className="sm:w-4 sm:h-4" />
                 Ask Question
@@ -251,7 +251,7 @@ export default function QnaTab({ courseId, adminId }: QnaTabProps) {
         {sortedQuestions.length === 0 ? (
           <motion.div 
             variants={itemVariants}
-            className="text-center py-12 sm:py-16 border border-dashed border-[var(--qna-banner-border)] rounded-xl text-[var(--text-color)] opacity-60 text-xs sm:text-sm bg-transparent"
+            className="text-center py-12 sm:py-16 border border-dashed border-(--qna-banner-border) rounded-xl text-(--text-color) opacity-60 text-xs sm:text-sm bg-transparent"
           >
             No questions yet. Be the first to ask!
           </motion.div>

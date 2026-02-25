@@ -50,25 +50,25 @@ export default function Sidebar({
               }}
               className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group relative ${
                 isActive 
-                  ? "text-[var(--sidebar-nav-text-active)] bg-[var(--sidebar-nav-bg-active)] shadow-sm" 
-                  : "text-[var(--sidebar-nav-text-idle)] hover:bg-[var(--sidebar-nav-bg-hover)] hover:text-[var(--text-color)]"
+                  ? "text-(--sidebar-nav-text-active) bg-(--sidebar-nav-bg-active) shadow-sm" 
+                  : "text-(--sidebar-nav-text-idle) hover:bg-(--sidebar-nav-bg-hover) hover:text-(--text-color)"
               }`}
             >
               {/* Active Indicator Bar */}
               {isActive && (
                 <motion.div 
                   layoutId="active-nav-bar"
-                  className="absolute left-0 w-1 h-6 bg-[var(--sidebar-nav-indicator)] rounded-r-full"
+                  className="absolute left-0 w-1 h-6 bg-(--sidebar-nav-indicator) rounded-r-full"
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 />
               )}
               
               <item.icon 
                 size={20} 
-                className={isActive ? "text-[var(--sidebar-nav-text-active)]" : "text-[var(--sidebar-nav-text-idle)] group-hover:text-[var(--text-color)]"} 
+                className={isActive ? "text-(--sidebar-nav-text-active)" : "text-(--sidebar-nav-text-idle) group-hover:text-(--text-color)"} 
               />
 
-              <span className={`font-semibold text-sm ${isActive ? "text-[var(--sidebar-nav-text-active)]" : ""}`}>
+              <span className={`font-semibold text-sm ${isActive ? "text-(--sidebar-nav-text-active)" : ""}`}>
                 {item.label}
               </span>
             </Link>

@@ -59,16 +59,16 @@ export default function Header({
         {/* Mobile Sidebar Toggle */}
         <button
           onClick={onMenuClick}
-          className="lg:hidden p-1.5 sm:p-2 -ml-1 sm:-ml-2 hover:bg-amber-100 dark:hover:bg-[var(--sidebar-nav-bg-hover)] rounded-xl transition-colors relative z-50"
+          className="lg:hidden p-1.5 sm:p-2 -ml-1 sm:-ml-2 hover:bg-amber-100 dark:hover:bg-(--sidebar-nav-bg-hover) rounded-xl transition-colors relative z-50"
         >
           <motion.div
             animate={{ rotate: isSidebarOpen ? 90 : 0 }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
           >
             {isSidebarOpen ? (
-               <X size={24} className="text-gray-900 dark:text-[var(--text-color)]" /> 
+               <X size={24} className="text-gray-900 dark:text-(--text-color)" /> 
             ) : (
-               <Menu size={24} className="text-gray-600 dark:text-[var(--text-color)]" />
+               <Menu size={24} className="text-gray-600 dark:text-(--text-color)" />
             )}
           </motion.div>
         </button>
@@ -90,16 +90,16 @@ export default function Header({
             {loading ? (
               <Loader2 className="h-3 w-3 animate-spin text-orange-600" />
             ) : (
-              <span className="text-xs sm:text-sm font-bold text-[var(--text-color)]">
+              <span className="text-xs sm:text-sm font-bold text-(--text-color)">
                 {streak ?? 0}
               </span>
             )}
             {/* Hidden 'Days Streak' on very small mobile, visible from 'sm' breakpoint up */}
-            <span className="hidden sm:inline text-[10px] text-[var(--text-color)] font-medium">
+            <span className="hidden sm:inline text-[10px] text-(--text-color) font-medium">
               Days Streak
             </span>
             {/* Mobile-only label */}
-            <span className="sm:hidden text-[8px] text-[var(--text-color)] font-bold mt-0.5">
+            <span className="sm:hidden text-[8px] text-(--text-color) font-bold mt-0.5">
               DAYS
             </span>
           </div>
@@ -107,7 +107,7 @@ export default function Header({
 
         {/* Info Button & Tooltip: Hidden on Mobile, Flex on Desktop */}
         <div className="relative group hidden md:flex items-center">
-          <button className="text-gray-400 hover:text-[var(--nav-item-active)] transition-colors p-1 focus:outline-none">
+          <button className="text-gray-400 hover:text-(--nav-item-active) transition-colors p-1 focus:outline-none">
             <Info size={18} />
           </button>
 
@@ -142,12 +142,12 @@ export default function Header({
           
           {/* Text Stack (Username & Logout) */}
           <div className="hidden md:flex flex-col items-end leading-tight">
-            <span className="text-sm font-bold text-[var(--text-color)] max-w-[120px] truncate">
+            <span className="text-sm font-bold text-(--text-color) max-w-[120px] truncate">
               {user?.name || "Username"}
             </span>
             <button
               onClick={handleLogout}
-              className="text-xs font-medium text-[var(--colored-text)] hover:opacity-80 transition-opacity mt-0.5 flex items-center gap-1 cursor-pointer"
+              className="text-xs font-medium text-(--colored-text) hover:opacity-80 transition-opacity mt-0.5 flex items-center gap-1 cursor-pointer"
             >
               Logout
             </button>

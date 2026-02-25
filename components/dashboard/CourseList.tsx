@@ -90,7 +90,7 @@ export default function CourseList({ courses: initialCourses, loading }: CourseL
     <div className="space-y-6 w-full">
       {/* Header & Carousel Controls */}
       <div className="flex items-center justify-between px-1">
-        <h3 className="text-xl md:text-2xl font-bold text-[var(--text-color)] theme-transition tracking-tight ">
+        <h3 className="text-xl md:text-2xl font-bold text-(--text-color) theme-transition tracking-tight ">
           {oneCourse ? "Featured Course" : "Featured Courses"}
         </h3>
         
@@ -98,13 +98,13 @@ export default function CourseList({ courses: initialCourses, loading }: CourseL
           <div className="flex items-center gap-2">
             <button 
               onClick={prevSlide}
-              className="p-2 rounded-full hover:bg-[var(--sidebar-nav-bg-hover)] text-[var(--text-color)] transition-colors border border-[var(--banner-border)]"
+              className="p-2 rounded-full hover:bg-(--sidebar-nav-bg-hover) text-(--text-color) transition-colors border border-(--banner-border)"
             >
               <ChevronLeft size={20} />
             </button>
             <button 
               onClick={nextSlide}
-              className="p-2 rounded-full hover:bg-[var(--sidebar-nav-bg-hover)] text-[var(--text-color)] transition-colors border border-[var(--banner-border)]"
+              className="p-2 rounded-full hover:bg-(--sidebar-nav-bg-hover) text-(--text-color) transition-colors border border-(--banner-border)"
             >
               <ChevronRight size={20} />
             </button>
@@ -114,7 +114,7 @@ export default function CourseList({ courses: initialCourses, loading }: CourseL
 
       {/* Carousel Card Container */}
       <div className={`
-          relative overflow-hidden rounded-[9px] bg-[var(--streak-background)] theme-transition min-h-[254px] 
+          relative overflow-hidden rounded-[9px] bg-(--streak-background) theme-transition min-h-[254px] 
           border border-transparent
           shadow-[0px_0px_23.6px_0px_rgba(0,0,0,0.25)] 
           dark:border-[#464646] 
@@ -154,12 +154,12 @@ export default function CourseList({ courses: initialCourses, loading }: CourseL
             <div className="w-full md:w-1/2 py-2 pr-2 flex flex-col justify-center items-start">
               
               <div className="mb-3">
-                <span className="px-3.5 py-1 rounded-full text-[10px] font-semibold border border-[var(--colored-text)] text-[var(--colored-text)]">
+                <span className="px-3.5 py-1 rounded-full text-[10px] font-semibold border border-(--colored-text) text-(--colored-text)">
                   {course.type === "CRASH" ? "Crash Course" : "Premium Course"}
                 </span>
               </div>
 
-              <h2 className="text-xl md:text-2xl font-bold text-[var(--text-color)] mb-1 line-clamp-2 leading-tight">
+              <h2 className="text-xl md:text-2xl font-bold text-(--text-color) mb-1 line-clamp-2 leading-tight">
                 {course.title}
               </h2>
               <p className="text-gray-500 dark:text-gray-400 font-medium mb-3 text-sm">
@@ -174,7 +174,7 @@ export default function CourseList({ courses: initialCourses, loading }: CourseL
               {hasAccess ? (
                 <button
                   disabled={isResuming}
-                  className="w-full max-w-[346px] h-[44px] bg-[var(--colored-text)] text-black px-4 rounded-md font-semibold flex justify-center items-center gap-2 hover:brightness-110 transition-all active:scale-95 mt-auto"
+                  className="w-full max-w-[346px] h-[44px] bg-(--colored-text) text-black px-4 rounded-md font-semibold flex justify-center items-center gap-2 hover:brightness-110 transition-all active:scale-95 mt-auto"
                 >
                   {isResuming ? (
                     <>

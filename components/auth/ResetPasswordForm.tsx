@@ -86,7 +86,7 @@ export default function ResetPasswordForm() {
 
   if (!token && !hasSession) {
     return (
-      <div className="min-h-screen bg-[var(--start-background)] flex justify-center items-center">
+      <div className="min-h-screen bg-(--start-background) flex justify-center items-center">
         <Loader2 className="animate-spin text-[#FABD23]" />
       </div>
     );
@@ -94,7 +94,7 @@ export default function ResetPasswordForm() {
 
   return (
     <AnimatePresence>
-      <div className="min-h-screen bg-[var(--start-background)] flex flex-col items-center justify-center p-6 relative overflow-hidden theme-transition">
+      <div className="min-h-screen bg-(--start-background) flex flex-col items-center justify-center p-6 relative overflow-hidden theme-transition">
         <ThemeSwitcher className="fixed bottom-6 right-6 z-50" />
         
         {/* Background Glow Shade */}
@@ -122,7 +122,7 @@ export default function ResetPasswordForm() {
           className="w-full max-w-[440px] z-10 theme-transition"
         >
           {/* Card */}
-          <div className="bg-transparent backdrop-blur-xl rounded-3xl border border-white/10 shadow-[var(--box-shadow)] overflow-hidden">
+          <div className="bg-transparent backdrop-blur-xl rounded-3xl border border-white/10 shadow-(--box-shadow) overflow-hidden">
             
             {/* Header Section */}
             <motion.div 
@@ -131,8 +131,8 @@ export default function ResetPasswordForm() {
               transition={{ delay: 0.4 }}
               className="bg-(--banner-header) theme-transition p-8 text-center"
             >
-               <h1 className="text-3xl theme-transition font-bold text-[var(--text-color)] tracking-tight">Secure Your Account</h1>
-               <p className="mt-2 theme-transition text-xs text-[var(--text-color)] opacity-70 leading-relaxed">
+               <h1 className="text-3xl theme-transition font-bold text-(--text-color) tracking-tight">Secure Your Account</h1>
+               <p className="mt-2 theme-transition text-xs text-(--text-color) opacity-70 leading-relaxed">
                  To protect your account, please enter a new password. We recommend using a unique phrase you don't use elsewhere.
                </p>
             </motion.div>
@@ -141,7 +141,7 @@ export default function ResetPasswordForm() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* New Password */}
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-[var(--text-color)] ml-1">New Password</label>
+                  <label className="text-sm font-bold text-(--text-color) ml-1">New Password</label>
                   <div className="relative group">
                     <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-[#464646] w-5 h-5 group-focus-within:text-[#FABD23] transition-colors" />
                     <input
@@ -150,7 +150,7 @@ export default function ResetPasswordForm() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       placeholder="••••••••"
-                      className="w-full pl-12 pr-12 py-3.5 bg-transparent border border-[var(--input-border)] rounded-xl outline-none text-[var(--text-color)] placeholder:text-[#464646] focus:border-[#FABD23]/50 transition-all"
+                      className="w-full pl-12 pr-12 py-3.5 bg-transparent border border-(--input-border) rounded-xl outline-none text-(--text-color) placeholder:text-[#464646] focus:border-[#FABD23]/50 transition-all"
                     />
                     <button 
                       type="button" 
@@ -165,7 +165,7 @@ export default function ResetPasswordForm() {
                 {/* Strength Indicator */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
-                     <span className="text-[var(--text-color)] opacity-60">Security Strength</span>
+                     <span className="text-(--text-color) opacity-60">Security Strength</span>
                      <span className={strengthPercent === 100 ? "text-emerald-500" : "text-[#FABD23]"}>
                        {strengthPercent}% - {strengthLabel}
                      </span>
@@ -182,7 +182,7 @@ export default function ResetPasswordForm() {
 
                 {/* Confirm Password */}
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-[var(--text-color)] ml-1">Confirm New Password</label>
+                  <label className="text-sm font-bold text-(--text-color) ml-1">Confirm New Password</label>
                   <div className="relative group">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#464646] w-5 h-5 group-focus-within:text-[#FABD23] transition-colors" />
                     <input
@@ -191,7 +191,7 @@ export default function ResetPasswordForm() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
                       placeholder="••••••••"
-                      className="w-full pl-12 pr-4 py-3.5 bg-transparent border border-[var(--input-border)] rounded-xl outline-none text-[var(--text-color)] placeholder:text-[#464646] focus:border-[#FABD23]/50 transition-all"
+                      className="w-full pl-12 pr-4 py-3.5 bg-transparent border border-(--input-border) rounded-xl outline-none text-(--text-color) placeholder:text-[#464646] focus:border-[#FABD23]/50 transition-all"
                     />
                   </div>
                 </div>
@@ -227,7 +227,7 @@ export default function ResetPasswordForm() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.4 }}
             transition={{ delay: 0.8 }}
-            className="mt-8 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-color)]"
+            className="mt-8 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-(--text-color)"
           >
              <ShieldCheck size={14} /> Secure Enterprise Encryption
           </motion.p>

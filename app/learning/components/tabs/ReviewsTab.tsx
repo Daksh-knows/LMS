@@ -171,22 +171,22 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
         <div className="space-y-4">
           
           {/* 1. Overall Stats Card */}
-          <div className="bg-[var(--rev-overall-bg)] border border-[var(--rev-overall-border)] rounded-2xl p-5 sm:p-6 flex flex-col theme-transition shadow-sm">
+          <div className="bg-(--rev-overall-bg) border border-(--rev-overall-border) rounded-2xl p-5 sm:p-6 flex flex-col theme-transition shadow-sm">
             <div className="flex items-end justify-between w-full mb-2">
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl sm:text-5xl font-black text-[var(--text-color)] leading-none">
+                <span className="text-4xl sm:text-5xl font-black text-(--text-color) leading-none">
                   {averageRating.toFixed(1)}
                 </span>
-                <span className="text-sm text-[var(--text-color)] opacity-60 font-bold">
+                <span className="text-sm text-(--text-color) opacity-60 font-bold">
                   /5.0
                 </span>
               </div>
-              <span className="text-xs sm:text-sm text-[var(--text-color)] opacity-60 font-medium pb-1">
+              <span className="text-xs sm:text-sm text-(--text-color) opacity-60 font-medium pb-1">
                 {reviews.length} Total Reviews
               </span>
             </div>
             
-            <div className="flex gap-1 text-[var(--colored-text)]">
+            <div className="flex gap-1 text-(--colored-text)">
               {[1, 2, 3, 4, 5].map((s) => (
                 <Star
                   key={s}
@@ -200,15 +200,15 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
           </div>
 
           {/* 2. Add / Edit Review Card */}
-          <div className="bg-[var(--rev-form-bg)] border border-[var(--rev-overall-border)] rounded-2xl p-5 sm:p-6 shadow-sm theme-transition">
-            <h3 className="text-center text-base sm:text-lg font-bold text-[var(--text-color)] mb-4">
+          <div className="bg-(--rev-form-bg) border border-(--rev-overall-border) rounded-2xl p-5 sm:p-6 shadow-sm theme-transition">
+            <h3 className="text-center text-base sm:text-lg font-bold text-(--text-color) mb-4">
               Share Your Learning Experience
             </h3>
 
             {myReview && !isEditing ? (
               // View My Existing Review State
               <div className="space-y-4">
-                <div className="flex justify-center text-[var(--colored-text)] gap-1 mb-4">
+                <div className="flex justify-center text-(--colored-text) gap-1 mb-4">
                   {[1, 2, 3, 4, 5].map((s) => (
                     <Star
                       key={s}
@@ -219,13 +219,13 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
                     />
                   ))}
                 </div>
-                <div className="bg-[var(--rev-input-bg)] border border-[var(--rev-input-border)] rounded-xl p-4 relative group">
-                  <p className="text-[var(--text-color)] opacity-80 text-sm leading-relaxed italic">
+                <div className="bg-(--rev-input-bg) border border-(--rev-input-border) rounded-xl p-4 relative group">
+                  <p className="text-(--text-color) opacity-80 text-sm leading-relaxed italic">
                     "{myReview.comment || "No comment left."}"
                   </p>
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="absolute top-3 right-3 p-1.5 hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors text-[var(--text-color)] opacity-50 hover:opacity-100"
+                    className="absolute top-3 right-3 p-1.5 hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors text-(--text-color) opacity-50 hover:opacity-100"
                     title="Edit Review"
                   >
                     <Edit2 size={16} />
@@ -257,14 +257,14 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="Describe your learning journey, the curriculum depth & what you enjoyed..."
-                  className="w-full p-4 text-sm bg-[var(--rev-input-bg)] border border-[var(--rev-input-border)] text-[var(--text-color)] placeholder:text-[var(--text-color)] placeholder:opacity-50 rounded-xl focus:ring-1 focus:ring-[var(--colored-text)] outline-none min-h-[120px] transition-colors resize-none theme-transition"
+                  className="w-full p-4 text-sm bg-(--rev-input-bg) border border-(--rev-input-border) text-(--text-color) placeholder:text-(--text-color) placeholder:opacity-50 rounded-xl focus:ring-1 focus:ring-(--colored-text) outline-none min-h-[120px] transition-colors resize-none theme-transition"
                 />
 
                 <div className="flex gap-3">
                   {isEditing && (
                     <button
                       onClick={() => setIsEditing(false)}
-                      className="px-4 py-3 text-sm font-bold text-[var(--text-color)] opacity-60 hover:opacity-100 transition-opacity"
+                      className="px-4 py-3 text-sm font-bold text-(--text-color) opacity-60 hover:opacity-100 transition-opacity"
                     >
                       Cancel
                     </button>
@@ -272,7 +272,7 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
                   <button
                     onClick={handleSubmit}
                     disabled={rating === 0 || isSubmitting}
-                    className="flex-1 py-3 bg-[var(--colored-text)] text-black rounded-xl font-bold text-sm hover:brightness-110 disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]"
+                    className="flex-1 py-3 bg-(--colored-text) text-black rounded-xl font-bold text-sm hover:brightness-110 disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]"
                   >
                     {isSubmitting ? (
                       <>
@@ -298,7 +298,7 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
           
           {/* Header & Filter */}
           <div className="flex items-center justify-between mb-4 px-1">
-            <h3 className="text-xl sm:text-2xl font-bold text-[var(--text-color)] tracking-tight">
+            <h3 className="text-xl sm:text-2xl font-bold text-(--text-color) tracking-tight">
               Latest Reviews
             </h3>
             <Dropdown 
@@ -311,8 +311,8 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
           {/* Scrollable Reviews List */}
           <div className="space-y-4 overflow-y-auto review-scrollbar pr-2 max-h-[600px] lg:max-h-[calc(100vh-200px)]">
             {sortedOtherReviews.length === 0 ? (
-              <div className="text-center py-16 bg-transparent border border-dashed border-[var(--rev-overall-border)] rounded-2xl">
-                <p className="text-[var(--text-color)] opacity-50 text-sm font-medium">
+              <div className="text-center py-16 bg-transparent border border-dashed border-(--rev-overall-border) rounded-2xl">
+                <p className="text-(--text-color) opacity-50 text-sm font-medium">
                   No reviews yet. Be the first to share your thoughts!
                 </p>
               </div>
@@ -320,7 +320,7 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
               sortedOtherReviews.map((rev: any, idx: number) => (
                 <div
                   key={rev.id || idx}
-                  className="bg-[var(--rev-card-bg)] border border-[var(--rev-overall-border)] rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow theme-transition"
+                  className="bg-(--rev-card-bg) border border-(--rev-overall-border) rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow theme-transition"
                 >
                   <div className="flex items-start gap-4 mb-3">
                     <div className="shrink-0">
@@ -328,7 +328,7 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
                         <img
                           src={rev.user.image}
                           alt={rev.user.name || "User"}
-                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover shadow-sm border border-[var(--rev-overall-border)]"
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover shadow-sm border border-(--rev-overall-border)"
                         />
                       ) : (
                         <UserCircle size={48} className="text-gray-400" />
@@ -338,17 +338,17 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between flex-wrap gap-2">
                         <div>
-                          <h4 className="text-base sm:text-lg font-bold text-[var(--text-color)] leading-tight">
+                          <h4 className="text-base sm:text-lg font-bold text-(--text-color) leading-tight">
                             {rev.user?.name || "Anonymous"}
                           </h4>
-                          <span className="text-[11px] sm:text-xs text-[var(--text-color)] opacity-50 font-medium">
+                          <span className="text-[11px] sm:text-xs text-(--text-color) opacity-50 font-medium">
                             {/* Assuming you have a formatted date, fallback to standard text */}
                             {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString() : "2 months ago"}
                           </span>
                         </div>
                         
                         {/* Review Stars */}
-                        <div className="flex gap-0.5 text-[var(--colored-text)]">
+                        <div className="flex gap-0.5 text-(--colored-text)">
                           {[1, 2, 3, 4, 5].map((s) => (
                             <Star
                               key={s}
@@ -363,16 +363,16 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({
                     </div>
                   </div>
 
-                  <p className="text-sm sm:text-base text-[var(--text-color)] opacity-80 leading-relaxed italic mb-4">
+                  <p className="text-sm sm:text-base text-(--text-color) opacity-80 leading-relaxed italic mb-4">
                     "{rev.comment || "Rated this lecture."}"
                   </p>
 
                   {/* Actions footer (Helpful / Reply placeholders) */}
-                  {/* <div className="flex items-center gap-5 pt-4 border-t border-[var(--text-color)] border-opacity-10">
-                    <button className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-color)] opacity-60 hover:opacity-100 transition-opacity">
+                  {/* <div className="flex items-center gap-5 pt-4 border-t border-(--text-color) border-opacity-10">
+                    <button className="flex items-center gap-1.5 text-xs font-bold text-(--text-color) opacity-60 hover:opacity-100 transition-opacity">
                       <ThumbsUp size={14} /> Helpful (0)
                     </button>
-                    <button className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-color)] opacity-60 hover:opacity-100 transition-opacity">
+                    <button className="flex items-center gap-1.5 text-xs font-bold text-(--text-color) opacity-60 hover:opacity-100 transition-opacity">
                       <CornerUpLeft size={14} /> Reply
                     </button>
                   </div> */}

@@ -6,13 +6,13 @@ interface ToastProps {
 }
 
 // Helper for shared styling to keep it clean
-const toastBaseClasses = "flex items-center gap-3 p-4 rounded-2xl shadow-[var(--box-shadow)] min-w-[320px] border theme-transition animate-in fade-in slide-in-from-bottom-2";
+const toastBaseClasses = "flex items-center gap-3 p-4 rounded-2xl shadow-(--box-shadow) min-w-[320px] border theme-transition animate-in fade-in slide-in-from-bottom-2";
 const iconContainerClasses = "w-12 h-12 shrink-0 bg-white/10 dark:bg-white/5 rounded-xl backdrop-blur-md overflow-hidden flex items-center justify-center border border-white/10";
 
 // 1. Success Toast
 const SuccessToast = ({ message }: ToastProps) => (
   <div 
-    className={`${toastBaseClasses} bg-[var(--background)] border-emerald-500/30`}
+    className={`${toastBaseClasses} bg-(--background) border-emerald-500/30`}
     style={{ backgroundColor: 'var(--background)', color: 'var(--text-color)' }}
   >
     <div className={iconContainerClasses}>
@@ -33,7 +33,7 @@ const SuccessToast = ({ message }: ToastProps) => (
 // 2. Error Toast
 const ErrorToast = ({ message }: ToastProps) => (
   <div 
-    className={`${toastBaseClasses} bg-[var(--background)] border-red-500/30`}
+    className={`${toastBaseClasses} bg-(--background) border-red-500/30`}
     style={{ backgroundColor: 'var(--background)', color: 'var(--text-color)' }}
   >
     <div className={iconContainerClasses}>
@@ -54,7 +54,7 @@ const ErrorToast = ({ message }: ToastProps) => (
 // 3. Delete/Warning Toast
 const DeleteToast = ({ message }: ToastProps) => (
   <div 
-    className={`${toastBaseClasses} bg-[var(--background)] border-[var(--banner-border)]`}
+    className={`${toastBaseClasses} bg-(--background) border-(--banner-border)`}
     style={{ backgroundColor: 'var(--background)', color: 'var(--text-color)' }}
   >
     <div className={iconContainerClasses}>
