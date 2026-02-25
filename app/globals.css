@@ -65,6 +65,25 @@
   --bookmark-btn: #FABD23;
   --bookmark-del-bg: #FFCC594D;
   --bookmark-del-icon: #B28800;
+
+  /* Course Sidebar Lesson States (Light) */
+  --lec-completed-bg: #FBD89D;
+  --lec-completed-border: #FFCC594D;
+  --lec-active-bg: #FBD89D;
+  --lec-active-border: #FFFFFF;
+  --lec-unwatched-bg: #333333;
+  --lec-unwatched-border: #999999;
+  
+  /* Course Sidebar Circles (Shared in both themes) */
+  --circle-completed-bg: #FFCD50;
+  --circle-completed-border: #F59E0B;
+  --circle-active-border: #FFFFFF;
+  --circle-unwatched-border: #999999;
+  
+  /* Next Lesson Button (Light) */
+  --btn-next-bg: #FABD23;
+  --btn-next-text: #000000;
+  --btn-next-shadow: 0px 0px 20px 0px #00000040;
 }
 
 .dark {
@@ -170,6 +189,7 @@
   --bookmark-btn: #FABD23;
   --bookmark-del-bg: #464646;
   --bookmark-del-icon: #B3B3B3;
+
   /* Reviews Section Dark */
   --rev-overall-bg: #2E2E2ECC;
   --rev-overall-border: #464646;
@@ -179,6 +199,19 @@
   --rev-card-bg: #2A2A2A;
   --sb-thumb: #B3B3B3;
   --sb-track: #464646;
+
+  /* Course Sidebar Lesson States (Dark) */
+  --lec-completed-bg: #322607;
+  --lec-completed-border: #FFCC594D;
+  --lec-active-bg: #CE8100;
+  --lec-active-border: #FFFFFF;
+  --lec-unwatched-bg: #333333;
+  --lec-unwatched-border: #999999;
+  
+  /* Next Lesson Button (Dark) */
+  --btn-next-bg: #FFFFFF;
+  --btn-next-text: #000000;
+  --btn-next-shadow: none;
 }
 
 .top-shadow-box {
