@@ -1,15 +1,11 @@
 "use client"
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import AuthProvider from '@/components/SessionProvider';
 import { Toaster } from 'react-hot-toast'; 
-import { motion } from 'framer-motion';
-import AnimatedBackground from '@/components/AnimatedBackground';
 import { Toaster as SonnerToaster } from 'sonner'; 
 import { ConfirmProvider } from '@/context/ConfirmContext';
 import { ThemeProvider } from '@/components/Theme/ThemeProvider';
-import ThemeSwitcher from '@/components/Theme/ThemeSwitcher';
 
 
 const inter = Inter({
