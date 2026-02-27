@@ -19,48 +19,50 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <body 
-        className={`${inter.className} antialiased`} 
-        suppressHydrationWarning
-      > 
-      <ThemeProvider 
-        attribute="data-theme" 
-        defaultTheme="system" 
-        enableSystem
-      >
-        <ConfirmProvider>
-          <AuthProvider>
-            <Toaster 
-              position="top-center"
-              toastOptions={{
-                style: {
-                  borderRadius: '16px',
-                  background: '#333',
-                  color: '#fff',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                },
-                success: {
-                  iconTheme: {
-                    primary: '#16a34a', 
-                    secondary: '#fff',
-                  },
-                },
-              }}
-            />
-            <SonnerToaster 
-                position="bottom-right" 
+    <html lang='en'>
+      <body 
+          className={`${inter.className} antialiased`} 
+          suppressHydrationWarning
+        > 
+        <ThemeProvider 
+          attribute="data-theme" 
+          defaultTheme="system" 
+          enableSystem
+        >
+          <ConfirmProvider>
+            <AuthProvider>
+              <Toaster 
+                position="top-center"
                 toastOptions={{
-                  style: { background: 'transparent', border: 'none', boxShadow: 'none' },
-                }} 
-            />
-            <div className="relative z-0">
-              {children}
-            </div>
-          </AuthProvider>
-        </ConfirmProvider>
-      </ThemeProvider>
-    </body>
+                  style: {
+                    borderRadius: '16px',
+                    background: '#333',
+                    color: '#fff',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                  },
+                  success: {
+                    iconTheme: {
+                      primary: '#16a34a', 
+                      secondary: '#fff',
+                    },
+                  },
+                }}
+              />
+              <SonnerToaster 
+                  position="bottom-right" 
+                  toastOptions={{
+                    style: { background: 'transparent', border: 'none', boxShadow: 'none' },
+                  }} 
+              />
+              <div className="relative z-0">
+                {children}
+              </div>
+            </AuthProvider>
+          </ConfirmProvider>
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }
 
