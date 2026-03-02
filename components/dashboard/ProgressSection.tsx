@@ -195,7 +195,7 @@ export default function ProgressSection({ stats }: ProgressSectionProps) {
         </div>
 
         {/* Calendar Grid Header */}
-        <div className="grid grid-cols-7 gap-y-4 gap-x-2 text-center mb-2">
+        <div className="grid grid-cols-7 gap-y-2 gap-x-1 text-center mb-2">
           {daysOfWeek.map(day => (
             <span key={day} className="text-(--text-color) opacity-40 text-xs font-semibold select-none">
               {day}
@@ -213,7 +213,7 @@ export default function ProgressSection({ stats }: ProgressSectionProps) {
               initial="enter"
               animate="center"
               exit="exit"
-              className="grid grid-cols-7 gap-y-4 gap-x-2 text-center absolute inset-0"
+              className="grid grid-cols-7 gap-y-2 gap-x-2 text-center absolute inset-0"
             >
               {/* Empty Padding Cells */}
               {Array.from({ length: paddingDays }).map((_, i) => (
