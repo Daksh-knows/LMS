@@ -7,7 +7,8 @@ import { Mail, Lock, ArrowRight, Loader2, Info, EyeOff, Eye } from 'lucide-react
 import { signIn, getSession } from "next-auth/react";
 import ThemeSwitcher from '@/components/Theme/ThemeSwitcher';
 import { showToast } from '@/utils/Toast';
-import { motion, AnimatePresence } from 'framer-motion'; //
+import { motion, AnimatePresence } from 'framer-motion'; 
+import ClickSpark from '@/components/ui/ClickSpark';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -121,13 +122,21 @@ export default function SignInPage() {
               </div>
 
               {/* Gradient Button */}
-              <button
-                type="submit"
-                disabled={!!isLoading}
-                className="w-full h-[52px] bg-gradient-to-r from-[#F59E0B] to-[#C47E09] hover:brightness-110 text-white font-bold rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-amber-900/20"
+              <ClickSpark
+                sparkColor='#fff'
+                sparkSize={10}
+                sparkRadius={60}
+                sparkCount={8}
+                duration={400}
               >
-                {isLoading ? <Loader2 className="animate-spin" /> : <>Sign In with Email <ArrowRight size={20} /></>}
-              </button>
+                <button
+                  type="submit"
+                  disabled={!!isLoading}
+                  className="w-full h-[52px] bg-gradient-to-r from-[#F59E0B] to-[#C47E09] hover:brightness-110 text-white font-bold rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-amber-900/20"
+                >
+                  {isLoading ? <Loader2 className="animate-spin" /> : <>Sign In with Email <ArrowRight size={20} /></>}
+                </button>
+              </ClickSpark>
             </form>
 
             {/* Info Banner Box */}

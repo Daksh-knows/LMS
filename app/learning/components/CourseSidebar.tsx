@@ -20,6 +20,7 @@ import { useCourse } from "@/context/CourseContext";
 import Loader from "@/utils/Loader";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/utils/Toast";
+import ClickSpark from "@/components/ui/ClickSpark";
 
 // --- Types ---
 export type ItemType = "VIDEO" | "TEXT" | "QUIZ" | "ASSIGNMENT" | "LIVE";
@@ -322,41 +323,49 @@ const getStatusIndicator = (item: any, isActive: boolean, isLocked: boolean) => 
                           };
 
                           return (
-                            <div
-                              key={item.id}
-                              id={`lecture-${item.id}`}
-                              onClick={() => !isLocked && onSelectLecture(item)}
-                              className={`flex items-center gap-3 ml-2 mr-2 mt-1 mb-2 p-2.5 rounded-xl transition-all border ${stateStyles} ${
-                                isLocked ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:brightness-105"
-                              }`}
+                            <ClickSpark
+                              sparkColor='#fff'
+                              sparkSize={10}
+                              sparkRadius={60}
+                              sparkCount={8}
+                              duration={400}
                             >
-                              {/* 1. Circle/Indicator on the far left */}
-                              <div className="shrink-0">
-                                {renderCircle()}
-                              </div>
-                              
-                              {/* 2. Main Content Container: Side-by-Side Layout */}
-                              <div className="flex-1 min-w-0 flex items-center justify-between gap-4">
-                                
-                                {/* Left Side: Title (Truncates if too long) */}
-                                <p className={`text-[13px] leading-relaxed truncate ${textStyles}`}>
-                                  {item.title}
-                                </p>
-                                
-                                {/* Right Side: Icon and Time */}
-                                <div className="flex items-center gap-2 shrink-0">
-                                  <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider opacity-60">
-                                    {getTypeIcon(item.type, isActive)}
-                                    {item.duration && (
-                                      <span className={`${textStyles} opacity-60`}>
-                                        {item.duration}m
-                                      </span>
-                                    )}
-                                  </div>
+                              <div
+                                key={item.id}
+                                id={`lecture-${item.id}`}
+                                onClick={() => !isLocked && onSelectLecture(item)}
+                                className={`flex items-center gap-3 ml-2 mr-2 mt-1 mb-2 p-2.5 rounded-xl transition-all border ${stateStyles} ${
+                                  isLocked ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:brightness-105"
+                                }`}
+                              >
+                                {/* 1. Circle/Indicator on the far left */}
+                                <div className="shrink-0">
+                                  {renderCircle()}
                                 </div>
+                                
+                                {/* 2. Main Content Container: Side-by-Side Layout */}
+                                <div className="flex-1 min-w-0 flex items-center justify-between gap-4">
+                                  
+                                  {/* Left Side: Title (Truncates if too long) */}
+                                  <p className={`text-[13px] leading-relaxed truncate ${textStyles}`}>
+                                    {item.title}
+                                  </p>
+                                  
+                                  {/* Right Side: Icon and Time */}
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider opacity-60">
+                                      {getTypeIcon(item.type, isActive)}
+                                      {item.duration && (
+                                        <span className={`${textStyles} opacity-60`}>
+                                          {item.duration}m
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
 
+                                </div>
                               </div>
-                            </div>
+                            </ClickSpark>
                           );
                         })}
                       </div>
