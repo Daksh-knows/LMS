@@ -8,6 +8,7 @@ import Loader from "@/utils/Loader";
 import { showToast } from "@/utils/Toast";
 import SpotlightCard from '@/components/SpotlightCard';
 import SplitText from "@/components/SplitText";
+import ClickSpark from "../ui/ClickSpark";
 
 interface CourseListProps {
   courses: any[];
@@ -189,22 +190,30 @@ export default function CourseList({ courses: initialCourses, loading }: CourseL
 
                   {/* Action Button: Matches exact dimensions (w: 346px, h: 44px) */}
                   {hasAccess ? (
-                    <button
-                      disabled={isResuming}
-                      className="w-full max-w-[346px] h-[44px] bg-(--colored-text) text-black px-4 rounded-md font-semibold flex justify-center items-center gap-2 hover:brightness-110 transition-all active:scale-95 mt-auto"
+                    <ClickSpark
+                      sparkColor='#fff'
+                      sparkSize={10}
+                      sparkRadius={60}
+                      sparkCount={8}
+                      duration={400}
                     >
-                      {isResuming ? (
-                        <>
-                          <Loader2 className="animate-spin" size={18} />
-                          Resuming...
-                        </>
-                      ) : (
-                        <>
-                          <PlayIcon size={18}  />
-                          Resume Learning <ArrowRight size={18} />
-                        </>
-                      )}
-                    </button>
+                      <button
+                        disabled={isResuming}
+                        className="w-full max-w-[346px] h-[44px] bg-(--colored-text) text-black px-4 rounded-md font-semibold flex justify-center items-center gap-2 hover:brightness-110 transition-all active:scale-95 mt-auto"
+                      >
+                        {isResuming ? (
+                          <>
+                            <Loader2 className="animate-spin" size={18} />
+                            Resuming...
+                          </>
+                        ) : (
+                          <>
+                            <PlayIcon size={18}  />
+                            Resume Learning <ArrowRight size={18} />
+                          </>
+                        )}
+                      </button>
+                    </ClickSpark>
                   ) : (
                     <div className="w-full max-w-[346px] h-[44px] flex justify-center items-center gap-2 text-gray-500 font-bold text-xs uppercase tracking-widest bg-gray-200 dark:bg-gray-800 rounded-md mt-auto">
                       <Lock size={16} /> Buy on Ladder1 to Unlock
