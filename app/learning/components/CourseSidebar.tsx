@@ -22,7 +22,6 @@ import { useRouter } from "next/navigation";
 import { showToast } from "@/utils/Toast";
 import ClickSpark from "@/components/ui/ClickSpark";
 
-// --- Types ---
 export type ItemType = "VIDEO" | "TEXT" | "QUIZ" | "ASSIGNMENT" | "LIVE";
 export interface Resource { title: string; url: string; }
 export interface CourseItem {
@@ -156,7 +155,7 @@ const CourseSidebar: React.FC<Props> = ({
       }, 100);
     }
   }, [currentLectureId, course?.modules]);
-  // --- ALL HOOKS ARE DONE. NOW YOU CAN RETURN EARLY ---
+
   if (!course) return <Loader message="Loading lectures" />;
 
   const courseId = course.id;
@@ -170,31 +169,6 @@ const CourseSidebar: React.FC<Props> = ({
       sessionStorage.setItem("sidebar_state", JSON.stringify(newState));
       return newState;
     });
-  };
-
-const getStatusIndicator = (item: any, isActive: boolean, isLocked: boolean) => {
-    // 1. Completed State (Optional override if you track completion)
-    const isCompleted = item.userProgress?.[0]?.isCompleted;
-    if (isCompleted && !isActive) {
-      return <CheckCircle2 size={16} className="text-[#FABD23]" />;
-    }
-
-    // 2. Locked State
-    if (isLocked) {
-      return <div className="w-3.5 h-3.5 rounded-full border-2 border-gray-500" />;
-    }
-
-    // 3. Active (Currently Playing) State - Solid dot inside ring
-    if (isActive) {
-      return (
-        <div className="w-4 h-4 rounded-full border-2 border-[#FABD23] flex items-center justify-center bg-transparent">
-          <div className="w-2 h-2 rounded-full bg-[#FABD23]" />
-        </div>
-      );
-    }
-
-    // 4. Available (Unlocked but not active) State - Empty ring
-    return <div className="w-4 h-4 rounded-full border-2 border-current" />;
   };
 
   const getTypeIcon = (type: ItemType, isActive: boolean) => {
@@ -329,9 +303,9 @@ const getStatusIndicator = (item: any, isActive: boolean, isLocked: boolean) => 
                               sparkRadius={60}
                               sparkCount={8}
                               duration={400}
+                              key={item.id}
                             >
                               <div
-                                key={item.id}
                                 id={`lecture-${item.id}`}
                                 onClick={() => !isLocked && onSelectLecture(item)}
                                 className={`flex items-center gap-3 ml-2 mr-2 mt-1 mb-2 p-2.5 rounded-xl transition-all border ${stateStyles} ${
