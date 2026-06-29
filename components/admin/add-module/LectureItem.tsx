@@ -1,8 +1,9 @@
 import React from "react";
-import { ArrowUp, ArrowDown, Edit, Trash2, Loader2, X } from "lucide-react";
+import { ArrowUp, ArrowDown, Edit, Trash2, Loader2, X, HelpCircle } from "lucide-react";
 import { getTypeStyles } from "./utils"; 
 import { useBackgroundUpload } from "@/context/BackgroundUploadContext";
 import { useConfirm } from "@/context/ConfirmContext";
+import { useRouter } from "next/navigation";
 
 interface LectureItemProps {
   lecture: any;
@@ -21,6 +22,7 @@ export const LectureItem = ({
   lecture, index, isSelected, isFirst, isLast, onSelect, onMove, onEdit, onDelete, onCancel
 }: LectureItemProps) => {
   const style = getTypeStyles(lecture.type);
+  const router = useRouter();
   
   // Get cancel function from context
   const { uploads, cancelUpload } = useBackgroundUpload(); 
@@ -113,6 +115,19 @@ export const LectureItem = ({
             <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 uppercase tracking-wider">
               {style.label}
             </span>
+            {lecture.type === "VIDEO" && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/dashboard/admin/lectures/${lecture.id}/questions`);
+                }}
+                className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 hover:bg-blue-100 flex items-center gap-1 transition cursor-pointer"
+                title="Configure Video Questions"
+              >
+                <HelpCircle size={12} className="text-blue-500" />
+                Add Questions
+              </button>
+            )}
             {lecture.isFree && (
               <span className="text-[10px] font-bold text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-100">
                 Free Preview
