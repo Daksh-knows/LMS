@@ -63,6 +63,7 @@ model User {
   tickets              SupportTicket[]
   userProgress         UserProgress[]
   stats                UserStats?
+  videoQuestionResponses VideoQuestionResponse[]
 }
 
 model StudentProfile {
@@ -164,6 +165,7 @@ model Lecture {
   quizQuestions QuizQuestion[]
   reviews       Review[]
   userProgress  UserProgress[]
+  videoQuestions VideoQuestion[]
 
   @@index([moduleId])
 }
@@ -462,4 +464,40 @@ enum NotificationType {
   ASSIGNMENT
   MENTION
   BILLING
+}
+
+enum VideoQuestionType {
+  MCQ
+}
+
+model VideoQuestion {
+  id            String                  @id @default(cuid())
+  lectureId     String
+  timestamp     Float
+  type          VideoQuestionType       @default(MCQ)
+  text          String
+  imageUrl      String?
+  options       String[]                // For MCQ options
+  correctAnswer String                  // Correct option or answer text
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  lecture       Lecture                 @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  responses     VideoQuestionResponse[]
+
+  @@index([lectureId])
+}
+
+model VideoQuestionResponse {
+  id              String        @id @default(cuid())
+  videoQuestionId String
+  userId          String
+  answer          String        // Student's chosen option
+  isCorrect       Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  videoQuestion   VideoQuestion @relation(fields: [videoQuestionId], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, videoQuestionId])
+  @@index([videoQuestionId])
+  @@index([userId])
 }
