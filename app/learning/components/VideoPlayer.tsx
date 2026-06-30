@@ -36,7 +36,7 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
   const searchParams = useSearchParams();
   const urlSeekParam = searchParams.get('seek');
   
-  // console.log("VideoURL :" , videoUrl)
+  console.log("VideoURL :" , videoUrl)
   const controllerRef = useRef<any>(null);
   const totalSecondsWatched = useRef<number>(0);
   const [showTooltip, setShowTooltip] = useState(false);

@@ -74,82 +74,6 @@ const AdminVideoPlayer: React.FC<Props> = ({
     setShowForm(true);
   };
 
-  const [isSaving, setIsSaving] = useState(false);
-
-  const handleSave = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!questionText.trim()) {
-      showToast.error("Question text is required");
-      return;
-    }
-
-    const filteredOptions = options.map(opt => opt.trim()).filter(Boolean);
-    if (filteredOptions.length < 2) {
-      showToast.error("Please configure at least 2 options");
-      return;
-    }
-
-    const correctText = options[correctAnswerIndex]?.trim();
-    if (!correctText) {
-      showToast.error("The selected correct option cannot be empty");
-      return;
-    }
-
-    try {
-      setIsSaving(true);
-      let uploadedImageUrl = null;
-
-      // 1. Upload image if selected
-      if (imageFile) {
-        const formData = new FormData();
-        formData.append("file", imageFile);
-        const uploadRes = await fetch("/api/upload/file", {
-          method: "POST",
-          body: formData
-        });
-        if (!uploadRes.ok) {
-          throw new Error("Failed to upload image");
-        }
-        const uploadData = await uploadRes.json();
-        uploadedImageUrl = uploadData.url;
-      }
-
-      // 2. Save video question
-      const saveRes = await fetch(`/api/lecture/${lectureId}/video-questions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          timestamp: currentQuestionTime,
-          type: questionType,
-          text: questionText.trim(),
-          imageUrl: uploadedImageUrl,
-          options: filteredOptions,
-          correctAnswer: correctText,
-        })
-      });
-
-      if (!saveRes.ok) {
-        throw new Error("Failed to save question");
-      }
-
-      showToast.success("Interactive question saved successfully!");
-      
-      // Reset form states
-      setShowForm(false);
-      setQuestionText("");
-      setOptions(["", ""]);
-      setCorrectAnswerIndex(0);
-      setImageFile(null);
-      setImagePreviewUrl(null);
-
-    } catch (error) {
-      console.error("[SAVE_QUESTION_ERROR]", error);
-      showToast.error("Could not save question. Please try again.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   // updates mounted
   useEffect(() => { setIsMounted(true); }, []);
 
@@ -185,7 +109,6 @@ const AdminVideoPlayer: React.FC<Props> = ({
         width: "100%",
         aspectRatio: "16/9",
       }}
-      noHotkeys={showForm}
     >
       <ReactPlayer
         slot="media"
@@ -201,6 +124,8 @@ const AdminVideoPlayer: React.FC<Props> = ({
         onPlaying={() => setIsVideoLoading(false)}
         onTimeUpdate={onTimeUpdate}
       />
+
+
 
       {/* --- LOADER OVERLAY --- */}
       {isVideoLoading && (
@@ -317,12 +242,6 @@ const AdminVideoPlayer: React.FC<Props> = ({
                     />
                   </div>
 
-                  {/* Select Correct Answer Instruction Banner */}
-                  <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-xl p-3 text-xs flex flex-col gap-1">
-                    <span className="font-bold">Correct Answer Selection:</span>
-                    <span>Please click the circular radio button on the left of whichever option is correct, or select it from the dropdown below.</span>
-                  </div>
-
                   {/* MCQ Options */}
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
@@ -382,24 +301,8 @@ const AdminVideoPlayer: React.FC<Props> = ({
                     </div>
                   </div>
 
-                  {/* Explicit Correct Answer Selection Dropdown */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Designate Correct Answer</label>
-                    <select
-                      value={correctAnswerIndex}
-                      onChange={(e) => setCorrectAnswerIndex(parseInt(e.target.value))}
-                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-700 font-semibold"
-                    >
-                      {options.map((opt, idx) => (
-                        <option key={idx} value={idx}>
-                          Option {idx + 1} {opt.trim() ? `— "${opt.trim().substring(0, 30)}${opt.trim().length > 30 ? "..." : ""}"` : ""}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
                   {/* Image from computer */}
-                  {/* <div>
+                  <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                       <Image size={14} />
                       Upload Image from Computer
@@ -433,7 +336,7 @@ const AdminVideoPlayer: React.FC<Props> = ({
                         </button>
                       </div>
                     )}
-                  </div> */}
+                  </div>
                 </div>
               )}
             </div>
@@ -449,18 +352,16 @@ const AdminVideoPlayer: React.FC<Props> = ({
               </button>
               <button
                 type="button"
-                onClick={() => handleSave()}
-                disabled={isSaving}
-                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm rounded-xl transition-colors cursor-pointer"
+                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-colors cursor-pointer"
               >
-                {isSaving ? "Saving..." : "Save"}
+                Save
               </button>
             </div>
           </div>
         </div>
       )}
-    </MediaController>
-  );
-};
+    </MediaController> 
+  ) ;
+}
 
-export default AdminVideoPlayer;
+export default AdminVideoPlayer
