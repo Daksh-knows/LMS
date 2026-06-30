@@ -173,7 +173,7 @@ function GradingCard({ submission, onSave, isSaving }: any) {
           {/* Student Info */}
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-lg">
-              {submission.User?.name.charAt(0)}
+              {submission.User?.name?.charAt(0) || 'A'}
             </div>
             <div className="min-w-0">
               <p className="font-bold text-gray-900 text-sm md:text-base truncate">{submission.User?.name}</p>
