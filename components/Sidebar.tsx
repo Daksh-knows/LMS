@@ -9,6 +9,8 @@ import {
   HeadphonesIcon, 
   Briefcase,
   ShieldCheck,
+  ShoppingCart,
+  Layers,
   X 
 } from "lucide-react";
 import Logo from "@/components/Logo";
@@ -28,7 +30,12 @@ export default function Sidebar({
   const oneCourse = process.env.NEXT_PUBLIC_ONE_COURSE === "true";
   const navItems = [
     { label: "Overview", icon: LayoutDashboard, href: isAdmin ? "/dashboard/admin-overview" : "/dashboard" },
-    ...(isAdmin ? [{ label: "Manage Courses", icon: ShieldCheck, href: "/dashboard/admin" }] : []),
+    ...(isAdmin ? [
+      { label: "Manage Courses", icon: ShieldCheck, href: "/dashboard/admin" },
+      { label: "Manage Bundles", icon: Layers, href: "/dashboard/admin/bundles" }
+    ] : [
+      { label: "Store", icon: ShoppingCart, href: "/dashboard/store" }
+    ]),
     { label: "Support", icon: HeadphonesIcon, href: isAdmin ? "/dashboard/admin/support" : "/dashboard/support" },
   ];
 
