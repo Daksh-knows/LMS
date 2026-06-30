@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Trash2, Edit, Plus, Loader2, Award } from "lucide-react";
+import { Trash2, Edit, Plus, Loader2, Award, LineChart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/utils/Toast";
 import { useConfirm } from "@/context/ConfirmContext";
@@ -198,6 +198,16 @@ export default function AdminCourseList({adminId} : Props) {
                   />
                 )}
               </button>
+
+              {/* Analytics */}
+              <Link href={`/dashboard/admin/courses/${course.id}/analytics`}>
+                <button
+                  title="View Analytics"
+                  className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
+                >
+                  <LineChart size={20} />
+                </button>
+              </Link>
 
               {/* Edit */}
               <Link href={`/dashboard/admin/edit-course/${course.id}`}>
