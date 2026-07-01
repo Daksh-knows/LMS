@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import ReactPlayer from 'react-player';
-import { BookmarkPlus, Info, Save } from "lucide-react";
+import { BookmarkPlus, Info, Save, HelpCircle, CheckCircle, XCircle, Image } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { showToast } from "@/utils/Toast";
 import {
@@ -54,6 +54,43 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
   const [hasCompleted, setHasCompleted] = useState(false);
   const [urlSeekProcessed, setUrlSeekProcessed] = useState(false);
   const { addBookmark } = useBookmarks();
+
+  // Student interactive video questions states
+  const [videoQuestions, setVideoQuestions] = useState<any[]>([]);
+  const [answeredQuestionIds, setAnsweredQuestionIds] = useState<Set<string>>(new Set());
+  const [activeQuestion, setActiveQuestion] = useState<any | null>(null);
+  const [studentAnswer, setStudentAnswer] = useState<string>("");
+  const [isAnswering, setIsAnswering] = useState<boolean>(false);
+  const [showFeedback, setShowFeedback] = useState<boolean>(false);
+  const [isCorrect, setIsCorrect] = useState<boolean>(false);
+  const [skippedQuestionId, setSkippedQuestionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadVideoQuestions = async () => {
+      if (!lectureId || !userId) return;
+      try {
+        const res = await fetch(`/api/lecture/${lectureId}/video-questions`);
+        if (res.ok) {
+          const data = await res.json();
+          setVideoQuestions(data);
+          
+          // Filter out questions this student has already answered
+          const answered = new Set<string>();
+          data.forEach((q: any) => {
+            const hasResponse = q.responses?.some((resp: any) => resp.user.id === userId || resp.userId === userId);
+            if (hasResponse) {
+              answered.add(q.id);
+            }
+          });
+          setAnsweredQuestionIds(answered);
+        }
+      } catch (err) {
+        console.error("Failed to load video questions:", err);
+      }
+    };
+
+    loadVideoQuestions();
+  }, [lectureId, userId]);
 
 
   const storageKey = `watch-progress-${userId}-${lectureId}`;
@@ -257,12 +294,110 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
       }
     };
 
+    const handleAnswerSubmit = async () => {
+      if (!activeQuestion) return;
+      if (!studentAnswer.trim()) {
+        showToast.error("Please select or enter an answer");
+        return;
+      }
+
+      const checkCorrect = studentAnswer.toLowerCase().trim() === activeQuestion.correctAnswer.toLowerCase().trim();
+      setIsCorrect(checkCorrect);
+      setShowFeedback(true);
+
+      try {
+        setIsAnswering(true);
+        const res = await fetch(`/api/lecture/${lectureId}/video-questions/respond`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            videoQuestionId: activeQuestion.id,
+            answer: studentAnswer.trim(),
+            isCorrect: checkCorrect,
+          })
+        });
+
+        if (!res.ok) throw new Error("Failed to save answer");
+
+        // Mark as answered so it never shows up again
+        setAnsweredQuestionIds(prev => {
+          const updated = new Set(prev);
+          updated.add(activeQuestion.id);
+          return updated;
+        });
+
+        showToast.success("Response recorded!");
+
+      } catch (err) {
+        console.error(err);
+        showToast.error("Failed to submit response");
+      } finally {
+        setIsAnswering(false);
+      }
+    };
+
+    const handleContinueVideo = () => {
+      setSkippedQuestionId(null);
+      setActiveQuestion(null);
+      setShowFeedback(false);
+      setStudentAnswer("");
+      setIsPlaying(true);
+      if (controllerRef.current) {
+        controllerRef.current.paused = false;
+      }
+    };
+
+    const handleSkipQuestion = () => {
+      if (activeQuestion) {
+        setSkippedQuestionId(activeQuestion.id);
+      }
+      setActiveQuestion(null);
+      setShowFeedback(false);
+      setStudentAnswer("");
+      setIsPlaying(true);
+      if (controllerRef.current) {
+        controllerRef.current.paused = false;
+      }
+      showToast.success("Question skipped");
+    };
+
     //handler for time updates to auto-complete lecture
     const handleTimeUpdate = async (e: any) => {
       const video = e.target;
-      if (!video || !video.duration || hasCompleted) return;
+      if (!video) return;
 
-      const playedFraction = video.currentTime / video.duration;
+      const currentTime = video.currentTime;
+
+      // Check if we hit any interactive questions
+      if (videoQuestions.length > 0 && !activeQuestion && !showFeedback) {
+        if (skippedQuestionId) {
+          const skippedQ = videoQuestions.find(q => q.id === skippedQuestionId);
+          if (skippedQ && (currentTime < skippedQ.timestamp || currentTime > skippedQ.timestamp + 1.5)) {
+            setSkippedQuestionId(null);
+          }
+        }
+
+        const pendingQuestion = videoQuestions.find(q => {
+          return !answeredQuestionIds.has(q.id) && 
+                 q.id !== skippedQuestionId &&
+                 currentTime >= q.timestamp && 
+                 currentTime <= q.timestamp + 1.2;
+        });
+
+        if (pendingQuestion) {
+          setIsPlaying(false);
+          if (controllerRef.current) {
+            controllerRef.current.paused = true;
+          }
+          setActiveQuestion(pendingQuestion);
+          setStudentAnswer("");
+          setShowFeedback(false);
+        }
+      }
+
+      if (!video.duration || hasCompleted) return;
+
+      const playedFraction = currentTime / video.duration;
 
       if (playedFraction >= 0.95) {
         setHasCompleted(true);
@@ -431,7 +566,7 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
         width: "100%",
         aspectRatio: "16/9",
       }}
-      noHotkeys={showForm}
+      noHotkeys={showForm || !!activeQuestion}
     >
       <ReactPlayer
         slot="media"
@@ -489,7 +624,7 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
       }
 
       {/* --- CONTROLS --- */}
-      <MediaControlBar>
+      <MediaControlBar style={activeQuestion ? { pointerEvents: "none", opacity: 0.3 } : undefined}>
         <button
           type="button"
           onClick={togglePlay}
@@ -555,6 +690,118 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
         <MediaPlaybackRateButton />
         <MediaFullscreenButton />
       </MediaControlBar>
+
+      {/* Invisible overlay blocking all clicks/taps on the player while question is open */}
+      {activeQuestion && (
+        <div 
+          className="absolute inset-0 bg-transparent z-20 cursor-default pointer-events-auto"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        />
+      )}
+
+      {/* --- STUDENT INTERACTIVE QUESTION POPUP OVERLAY --- */}
+      {activeQuestion && (
+        <div className="absolute inset-0 bg-transparent z-30 pointer-events-none flex items-end justify-end p-4">
+          <div className="bg-white text-slate-800 w-full max-w-[320px] sm:max-w-sm rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85%] pointer-events-auto animate-in slide-in-from-bottom-5 slide-in-from-right-5 duration-300">
+            {/* Header */}
+            <div className="bg-blue-600 text-white px-5 py-4 flex items-center gap-2">
+              <HelpCircle className="text-white shrink-0 animate-bounce" size={20} />
+              <div>
+                <span className="text-[10px] uppercase tracking-wider font-bold opacity-75 block mb-1">Interactive Question</span>
+                <h4 className="text-sm font-bold leading-tight">Time paused to test your understanding</h4>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4 overflow-y-auto flex-1 text-left">
+              <p className="text-base font-bold text-slate-800 leading-snug">{activeQuestion.text}</p>
+              
+              {activeQuestion.imageUrl && (
+                <div className="rounded-xl overflow-hidden border border-slate-200 max-h-40 flex items-center justify-center bg-slate-50">
+                  <img 
+                    src={activeQuestion.imageUrl} 
+                    alt="Question visual" 
+                    className="max-h-40 object-contain"
+                  />
+                </div>
+              )}
+
+              {!showFeedback ? (
+                /* Question Options input list */
+                <div className="space-y-3 pt-2">
+                  <div className="grid grid-cols-1 gap-2">
+                    {activeQuestion.options && activeQuestion.options.map((opt: string, idx: number) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setStudentAnswer(opt)}
+                        className={`w-full p-3.5 text-left text-sm font-semibold rounded-xl border transition flex items-center gap-2 cursor-pointer ${studentAnswer === opt ? "bg-blue-50 border-blue-500 text-blue-700 shadow-sm" : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"}`}
+                      >
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center text-[10px] shrink-0 ${studentAnswer === opt ? "border-blue-500 bg-blue-500 text-white" : "border-slate-300"}`}>
+                          {studentAnswer === opt && "✓"}
+                        </div>
+                        <span className="truncate">{opt}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-2 pt-3">
+                    <button
+                      onClick={handleSkipQuestion}
+                      className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition cursor-pointer text-sm"
+                    >
+                      Skip
+                    </button>
+                    <button
+                      onClick={handleAnswerSubmit}
+                      disabled={isAnswering || !studentAnswer.trim()}
+                      className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl transition shadow-sm cursor-pointer text-sm"
+                    >
+                      {isAnswering ? "Submitting..." : "Submit Answer"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Instant Feedback screen block */
+                <div className="text-center py-4 space-y-4">
+                  {isCorrect ? (
+                    <div className="space-y-2">
+                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto text-green-600">
+                        <CheckCircle size={36} />
+                      </div>
+                      <h3 className="text-lg font-bold text-green-700">Correct! Great job.</h3>
+                      <p className="text-xs text-slate-500">Your understanding is spot on!</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto text-red-600">
+                        <XCircle size={36} />
+                      </div>
+                      <h3 className="text-lg font-bold text-red-700">Nice Try!</h3>
+                      {activeQuestion.correctAnswer && (
+                        <p className="text-sm font-medium text-slate-600">
+                          The correct answer was: <strong className="text-slate-900">{activeQuestion.correctAnswer}</strong>
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <button
+                    onClick={handleContinueVideo}
+                    className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-sm mt-4 cursor-pointer text-sm"
+                  >
+                    Continue Lecture
+                  </button>
+                </div>
+              )}
+
+            </div>
+          </div>
+        </div>
+      )}
     </MediaController>
   );
 };
