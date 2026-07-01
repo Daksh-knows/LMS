@@ -705,10 +705,10 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
       {/* --- STUDENT INTERACTIVE QUESTION POPUP OVERLAY --- */}
       {activeQuestion && (
         <div className="absolute inset-0 bg-transparent z-30 pointer-events-none flex items-end justify-end p-4">
-          <div className="bg-white text-slate-800 w-full max-w-[320px] sm:max-w-sm rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85%] pointer-events-auto animate-in slide-in-from-bottom-5 slide-in-from-right-5 duration-300">
+          <div className="bg-(--sidebar-background) text-(--text-color) w-full max-w-[320px] sm:max-w-sm rounded-2xl shadow-2xl border border-(--course-sidebar-border) overflow-hidden flex flex-col max-h-[85%] pointer-events-auto animate-in slide-in-from-bottom-5 slide-in-from-right-5 duration-300 theme-transition">
             {/* Header */}
-            <div className="bg-blue-600 text-white px-5 py-4 flex items-center gap-2">
-              <HelpCircle className="text-white shrink-0 animate-bounce" size={20} />
+            <div className="bg-(--btn-next-bg) text-(--btn-next-text) px-5 py-4 flex items-center gap-2 theme-transition">
+              <HelpCircle className="text-(--btn-next-text) shrink-0 animate-bounce" size={20} />
               <div>
                 <span className="text-[10px] uppercase tracking-wider font-bold opacity-75 block mb-1">Interactive Question</span>
                 <h4 className="text-sm font-bold leading-tight">Time paused to test your understanding</h4>
@@ -717,10 +717,10 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
 
             {/* Content */}
             <div className="p-6 space-y-4 overflow-y-auto flex-1 text-left">
-              <p className="text-base font-bold text-slate-800 leading-snug">{activeQuestion.text}</p>
+              <p className="text-base font-bold text-(--text-color) leading-snug theme-transition">{activeQuestion.text}</p>
               
               {activeQuestion.imageUrl && (
-                <div className="rounded-xl overflow-hidden border border-slate-200 max-h-40 flex items-center justify-center bg-slate-50">
+                <div className="rounded-xl overflow-hidden border border-(--course-sidebar-border) max-h-40 flex items-center justify-center bg-(--sidebar-background)/50 theme-transition">
                   <img 
                     src={activeQuestion.imageUrl} 
                     alt="Question visual" 
@@ -738,9 +738,9 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
                         key={idx}
                         type="button"
                         onClick={() => setStudentAnswer(opt)}
-                        className={`w-full p-3.5 text-left text-sm font-semibold rounded-xl border transition flex items-center gap-2 cursor-pointer ${studentAnswer === opt ? "bg-blue-50 border-blue-500 text-blue-700 shadow-sm" : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"}`}
+                        className={`w-full p-3.5 text-left text-sm font-semibold rounded-xl border transition flex items-center gap-2 cursor-pointer ${studentAnswer === opt ? "bg-blue-500/10 border-blue-500 text-blue-600 shadow-sm" : "bg-(--sidebar-background) border-(--course-sidebar-border) hover:bg-(--sidebar-nav-bg-hover) text-(--text-color) opacity-90"} theme-transition`}
                       >
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center text-[10px] shrink-0 ${studentAnswer === opt ? "border-blue-500 bg-blue-500 text-white" : "border-slate-300"}`}>
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center text-[10px] shrink-0 ${studentAnswer === opt ? "border-blue-500 bg-blue-500 text-white" : "border-(--course-sidebar-border)"}`}>
                           {studentAnswer === opt && "✓"}
                         </div>
                         <span className="truncate">{opt}</span>
@@ -751,7 +751,7 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
                   <div className="flex gap-2 pt-3">
                     <button
                       onClick={handleSkipQuestion}
-                      className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition cursor-pointer text-sm"
+                      className="px-4 py-3 bg-(--sidebar-nav-bg-hover) text-(--text-color) opacity-80 hover:opacity-100 font-semibold rounded-xl transition cursor-pointer text-sm theme-transition"
                     >
                       Skip
                     </button>
@@ -769,21 +769,21 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, lectureId, seekTo, onSeekCompl
                 <div className="text-center py-4 space-y-4">
                   {isCorrect ? (
                     <div className="space-y-2">
-                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto text-green-600">
+                      <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto text-green-500">
                         <CheckCircle size={36} />
                       </div>
-                      <h3 className="text-lg font-bold text-green-700">Correct! Great job.</h3>
-                      <p className="text-xs text-slate-500">Your understanding is spot on!</p>
+                      <h3 className="text-lg font-bold text-green-500 theme-transition">Correct! Great job.</h3>
+                      <p className="text-xs text-(--text-color) opacity-60 theme-transition">Your understanding is spot on!</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto text-red-600">
+                      <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto text-red-500">
                         <XCircle size={36} />
                       </div>
-                      <h3 className="text-lg font-bold text-red-700">Nice Try!</h3>
+                      <h3 className="text-lg font-bold text-red-500 theme-transition">Nice Try!</h3>
                       {activeQuestion.correctAnswer && (
-                        <p className="text-sm font-medium text-slate-600">
-                          The correct answer was: <strong className="text-slate-900">{activeQuestion.correctAnswer}</strong>
+                        <p className="text-sm font-medium text-(--text-color) opacity-80 theme-transition">
+                          The correct answer was: <strong className="text-(--text-color)">{activeQuestion.correctAnswer}</strong>
                         </p>
                       )}
                     </div>
