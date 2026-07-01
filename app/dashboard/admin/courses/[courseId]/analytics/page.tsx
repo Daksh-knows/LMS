@@ -32,7 +32,7 @@ export default async function CourseAnalyticsPage({
       {/* Header section */}
       <div className="flex flex-col gap-2">
         <Link 
-          href={`/dashboard/admin/edit-course/${courseId}`}
+          href={`/dashboard/admin`}
           className="inline-flex items-center text-sm text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 transition-colors w-fit"
         >
           <ArrowLeft className="w-4 h-4 mr-1" />

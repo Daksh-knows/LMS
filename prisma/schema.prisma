@@ -50,6 +50,7 @@ model User {
   AssignmentSubmission AssignmentSubmission[]
   bookmarks            Bookmark[]
   createdCourses       Course[]               @relation("CourseAuthor")
+  createdBundles       CourseBundle[]         @relation("BundleAuthor")
   enrollments          MyEnrollment[]
   notes                Note[]
   notifications        Notification[]
@@ -106,6 +107,8 @@ model Course {
   modules           Module[]
   notifications     Notification[]
   userProgress      UserProgress[]
+  bundles           CourseBundle[]
+  payments          Payment[]
 
   @@index([title])
 }
@@ -342,6 +345,11 @@ model Payment {
   createdAt         DateTime       @default(now())
   user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   refundRequest     RefundRequest?
+
+  courseId          String?
+  bundleId          String?
+  course            Course?        @relation(fields: [courseId], references: [id])
+  bundle            CourseBundle?  @relation(fields: [bundleId], references: [id])
 }
 
 model RefundRequest {
@@ -404,6 +412,21 @@ model Notification {
 
   @@index([userId])
   @@index([createdAt])
+}
+
+model CourseBundle {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  price       Float
+  isPublished Boolean   @default(false)
+  adminId     String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  admin       User      @relation("BundleAuthor", fields: [adminId], references: [id])
+  courses     Course[]
+  payments    Payment[]
 }
 
 enum ItemType {
