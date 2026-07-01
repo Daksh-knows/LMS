@@ -124,12 +124,12 @@ export default function AdminCourseList({adminId} : Props) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest">
+        <h2 className="text-sm font-bold text-(--text-color) opacity-60 uppercase tracking-widest theme-transition">
           Your Courses ({courses?.length})
         </h2>
 
         <Link href="/dashboard/admin/add-course">
-          <button className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition-all">
+          <button className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition-all cursor-pointer">
             <Plus size={16} />
             Add New Course
           </button>
@@ -138,14 +138,14 @@ export default function AdminCourseList({adminId} : Props) {
 
       {/* Empty state */}
       {courses?.length === 0 ? (
-        <div className="p-10 border-2 border-dashed rounded-3xl text-center text-gray-400 bg-gray-50/50">
+        <div className="p-10 border-2 border-dashed border-(--course-sidebar-border) rounded-3xl text-center text-(--text-color) opacity-50 bg-(--sidebar-background)/50 theme-transition">
           You haven&apos;t created any courses yet.
         </div>
       ) : (
         courses.map((course) => (
           <div
             key={course.id}
-            className="flex items-center justify-between p-5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all"
+            className="flex items-center justify-between p-5 bg-(--sidebar-background) border border-(--course-sidebar-border) rounded-2xl shadow-sm hover:shadow-md transition-all theme-transition"
           >
             {/* Course Info */}
             <Link
@@ -164,7 +164,7 @@ export default function AdminCourseList({adminId} : Props) {
                   ))}
                 </div>
 
-                <h3 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                <h3 className="font-bold text-(--text-color) group-hover:text-blue-600 transition-colors theme-transition">
                   {course.title}
                 </h3>
               </div>

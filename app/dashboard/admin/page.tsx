@@ -14,12 +14,12 @@ export default async function AdminDashboardPage() {
   }
 
   return (
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <header className="mb-8 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-gray-500 text-sm">
-              Managing courses for <span className="font-semibold">{user.name || user.email}</span>
+            <h1 className="text-2xl font-bold text-(--text-color) theme-transition">Admin Dashboard</h1>
+            <p className="text-(--text-color) opacity-80 text-sm theme-transition">
+              Managing courses for <span className="font-semibold text-(--text-color)">{user.name || user.email}</span>
             </p>
           </div>
         </header>
