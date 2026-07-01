@@ -28,7 +28,17 @@ export async function POST(req: NextRequest) {
       position: newPosition,
       isPublished: true,
       isFree: data.isFree || false,
+      releaseAt: data.releaseAt ? new Date(data.releaseAt) : null,
     };
+
+    // Drip prerequisites (lectures that must be completed first)
+    if (Array.isArray(data.prerequisiteIds) && data.prerequisiteIds.length > 0) {
+      createData.prerequisites = {
+        create: data.prerequisiteIds
+          .filter((id: string) => id && id !== "")
+          .map((prerequisiteId: string) => ({ prerequisiteId })),
+      };
+    }
 
     // 3. Handle Specific Types
     if (data.type === 'VIDEO') {
@@ -200,6 +210,22 @@ export async function PATCH(req: NextRequest) {
         isFree: data.isFree,
         isPublished: data.isPublished,
       };
+      if (data.releaseAt !== undefined) {
+        updateData.releaseAt = data.releaseAt ? new Date(data.releaseAt) : null;
+      }
+
+      // Drip prerequisites: wipe-and-replace (mirrors attachment/quiz handling)
+      if (data.prerequisiteIds !== undefined) {
+        await tx.lecturePrerequisite.deleteMany({ where: { lectureId: itemId } });
+        const ids = (Array.isArray(data.prerequisiteIds) ? data.prerequisiteIds : [])
+          .filter((id: string) => id && id !== "" && id !== itemId);
+        if (ids.length > 0) {
+          await tx.lecturePrerequisite.createMany({
+            data: ids.map((prerequisiteId: string) => ({ lectureId: itemId, prerequisiteId })),
+            skipDuplicates: true,
+          });
+        }
+      }
 
       // 2. Handle Logic Based on Lecture Type
       if (data.type === 'VIDEO') {

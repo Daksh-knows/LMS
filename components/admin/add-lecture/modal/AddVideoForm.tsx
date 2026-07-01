@@ -10,12 +10,15 @@ import { useBackgroundUpload } from "@/context/BackgroundUploadContext";
 import { LiveVideoSection } from "./sections/LiveVideoSection";
 import { RecordedVideoSection } from "./sections/RecordedVideoSection";
 import { AttachmentsSection, FileAttachment } from "./sections/AttachmentsSection";
+import ReleaseScheduleField from "./sections/ReleaseScheduleField";
+import PrerequisitesField, { AvailableLecture } from "./sections/PrerequisitesField";
 import { showToast } from "@/utils/Toast";
 
 interface Props {
   courseId: string;
   sectionId: string;
   initialData?: any;
+  availableLectures?: AvailableLecture[];
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -24,9 +27,12 @@ export default function AddVideoForm({
   courseId,
   sectionId,
   initialData,
+  availableLectures = [],
   onSuccess,
   onCancel,
 }: Props) {
+  const [releaseAt, setReleaseAt] = useState<string>(initialData?.releaseAt || "");
+  const [prerequisiteIds, setPrerequisiteIds] = useState<string[]>(initialData?.prerequisiteIds || []);
   const [loading, setLoading] = useState(false);
   const { startUpload } = useBackgroundUpload();
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -146,6 +152,8 @@ export default function AddVideoForm({
         videoUrl: videoMode === "URL" ? videoUrl : "",
         duration: duration ? parseInt(duration) : 0,
         description: descriptionData ? JSON.stringify(descriptionData) : null,
+        releaseAt: releaseAt || null,
+        prerequisiteIds,
       };
 
       // 3. Create/Update in DB
@@ -268,6 +276,15 @@ export default function AddVideoForm({
         onAdd={addResource}
         onRemove={removeResource}
         onUpdate={updateResource}
+      />
+
+      {/* --- Drip Scheduling --- */}
+      <ReleaseScheduleField value={releaseAt} onChange={setReleaseAt} />
+      <PrerequisitesField
+        available={availableLectures}
+        selectedIds={prerequisiteIds}
+        onChange={setPrerequisiteIds}
+        currentLectureId={initialData?.id}
       />
 
       {/* --- Footer Actions --- */}

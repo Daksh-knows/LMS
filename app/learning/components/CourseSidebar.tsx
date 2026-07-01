@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCourse } from "@/context/CourseContext";
 import Loader from "@/utils/Loader";
 import { useRouter } from "next/navigation";
+import { getSession } from "next-auth/react";
 import { showToast } from "@/utils/Toast";
 import ClickSpark from "@/components/ui/ClickSpark";
 
@@ -186,7 +187,9 @@ const CourseSidebar: React.FC<Props> = ({
   const handleNext = async () => {
     try {
       setLoading(true);
-      const url = `/api/course/next-lecture?courseId=${courseId}&lectureId=${currentLectureId}`;
+      const session: any = await getSession();
+      const userId = session?.user?.id;
+      const url = `/api/course/next-lecture?courseId=${courseId}&lectureId=${currentLectureId}${userId ? `&userId=${userId}` : ""}`;
       const res = await fetch(url);
       const data = await res.json();
 
@@ -269,8 +272,23 @@ const CourseSidebar: React.FC<Props> = ({
                       <div className="py-2 px-1 space-y-1">
                         {section.lectures.map((item) => {
                           const isActive = item.id === currentLectureId;
-                          const isLocked = !isEnrolled && !item.isFree;
                           const isCompleted = item.userProgress?.[0]?.isCompleted;
+
+                          // Drip lock state (computed server-side)
+                          const enrollLock = !isEnrolled && !item.isFree;
+                          const timeLock = !!item.lockedByTime;
+                          const prereqLock = !!item.lockedByPrereq && !timeLock;
+                          // Hard locks block navigation; prereq locks allow it (page offers a credit unlock).
+                          const isLocked = enrollLock || timeLock;
+                          const showLock = isLocked || prereqLock;
+
+                          const releaseLabel =
+                            timeLock && item.effectiveReleaseAt
+                              ? new Date(item.effectiveReleaseAt).toLocaleDateString(undefined, {
+                                  month: "short",
+                                  day: "numeric",
+                                })
+                              : null;
 
                           // Dynamic styling based on lecture state
                           let stateStyles = "bg-(--lec-unwatched-bg) border-(--lec-unwatched-border)";
@@ -286,7 +304,7 @@ const CourseSidebar: React.FC<Props> = ({
 
                           // Circle indicator logic matching your new design
                           const renderCircle = () => {
-                            if (isLocked) return <Lock size={16} className="text-gray-500" />;
+                            if (showLock) return <Lock size={16} className="text-gray-500" />;
                             if (isCompleted && !isActive) {
                               return <div className="w-4 h-4 rounded-full border-2 bg-(--circle-completed-bg) border-(--circle-completed-border)" />;
                             }
@@ -328,6 +346,11 @@ const CourseSidebar: React.FC<Props> = ({
                                   {/* Right Side: Icon and Time */}
                                   <div className="flex items-center gap-2 shrink-0">
                                     <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider opacity-60">
+                                      {releaseLabel ? (
+                                        <span className="text-amber-500 normal-case">🔒 {releaseLabel}</span>
+                                      ) : prereqLock ? (
+                                        <span className="text-amber-500 normal-case">Locked</span>
+                                      ) : null}
                                       {getTypeIcon(item.type, isActive)}
                                       {item.duration && (
                                         <span className={`${textStyles} opacity-60`}>

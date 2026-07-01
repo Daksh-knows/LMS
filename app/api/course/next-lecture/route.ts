@@ -1,11 +1,13 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { computeLockState } from "@/lib/drip";
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const courseId = searchParams.get("courseId");
     const lectureId = searchParams.get("lectureId");
+    const userId = searchParams.get("userId");
 
     if (!courseId || !lectureId) {
       return new NextResponse("Missing IDs", { status: 400 });
@@ -23,40 +25,72 @@ export async function GET(req: Request) {
 
     if (!currentLecture) return new NextResponse("Not found", { status: 404 });
 
-    // 2. Logic to find the next lecture in the same module
-    const nextInModule = await db.lecture.findFirst({
+    // Completed lectures for prereq evaluation (only when we know the user).
+    let completedLectureIds: string[] = [];
+    if (userId) {
+      const done = await db.userProgress.findMany({
+        where: { userId, courseId, isCompleted: true },
+        select: { lectureId: true },
+      });
+      completedLectureIds = done.map((d) => d.lectureId);
+    }
+
+    // A lecture is skippable as "next" if drip-locked (time or prereq).
+    const isLocked = (lec: {
+      releaseAt: Date | null;
+      prerequisites: { prerequisiteId: string }[];
+    }, moduleReleaseAt: Date | null) =>
+      computeLockState({
+        lectureReleaseAt: lec.releaseAt,
+        moduleReleaseAt,
+        prerequisiteIds: lec.prerequisites.map((p) => p.prerequisiteId),
+        completedLectureIds,
+      }).isLocked;
+
+    // 2. Next unlocked lecture in the same module
+    const laterInModule = await db.lecture.findMany({
       where: {
         moduleId: currentLecture.moduleId,
         position: { gt: currentLecture.position },
         isPublished: true,
       },
       orderBy: { position: "asc" },
+      select: {
+        id: true,
+        releaseAt: true,
+        prerequisites: { select: { prerequisiteId: true } },
+        module: { select: { releaseAt: true } },
+      },
     });
 
+    const nextInModule = laterInModule.find((l) => !isLocked(l, l.module.releaseAt));
     if (nextInModule) return NextResponse.json({ nextId: nextInModule.id });
 
-    // 3. Logic to find the first lecture of the next module
-    const nextModule = await db.module.findFirst({
+    // 3. First unlocked lecture of a following module
+    const laterModules = await db.module.findMany({
       where: {
         courseId: courseId,
         position: { gt: currentLecture.module.position },
         isPublished: true,
       },
-      include: {
+      orderBy: { position: "asc" },
+      select: {
+        releaseAt: true,
         lectures: {
           where: { isPublished: true },
           orderBy: { position: "asc" },
-          take: 1,
+          select: {
+            id: true,
+            releaseAt: true,
+            prerequisites: { select: { prerequisiteId: true } },
+          },
         },
       },
-      orderBy: { position: "asc" },
     });
-    console.log('-----------------------');
-    console.log(nextModule);
-    console.log('-----------------------');
 
-    if (nextModule?.lectures?.[0]) {
-      return NextResponse.json({ nextId: nextModule.lectures[0].id });
+    for (const mod of laterModules) {
+      const firstUnlocked = mod.lectures.find((l) => !isLocked(l, mod.releaseAt));
+      if (firstUnlocked) return NextResponse.json({ nextId: firstUnlocked.id });
     }
 
     return NextResponse.json({ nextId: null });
