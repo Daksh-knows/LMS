@@ -31,6 +31,7 @@ const AssignmentComponent: React.FC  = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [submissionData, setSubmissionData] = useState<any>(null);
+  const [rubric, setRubric] = useState<any>(null);
   const [status, setStatus] = useState<"NOT_SUBMITTED" | "SUBMITTED" | "GRADED">("NOT_SUBMITTED");
   
   // --- Data Fetching ---
@@ -43,6 +44,7 @@ const AssignmentComponent: React.FC  = () => {
         if (data) {
           setStatus(data.status);
           setSubmissionData(data.submission);
+          setRubric(data.rubric || null);
           // Auto-expand if already submitted so they see the status immediately
           if (data.status !== "NOT_SUBMITTED") setIsExpanded(true);
         }
@@ -168,6 +170,43 @@ const AssignmentComponent: React.FC  = () => {
                 </div>
                 <ExternalLink size={14} className="text-gray-300 group-hover:text-blue-500 transition-colors shrink-0" />
               </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* --- RUBRIC OVERVIEW (PRE-SUBMISSION / UNDER REVIEW) --- */}
+      {rubric && rubric.criteria && rubric.criteria.length > 0 && status !== "GRADED" && (
+        <div className="space-y-2 border border-slate-150 p-4 rounded-xl bg-slate-50/50">
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest text-left">Grading Rubric</h3>
+          <div className="space-y-3">
+            {rubric.criteria.map((crit: any) => (
+              <div key={crit.id} className="p-3.5 bg-white border border-gray-150 rounded-lg text-left">
+                <div className="flex justify-between items-start gap-2">
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-800">{crit.title}</h4>
+                    {crit.description && (
+                      <p className="text-xs text-gray-400 mt-0.5 font-medium">{crit.description}</p>
+                    )}
+                  </div>
+                  <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded shrink-0">
+                    Max: {crit.maxPoints} pts
+                  </span>
+                </div>
+
+                {crit.ratings && crit.ratings.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-3 pt-3 border-t border-gray-50">
+                    {crit.ratings.map((rating: any) => (
+                      <div key={rating.id} className="p-2.5 bg-slate-50/50 border border-slate-100 rounded text-xs text-left">
+                        <div className="font-bold text-gray-700">{rating.title} ({rating.points} pts)</div>
+                        {rating.description && (
+                          <div className="text-[10px] text-gray-400 mt-0.5 leading-tight">{rating.description}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>
@@ -331,13 +370,80 @@ const AssignmentComponent: React.FC  = () => {
                       <p className="text-sm text-green-700 font-medium">Complete</p>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end">
+                   <div className="flex flex-col items-end">
                     <span className="text-xs font-bold uppercase text-gray-400 tracking-wider">Your Score</span>
                     <span className="text-3xl font-black text-green-600 tracking-tight">
-                      {submissionData?.grade}<span className="text-lg text-gray-400 font-medium">/100</span>
+                      {submissionData?.grade}<span className="text-lg text-gray-400 font-medium">/{rubric && rubric.criteria && rubric.criteria.length > 0 ? rubric.criteria.reduce((acc: number, c: any) => acc + (parseFloat(c.maxPoints) || 0), 0) : 100}</span>
                     </span>
                   </div>
                 </div>
+
+                {/* Rubric Grading Breakdown */}
+                {rubric && rubric.criteria && rubric.criteria.length > 0 && (
+                  <div className="space-y-4 pt-2 text-left">
+                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest text-left">
+                      Rubric Breakdown
+                    </h4>
+                    <div className="space-y-3">
+                      {rubric.criteria.map((crit: any) => {
+                        const scoresList = Array.isArray(submissionData?.rubricScores)
+                          ? submissionData.rubricScores
+                          : submissionData?.rubricScores?.scores || [];
+                        const scoreObj = scoresList.find((s: any) => s.criterionId === crit.id) || { points: 0, comment: "" };
+
+                        return (
+                          <div key={crit.id} className="p-4 bg-slate-50 border border-slate-100 rounded-xl space-y-3 text-left">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-2">
+                              <div>
+                                <h5 className="font-extrabold text-gray-900 text-sm">{crit.title}</h5>
+                                {crit.description && (
+                                  <p className="text-xs text-gray-400 font-medium">{crit.description}</p>
+                                )}
+                              </div>
+                              <span className="text-xs font-black text-blue-600 bg-blue-50 px-2 py-1 rounded shrink-0">
+                                {scoreObj.points} / {crit.maxPoints} pts
+                              </span>
+                            </div>
+
+                            {/* Criterion level feedback if present */}
+                            {scoreObj.comment && (
+                              <div className="p-2.5 bg-white border border-gray-100 rounded-lg text-xs text-gray-600 leading-relaxed text-left">
+                                <span className="font-bold text-gray-500 block text-[10px] uppercase tracking-wider mb-1">
+                                  Criterion Feedback:
+                                </span>
+                                "{scoreObj.comment}"
+                              </div>
+                            )}
+
+                            {/* Ratings (showing matched rating in blue) */}
+                            {crit.ratings && crit.ratings.length > 0 && (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-1">
+                                {crit.ratings.map((rating: any) => {
+                                  const isSelected = scoreObj.points === rating.points;
+                                  return (
+                                    <div
+                                      key={rating.id}
+                                      className={`p-2.5 rounded-lg border text-xs leading-normal text-left ${
+                                        isSelected
+                                          ? "bg-blue-50 border-blue-200 text-blue-800 font-semibold"
+                                          : "bg-white/50 border-transparent text-gray-400 opacity-60"
+                                      }`}
+                                    >
+                                      <div className="font-bold">{rating.title} ({rating.points} pts)</div>
+                                      {rating.description && (
+                                        <div className="text-[10px] mt-0.5">{rating.description}</div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {submissionData?.feedback && (
                   <div className="bg-white p-5 rounded-xl border border-green-100 shadow-sm">

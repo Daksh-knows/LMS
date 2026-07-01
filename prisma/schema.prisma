@@ -167,6 +167,7 @@ model Lecture {
   quizQuestions QuizQuestion[]
   reviews       Review[]
   userProgress  UserProgress[]
+  rubric        Json?
 
   @@index([moduleId])
 }
@@ -285,17 +286,18 @@ model AnswerOption {
 }
 
 model AssignmentSubmission {
-  id        String           @id @default(cuid())
-  fileUrl   String
-  lectureId String
-  studentId String
-  grade     Float?
-  feedback  String?
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  status    AssignmentStatus @default(NOT_SUBMITTED)
-  lecture   Lecture          @relation(fields: [lectureId], references: [id], onDelete: Cascade)
-  User      User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  id           String           @id @default(cuid())
+  fileUrl      String
+  lectureId    String
+  studentId    String
+  grade        Float?
+  feedback     String?
+  rubricScores Json?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  status       AssignmentStatus @default(NOT_SUBMITTED)
+  lecture      Lecture          @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  User         User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, lectureId])
 }
