@@ -63,6 +63,7 @@ export async function GET(
         
         attachments: item.resources,   // Map DB 'resources' to UI 'attachments'
         questions: item.quizQuestions,
+        rubric: item.rubric,
       }))
     }));
 

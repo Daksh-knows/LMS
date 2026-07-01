@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
     } 
     else if (data.type === 'ASSIGNMENT') {
       createData.description = data.description;
+      createData.rubric = data.rubric || null;
       
       // Assignments usually have supporting docs (PDFs)
       if (data.attachments && data.attachments.length > 0) {
@@ -243,6 +244,7 @@ export async function PATCH(req: NextRequest) {
       } 
       else if (data.type === 'ASSIGNMENT') {
         updateData.description = data.description;
+        updateData.rubric = data.rubric || null;
         
         await tx.attachment.deleteMany({ where: { lectureId: itemId } });
         

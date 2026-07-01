@@ -17,6 +17,7 @@ export async function GET(
       where: { id : lectureId },
       select: {
         title: true,
+        rubric: true,
         submissions: {
           include: {
             User: {
