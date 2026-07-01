@@ -40,10 +40,10 @@ export default function LectureQuestionsPage({ params }: { params: Promise<{ id:
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center min-h-screen bg-transparent">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-500 font-medium">Loading video player...</p>
+          <p className="text-(--text-color) opacity-70 font-medium theme-transition">Loading video player...</p>
         </div>
       </div>
     );
@@ -51,11 +51,11 @@ export default function LectureQuestionsPage({ params }: { params: Promise<{ id:
   console.log("LEcture " , lecture) ;
   if (!lecture || lecture.type !== "VIDEO") {
     return (
-      <div className="p-8 max-w-md mx-auto text-center mt-20 bg-white rounded-2xl border border-gray-200 shadow-sm">
+      <div className="p-8 max-w-md mx-auto text-center mt-20 bg-(--sidebar-background) rounded-2xl border border-(--course-sidebar-border) shadow-sm theme-transition">
         <AlertCircle size={48} className="text-red-500 mx-auto mb-4" />
-        <h1 className="text-xl font-bold text-gray-900 mb-2">Invalid Lecture Type</h1>
-        <p className="text-gray-500 mb-6">This separate player page is only for video lectures.</p>
-        <button onClick={() => router.back()} className="px-6 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition">
+        <h1 className="text-xl font-bold text-(--text-color) mb-2 theme-transition">Invalid Lecture Type</h1>
+        <p className="text-(--text-color) opacity-70 mb-6 theme-transition">This separate player page is only for video lectures.</p>
+        <button onClick={() => router.back()} className="px-6 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition cursor-pointer">
           Go Back
         </button>
       </div>
@@ -63,27 +63,27 @@ export default function LectureQuestionsPage({ params }: { params: Promise<{ id:
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-transparent pb-20">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
+      <header className="bg-(--sidebar-background) border-b border-(--course-sidebar-border) sticky top-0 z-30 theme-transition">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors">
+            <button onClick={() => router.back()} className="p-2 text-(--text-color) opacity-70 hover:opacity-100 hover:bg-(--sidebar-nav-bg-hover) rounded-full transition-colors cursor-pointer">
               <ArrowLeft size={20} />
             </button>
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 block leading-none mb-1">Lecture Video workspace</span>
-              <h1 className="text-lg font-bold text-gray-900 leading-none truncate max-w-lg">{lecture.title}</h1>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 block leading-none mb-1 animate-pulse">Lecture Video workspace</span>
+              <h1 className="text-lg font-bold text-(--text-color) leading-none truncate max-w-lg theme-transition">{lecture.title}</h1>
             </div>
           </div>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-        <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4">
-          <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
-            <Video className="text-blue-600" size={20} />
-            <h2 className="font-bold text-gray-900 text-base">Video Player</h2>
+        <div className="bg-(--sidebar-background) p-6 rounded-3xl border border-(--course-sidebar-border) shadow-sm space-y-4 theme-transition">
+          <div className="flex items-center gap-2 border-b border-(--course-sidebar-border) pb-3 theme-transition">
+            <Video className="text-blue-600 animate-pulse" size={20} />
+            <h2 className="font-bold text-(--text-color) text-base theme-transition">Video Player</h2>
           </div>
 
           <div>

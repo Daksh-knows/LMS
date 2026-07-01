@@ -416,17 +416,17 @@ const AdminVideoPlayer: React.FC<Props> = ({
       </MediaControlBar>
 
       {showForm && (
-        <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-30 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden flex flex-col max-h-[95%] text-slate-800">
+        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-30 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-(--sidebar-background) rounded-2xl shadow-2xl border border-(--course-sidebar-border) w-full max-w-lg overflow-hidden flex flex-col max-h-[95%] text-(--text-color) theme-transition">
             {/* Header */}
-            <div className="bg-slate-50 px-5 py-4 border-b border-slate-100 flex justify-between items-center">
+            <div className="bg-(--sidebar-background)/50 px-5 py-4 border-b border-(--course-sidebar-border) flex justify-between items-center theme-transition">
               <div className="flex items-center gap-2">
                 <HelpCircle className="text-blue-600 animate-pulse" size={20} />
-                <span className="font-bold text-slate-800 text-sm sm:text-base">Add Timestamp Question ({new Date(currentQuestionTime * 1000).toISOString().substr(14, 5)})</span>
+                <span className="font-bold text-(--text-color) text-sm sm:text-base theme-transition">Add Timestamp Question ({new Date(currentQuestionTime * 1000).toISOString().substr(14, 5)})</span>
               </div>
               <button 
                 onClick={() => setShowForm(false)} 
-                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1.5 rounded-full transition-colors cursor-pointer"
+                className="text-(--text-color) opacity-60 hover:opacity-100 hover:bg-(--sidebar-nav-bg-hover) p-1.5 rounded-full transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -436,11 +436,11 @@ const AdminVideoPlayer: React.FC<Props> = ({
             <div className="p-6 flex-1 overflow-y-auto space-y-4 text-left">
               {/* Question Type Selection */}
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Question Type</label>
+                <label className="block text-xs font-bold text-(--text-color) opacity-60 uppercase tracking-wider mb-1.5 theme-transition">Question Type</label>
                 <select
                   value={questionType}
                   onChange={(e) => setQuestionType(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-700 font-medium"
+                  className="w-full px-3 py-2 bg-(--sidebar-background) border border-(--course-sidebar-border) rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-(--text-color) font-medium theme-transition"
                 >
                   {Object.values(VideoQuestionType).map((val) => (
                     <option key={val} value={val}>{val}</option>
@@ -453,20 +453,20 @@ const AdminVideoPlayer: React.FC<Props> = ({
                 <div className="space-y-4">
                   {/* Question Text */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Question Text</label>
+                    <label className="block text-xs font-bold text-(--text-color) opacity-60 uppercase tracking-wider mb-1.5 theme-transition">Question Text</label>
                     <textarea
                       rows={3}
                       value={questionText}
                       onChange={(e) => setQuestionText(e.target.value)}
                       placeholder="What is displayed at this timestamp?"
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-slate-400"
+                      className="w-full px-3 py-2 bg-(--sidebar-background) border border-(--course-sidebar-border) rounded-xl text-sm text-(--text-color) focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-slate-400 theme-transition"
                     />
                   </div>
 
                   {/* MCQ Options */}
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Configure Options</label>
+                      <label className="block text-xs font-bold text-(--text-color) opacity-60 uppercase tracking-wider theme-transition">Configure Options</label>
                       <button
                         type="button"
                         onClick={() => {
@@ -474,7 +474,7 @@ const AdminVideoPlayer: React.FC<Props> = ({
                             setOptions([...options, ""]);
                           }
                         }}
-                        className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-0.5 cursor-pointer"
+                        className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-0.5 cursor-pointer theme-transition"
                       >
                         <Plus size={14} /> Add Option
                       </button>
@@ -488,7 +488,7 @@ const AdminVideoPlayer: React.FC<Props> = ({
                             name="correct_answer_radio"
                             checked={correctAnswerIndex === idx}
                             onChange={() => setCorrectAnswerIndex(idx)}
-                            className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer"
+                            className="w-4 h-4 text-blue-600 border-(--course-sidebar-border) focus:ring-blue-500 cursor-pointer"
                             title="Mark as correct answer"
                           />
                           <input
@@ -500,7 +500,7 @@ const AdminVideoPlayer: React.FC<Props> = ({
                               setOptions(updated);
                             }}
                             placeholder={`Option ${idx + 1}`}
-                            className="flex-1 px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800"
+                            className="flex-1 px-3 py-1.5 border border-(--course-sidebar-border) rounded-lg text-sm bg-(--sidebar-background) text-(--text-color) theme-transition"
                           />
                           <button
                             type="button"
@@ -513,7 +513,7 @@ const AdminVideoPlayer: React.FC<Props> = ({
                                 }
                               }
                             }}
-                            className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                            className="p-1.5 text-(--text-color) opacity-60 hover:text-red-500 hover:bg-red-50/20 rounded-lg transition cursor-pointer"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -524,7 +524,7 @@ const AdminVideoPlayer: React.FC<Props> = ({
 
                   {/* Image from computer */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                    <label className="block text-xs font-bold text-(--text-color) opacity-60 uppercase tracking-wider mb-1.5 flex items-center gap-1 theme-transition">
                       <Image size={14} />
                       Upload Image from Computer
                     </label>
@@ -540,10 +540,10 @@ const AdminVideoPlayer: React.FC<Props> = ({
                           setImagePreviewUrl(null);
                         }
                       }}
-                      className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                      className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-(--sidebar-nav-bg-hover) file:text-(--text-color) hover:file:bg-(--sidebar-nav-bg-hover) cursor-pointer theme-transition"
                     />
                     {imagePreviewUrl && (
-                      <div className="mt-3 relative rounded-xl overflow-hidden border border-slate-200 bg-slate-50 max-h-40 flex items-center justify-center">
+                      <div className="mt-3 relative rounded-xl overflow-hidden border border-(--course-sidebar-border) bg-(--sidebar-background)/50 max-h-40 flex items-center justify-center theme-transition">
                         <img src={imagePreviewUrl} alt="Preview" className="max-h-40 object-contain" />
                         <button
                           type="button"
@@ -563,14 +563,14 @@ const AdminVideoPlayer: React.FC<Props> = ({
             </div>
 
             {/* Footer */}
-            <div className="bg-slate-50 px-5 py-4 border-t border-slate-100 flex justify-between items-center gap-2">
+            <div className="bg-(--sidebar-background)/50 px-5 py-4 border-t border-(--course-sidebar-border) flex justify-between items-center gap-2 theme-transition">
               <div>
                 {editingQuestionId && (
                   <button
                     type="button"
                     disabled={isSaving}
                     onClick={() => handleDelete(editingQuestionId)}
-                    className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 font-bold text-sm rounded-xl transition cursor-pointer flex items-center gap-1.5"
+                    className="px-4 py-2 bg-red-50/20 hover:bg-red-100/20 text-red-500 hover:text-red-600 font-bold text-sm rounded-xl transition cursor-pointer flex items-center gap-1.5"
                   >
                     <Trash2 size={14} />
                     Delete
@@ -581,7 +581,7 @@ const AdminVideoPlayer: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 font-semibold text-sm rounded-xl border border-slate-200 transition-colors cursor-pointer"
+                  className="px-4 py-2 bg-(--sidebar-background) hover:bg-(--sidebar-nav-bg-hover) text-(--text-color) font-semibold text-sm rounded-xl border border-(--course-sidebar-border) transition-colors cursor-pointer theme-transition"
                 >
                   Cancel
                 </button>
@@ -601,17 +601,17 @@ const AdminVideoPlayer: React.FC<Props> = ({
     </MediaController>
 
     {/* Questions list below the player */}
-    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 text-slate-800">
-      <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider flex items-center justify-between border-b border-slate-100 pb-3">
+    <div className="bg-(--sidebar-background) p-6 rounded-3xl border border-(--course-sidebar-border) shadow-sm space-y-4 text-(--text-color) theme-transition">
+      <h3 className="font-bold text-(--text-color) text-sm uppercase tracking-wider flex items-center justify-between border-b border-(--course-sidebar-border) pb-3 theme-transition">
         <span>Configured Interactive Questions ({questions.length})</span>
-        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Click any question to seek & edit</span>
+        <span className="text-[10px] text-(--text-color) opacity-60 font-bold uppercase tracking-wider">Click any question to seek & edit</span>
       </h3>
 
       {questions.length === 0 ? (
-        <div className="text-center py-10 text-slate-400 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+        <div className="text-center py-10 text-(--text-color) opacity-50 bg-(--sidebar-background)/50 rounded-2xl border border-dashed border-(--course-sidebar-border) theme-transition">
           <HelpCircle size={32} className="mx-auto mb-2 text-slate-300 animate-bounce" />
           <p className="text-sm font-medium">No interactive questions added yet.</p>
-          <p className="text-xs text-slate-400 mt-1">Play the video and click "Add Question" at any timestamp.</p>
+          <p className="text-xs mt-1">Play the video and click "Add Question" at any timestamp.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -619,7 +619,7 @@ const AdminVideoPlayer: React.FC<Props> = ({
             <div
               key={q.id}
               onClick={() => handleEditQuestion(q)}
-              className="group border border-slate-100 hover:border-blue-200 hover:bg-blue-50/20 p-4 rounded-2xl transition cursor-pointer flex flex-col justify-between gap-3 text-left relative"
+              className="group border border-(--course-sidebar-border) hover:border-blue-200 hover:bg-blue-500/10 p-4 rounded-2xl transition cursor-pointer flex flex-col justify-between gap-3 text-left relative theme-transition"
             >
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
@@ -627,17 +627,17 @@ const AdminVideoPlayer: React.FC<Props> = ({
                     <Clock size={11} />
                     {new Date(q.timestamp * 1000).toISOString().substr(14, 5)}
                   </span>
-                  <span className="text-[10px] font-bold bg-slate-100 text-slate-500 uppercase tracking-wider px-2 py-0.5 rounded border border-slate-200">
+                  <span className="text-[10px] font-bold bg-(--sidebar-nav-bg-hover) text-(--text-color) opacity-80 uppercase tracking-wider px-2 py-0.5 rounded border border-(--course-sidebar-border) theme-transition">
                     {q.type}
                   </span>
                 </div>
 
-                <h4 className="text-sm font-bold text-slate-800 line-clamp-2 leading-snug group-hover:text-blue-700 transition-colors">
+                <h4 className="text-sm font-bold text-(--text-color) line-clamp-2 leading-snug group-hover:text-blue-700 transition-colors theme-transition">
                   {q.text}
                 </h4>
                 
                 {q.imageUrl && (
-                  <div className="rounded-xl overflow-hidden border border-slate-100 max-h-24 bg-slate-50 flex items-center justify-center">
+                  <div className="rounded-xl overflow-hidden border border-(--course-sidebar-border) max-h-24 bg-(--sidebar-background) flex items-center justify-center theme-transition">
                     <img src={q.imageUrl} alt="Thumbnail" className="max-h-24 object-contain" />
                   </div>
                 )}
@@ -649,7 +649,7 @@ const AdminVideoPlayer: React.FC<Props> = ({
                       return (
                         <div
                           key={oIdx}
-                          className={`px-2 py-1 text-[11px] rounded border font-semibold truncate ${isCorrect ? "bg-green-50 border-green-200 text-green-700" : "bg-white border-slate-100 text-slate-500"}`}
+                          className={`px-2 py-1 text-[11px] rounded border font-semibold truncate ${isCorrect ? "bg-green-500/20 border-green-500/30 text-green-600" : "bg-(--sidebar-background) border-(--course-sidebar-border) text-(--text-color) opacity-80 theme-transition"}`}
                         >
                           {oIdx + 1}. {opt}
                         </div>

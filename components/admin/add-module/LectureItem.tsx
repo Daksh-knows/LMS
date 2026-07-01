@@ -100,7 +100,7 @@ export const LectureItem = ({
   return (
     <div 
       onClick={onSelect}
-      className={`group/lecture relative flex flex-col sm:flex-row sm:items-center justify-between p-4 cursor-pointer transition-colors duration-200 ${isSelected ? "bg-blue-50/60" : "bg-white hover:bg-gray-50/50"}`}
+      className={`group/lecture relative flex flex-col sm:flex-row sm:items-center justify-between p-4 cursor-pointer transition-colors duration-200 ${isSelected ? "bg-blue-500/10 border-blue-500/20" : "bg-(--sidebar-background) hover:bg-(--sidebar-nav-bg-hover)"} theme-transition`}
     >
       {/* Icon & Title */}
       <div className="flex items-start gap-4 flex-1">
@@ -108,11 +108,11 @@ export const LectureItem = ({
            {style.icon}
         </div>
         <div className="flex flex-col gap-1">
-          <span className={`text-sm font-medium transition-colors ${isSelected ? "text-blue-900" : "text-gray-700"}`}>
+          <span className={`text-sm font-semibold transition-colors ${isSelected ? "text-blue-600" : "text-(--text-color) opacity-90"} theme-transition`}>
             {index + 1}. {lecture.title}
           </span>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 uppercase tracking-wider">
+            <span className="text-[10px] font-bold text-(--text-color) opacity-60 bg-(--sidebar-nav-bg-hover) px-1.5 py-0.5 rounded border border-(--course-sidebar-border) uppercase tracking-wider theme-transition">
               {style.label}
             </span>
             {lecture.type === "VIDEO" && (
@@ -140,27 +140,27 @@ export const LectureItem = ({
       {/* Actions */}
       <div className={`flex items-center gap-1 mt-3 sm:mt-0 self-end sm:self-auto transition-opacity duration-200 ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
         {isSelected && (
-          <div className="flex items-center bg-white rounded-lg border border-gray-200 shadow-sm mr-2 overflow-hidden">
+          <div className="flex items-center bg-(--sidebar-background) rounded-lg border border-(--course-sidebar-border) shadow-sm mr-2 overflow-hidden theme-transition">
             <button 
               onClick={(e) => { e.stopPropagation(); onMove('up'); }} 
               disabled={isFirst} 
-              className="p-1.5 hover:bg-gray-50 text-gray-500 hover:text-blue-600 disabled:opacity-30 border-r border-gray-100"
+              className="p-1.5 hover:bg-(--sidebar-nav-bg-hover) text-(--text-color) hover:text-blue-600 disabled:opacity-30 border-r border-(--course-sidebar-border) cursor-pointer"
             >
               <ArrowUp size={14} />
             </button>
             <button 
               onClick={(e) => { e.stopPropagation(); onMove('down'); }} 
               disabled={isLast} 
-              className="p-1.5 hover:bg-gray-50 text-gray-500 hover:text-blue-600 disabled:opacity-30"
+              className="p-1.5 hover:bg-(--sidebar-nav-bg-hover) text-(--text-color) hover:text-blue-600 disabled:opacity-30 cursor-pointer"
             >
               <ArrowDown size={14} />
             </button>
           </div>
         )}
-        <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+        <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="p-2 text-(--text-color) opacity-60 hover:text-blue-600 hover:bg-blue-50/20 rounded-lg transition-colors cursor-pointer">
           <Edit size={16} />
         </button>
-        <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+        <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-2 text-(--text-color) opacity-60 hover:text-red-600 hover:bg-red-50/20 rounded-lg transition-colors cursor-pointer">
           <Trash2 size={16} />
         </button>
       </div>
