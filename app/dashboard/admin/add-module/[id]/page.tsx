@@ -61,7 +61,7 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
 
       const data = await contentRes.json();
       const typeData = await typeRes.json();
-
+      console.log("Sections " , data.sections) ;
       if (data.success) {
         setSections(data.sections || []);
         setCourseTitle(data.courseTitle);

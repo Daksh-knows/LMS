@@ -7,12 +7,13 @@ import AdminVideoPlayer from "@/components/lecture/AdminVideoPlayer";
 
 export default function LectureQuestionsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const playerRef = useRef<any>(null);
 
   const [lectureId, setLectureId] = useState<string>("");
   const [lecture, setLecture] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [seekTo, setSeekTo] = useState<string | null>(null);
+
+  const handleSeekComplete = () => setSeekTo(null);
 
   useEffect(() => {
     params.then((resolvedParams) => {
@@ -24,9 +25,11 @@ export default function LectureQuestionsPage({ params }: { params: Promise<{ id:
   const fetchLecture = async (id: string) => {
     try {
       setIsLoading(true);
-      const res = await fetch(`/api/lecture/${id}`);
+      console.log("Lecture ID " , id) ;
+      const res = await fetch(`/api/admin/lecture/${id}`);
       if (!res.ok) throw new Error("Failed to fetch lecture");
       const data = await res.json();
+      console.log("Fetched lecture ",lecture) ;
       setLecture(data);
     } catch (error) {
       console.error("Error loading lecture:", error);
@@ -45,7 +48,7 @@ export default function LectureQuestionsPage({ params }: { params: Promise<{ id:
       </div>
     );
   }
-
+  console.log("LEcture " , lecture) ;
   if (!lecture || lecture.type !== "VIDEO") {
     return (
       <div className="p-8 max-w-md mx-auto text-center mt-20 bg-white rounded-2xl border border-gray-200 shadow-sm">
@@ -83,17 +86,16 @@ export default function LectureQuestionsPage({ params }: { params: Promise<{ id:
             <h2 className="font-bold text-gray-900 text-base">Video Player</h2>
           </div>
 
-          <div className="bg-black rounded-2xl overflow-hidden shadow-lg aspect-video relative">
+          <div>
             {lecture.videoUrl ? (
               <AdminVideoPlayer
-                playerRef={playerRef}
                 videoUrl={lecture.videoUrl}
                 lectureId={lecture.id}
-                isPlaying={isPlaying}
-                setIsPlaying={setIsPlaying}
+                seekTo={seekTo}
+                onSeekComplete={handleSeekComplete}
               />
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-white bg-gray-950">
+              <div className="bg-black rounded-2xl overflow-hidden shadow-lg aspect-video relative flex flex-col items-center justify-center h-full text-white bg-gray-950">
                 <Video size={48} className="text-gray-600 mb-2" />
                 <p className="text-gray-400">No video URL found for this lecture</p>
               </div>

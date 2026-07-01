@@ -96,7 +96,7 @@ export const LectureItem = ({
       </div>
     );
   }
-
+  console.log("L " ,lecture) ;
   return (
     <div 
       onClick={onSelect}

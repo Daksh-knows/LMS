@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactPlayer from 'react-player';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { showToast } from "@/utils/Toast";
-import { HelpCircle, X, Plus, Trash2, Image } from "lucide-react";
+import { HelpCircle, X, Plus, Trash2, Image, Clock, Edit } from "lucide-react";
 import {
   MediaController,
   MediaControlBar,
@@ -25,6 +25,8 @@ enum VideoQuestionType {
 interface Props {
   videoUrl: string;
   lectureId: string;
+  seekTo: string | null;
+  onSeekComplete: () => void;
   playerRef?: React.RefObject<any>;
   isPlaying?: boolean;
   setIsPlaying?: (playing: boolean) => void;
@@ -37,7 +39,9 @@ const AdminVideoPlayer: React.FC<Props> = ({
   playerRef, 
   isPlaying: parentIsPlaying, 
   setIsPlaying: parentSetIsPlaying,
-  onTimeUpdate
+  onTimeUpdate,
+  seekTo = null,
+  onSeekComplete = () => {}
 }) => {
   const { data: session } = useSession();
   const userId = session?.user?.id;
@@ -52,7 +56,53 @@ const AdminVideoPlayer: React.FC<Props> = ({
   const isPlaying = parentIsPlaying !== undefined ? parentIsPlaying : localIsPlaying;
   const setIsPlaying = parentSetIsPlaying !== undefined ? parentSetIsPlaying : setLocalIsPlaying;
 
+  // seek to specific time if provided via props
+  useEffect(() => {
+    if (seekTo !== null && controllerRef.current && controllerRef.current.media) {
+      // Helper function to parse time
+      const parseTimeToSeconds = (timeStr: string | null): number => {
+        if (!timeStr) return 0;
+        let seconds = 0;
+        if (timeStr.includes(':')) {
+          const parts = timeStr.split(':').map(Number);
+          if (parts.length === 2) {
+            seconds = parts[0] * 60 + parts[1];
+          } else if (parts.length === 3) {
+            seconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+          }
+        } else {
+          seconds = parseFloat(timeStr);
+        }
+        return isNaN(seconds) ? 0 : seconds;
+      };
+
+      const timeToSeek = parseTimeToSeconds(seekTo);
+
+      if (timeToSeek > 0) {
+        try {
+          const mediaElement = controllerRef.current.media;
+          if (mediaElement && mediaElement.currentTime !== undefined) {
+            mediaElement.currentTime = timeToSeek;
+            
+            setTimeout(() => {
+              setIsPlaying(true);
+              if (controllerRef.current) {
+                controllerRef.current.paused = false;
+              }
+            }, 100);
+          }
+        } catch (error) {
+          console.error("Seek error:", error);
+        }
+      }
+
+      onSeekComplete();
+    }
+  }, [seekTo, onSeekComplete]);
+
   // Interactive question form states
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [currentQuestionTime, setCurrentQuestionTime] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [questionType, setQuestionType] = useState<string>("MCQ");
@@ -61,6 +111,23 @@ const AdminVideoPlayer: React.FC<Props> = ({
   const [correctAnswerIndex, setCorrectAnswerIndex] = useState<number>(0);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+
+  const fetchQuestions = async () => {
+    if (!lectureId) return;
+    try {
+      const res = await fetch(`/api/lecture/${lectureId}/video-questions`);
+      if (res.ok) {
+        const data = await res.json();
+        setQuestions(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch video questions:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchQuestions();
+  }, [lectureId]);
 
   const handleOpenForm = () => {
     setIsPlaying(false);
@@ -71,7 +138,159 @@ const AdminVideoPlayer: React.FC<Props> = ({
     const rawTime = mediaElement ? mediaElement.currentTime : 0;
     const safeTime = isNaN(rawTime) ? 0 : rawTime;
     setCurrentQuestionTime(safeTime);
+    setQuestionText("");
+    setOptions(["", ""]);
+    setCorrectAnswerIndex(0);
+    setImageFile(null);
+    setImagePreviewUrl(null);
+    setEditingQuestionId(null);
     setShowForm(true);
+  };
+
+  const handleEditQuestion = (q: any) => {
+    setIsPlaying(false);
+    if (controllerRef.current) {
+      controllerRef.current.paused = true;
+    }
+    const mediaElement = controllerRef.current?.media;
+    if (mediaElement && mediaElement.currentTime !== undefined) {
+      mediaElement.currentTime = q.timestamp;
+    }
+    setCurrentQuestionTime(q.timestamp);
+    setQuestionType(q.type);
+    setQuestionText(q.text);
+    setOptions(q.options && q.options.length > 0 ? q.options : ["", ""]);
+    
+    // Find correct answer index
+    const correctIdx = q.options.findIndex((opt: string) => opt.toLowerCase().trim() === q.correctAnswer.toLowerCase().trim());
+    setCorrectAnswerIndex(correctIdx >= 0 ? correctIdx : 0);
+    
+    setImageFile(null);
+    setImagePreviewUrl(q.imageUrl || null);
+    setEditingQuestionId(q.id);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (questionId: string) => {
+    if (!confirm("Are you sure you want to delete this question?")) {
+      return;
+    }
+    try {
+      setIsSaving(true);
+      const res = await fetch(`/api/lecture/${lectureId}/video-questions?questionId=${questionId}`, {
+        method: "DELETE"
+      });
+      if (!res.ok) {
+        throw new Error("Failed to delete question");
+      }
+      showToast.success("Question deleted successfully");
+      setShowForm(false);
+      setEditingQuestionId(null);
+      fetchQuestions();
+    } catch (error) {
+      console.error("[DELETE_QUESTION_ERROR]", error);
+      showToast.error("Failed to delete question");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!questionText.trim()) {
+      showToast.error("Question text is required");
+      return;
+    }
+
+    const filteredOptions = options.map(opt => opt.trim()).filter(Boolean);
+    if (filteredOptions.length < 2) {
+      showToast.error("Please configure at least 2 options");
+      return;
+    }
+
+    const correctText = options[correctAnswerIndex]?.trim();
+    if (!correctText) {
+      showToast.error("The selected correct option cannot be empty");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      let uploadedImageUrl = imagePreviewUrl; // Retain existing image if editing
+
+      // 1. Upload new image if selected
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("file", imageFile);
+        const uploadRes = await fetch("/api/upload/file", {
+          method: "POST",
+          body: formData
+        });
+        if (!uploadRes.ok) {
+          throw new Error("Failed to upload image");
+        }
+        const uploadData = await uploadRes.json();
+        uploadedImageUrl = uploadData.url;
+      }
+
+      // 2. Save or Update video question
+      let saveRes;
+      if (editingQuestionId) {
+        // PUT (Edit)
+        saveRes = await fetch(`/api/lecture/${lectureId}/video-questions`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: editingQuestionId,
+            type: questionType,
+            text: questionText.trim(),
+            imageUrl: uploadedImageUrl,
+            options: filteredOptions,
+            correctAnswer: correctText,
+          })
+        });
+      } else {
+        // POST (Create)
+        saveRes = await fetch(`/api/lecture/${lectureId}/video-questions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            timestamp: currentQuestionTime,
+            type: questionType,
+            text: questionText.trim(),
+            imageUrl: uploadedImageUrl,
+            options: filteredOptions,
+            correctAnswer: correctText,
+          })
+        });
+      }
+
+      if (!saveRes.ok) {
+        throw new Error("Failed to save question");
+      }
+
+      showToast.success(editingQuestionId ? "Interactive question updated successfully!" : "Interactive question saved successfully!");
+      
+      // Reset form states
+      setShowForm(false);
+      setQuestionText("");
+      setOptions(["", ""]);
+      setCorrectAnswerIndex(0);
+      setImageFile(null);
+      setImagePreviewUrl(null);
+      setEditingQuestionId(null);
+
+      // Reload list dynamically
+      fetchQuestions();
+
+    } catch (error) {
+      console.error("[SAVE_QUESTION_ERROR]", error);
+      showToast.error("Could not save question. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // updates mounted
@@ -101,15 +320,17 @@ const AdminVideoPlayer: React.FC<Props> = ({
   if (isYouTube) {
     return <YoutubeVideoPlayer videoUrl={videoUrl} markAsComplete={async () => {}} hasCompleted={false} isMarkingComplete={false} />;
   }
-
+  console.log("Video url" , videoUrl) ;
   return (
-    <MediaController
-      ref={controllerRef}
-      style={{
-        width: "100%",
-        aspectRatio: "16/9",
-      }}
-    >
+    <div className="space-y-8 w-full">
+      <MediaController
+        ref={controllerRef}
+        style={{
+          width: "100%",
+          aspectRatio: "16/9",
+        }}
+        noHotkeys={showForm}
+      >
       <ReactPlayer
         slot="media"
         ref={playerRef}
@@ -342,26 +563,133 @@ const AdminVideoPlayer: React.FC<Props> = ({
             </div>
 
             {/* Footer */}
-            <div className="bg-slate-50 px-5 py-4 border-t border-slate-100 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 font-semibold text-sm rounded-xl border border-slate-200 transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-colors cursor-pointer"
-              >
-                Save
-              </button>
+            <div className="bg-slate-50 px-5 py-4 border-t border-slate-100 flex justify-between items-center gap-2">
+              <div>
+                {editingQuestionId && (
+                  <button
+                    type="button"
+                    disabled={isSaving}
+                    onClick={() => handleDelete(editingQuestionId)}
+                    className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 font-bold text-sm rounded-xl transition cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Trash2 size={14} />
+                    Delete
+                  </button>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 font-semibold text-sm rounded-xl border border-slate-200 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSave()}
+                  disabled={isSaving}
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm rounded-xl transition-colors cursor-pointer"
+                >
+                  {isSaving ? "Saving..." : "Save"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
-    </MediaController> 
-  ) ;
-}
+    </MediaController>
 
-export default AdminVideoPlayer
+    {/* Questions list below the player */}
+    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 text-slate-800">
+      <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider flex items-center justify-between border-b border-slate-100 pb-3">
+        <span>Configured Interactive Questions ({questions.length})</span>
+        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Click any question to seek & edit</span>
+      </h3>
+
+      {questions.length === 0 ? (
+        <div className="text-center py-10 text-slate-400 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+          <HelpCircle size={32} className="mx-auto mb-2 text-slate-300 animate-bounce" />
+          <p className="text-sm font-medium">No interactive questions added yet.</p>
+          <p className="text-xs text-slate-400 mt-1">Play the video and click "Add Question" at any timestamp.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {questions.map((q) => (
+            <div
+              key={q.id}
+              onClick={() => handleEditQuestion(q)}
+              className="group border border-slate-100 hover:border-blue-200 hover:bg-blue-50/20 p-4 rounded-2xl transition cursor-pointer flex flex-col justify-between gap-3 text-left relative"
+            >
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full">
+                    <Clock size={11} />
+                    {new Date(q.timestamp * 1000).toISOString().substr(14, 5)}
+                  </span>
+                  <span className="text-[10px] font-bold bg-slate-100 text-slate-500 uppercase tracking-wider px-2 py-0.5 rounded border border-slate-200">
+                    {q.type}
+                  </span>
+                </div>
+
+                <h4 className="text-sm font-bold text-slate-800 line-clamp-2 leading-snug group-hover:text-blue-700 transition-colors">
+                  {q.text}
+                </h4>
+                
+                {q.imageUrl && (
+                  <div className="rounded-xl overflow-hidden border border-slate-100 max-h-24 bg-slate-50 flex items-center justify-center">
+                    <img src={q.imageUrl} alt="Thumbnail" className="max-h-24 object-contain" />
+                  </div>
+                )}
+
+                {q.options && q.options.length > 0 && (
+                  <div className="grid grid-cols-2 gap-1.5 pt-1">
+                    {q.options.map((opt: string, oIdx: number) => {
+                      const isCorrect = opt.toLowerCase().trim() === q.correctAnswer.toLowerCase().trim();
+                      return (
+                        <div
+                          key={oIdx}
+                          className={`px-2 py-1 text-[11px] rounded border font-semibold truncate ${isCorrect ? "bg-green-50 border-green-200 text-green-700" : "bg-white border-slate-100 text-slate-500"}`}
+                        >
+                          {oIdx + 1}. {opt}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-1.5 border-t border-slate-50 pt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditQuestion(q);
+                  }}
+                  className="p-1 px-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                >
+                  <Edit size={11} />
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(q.id);
+                  }}
+                  className="p-1 px-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                >
+                  <Trash2 size={11} />
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+  );
+};
+
+export default AdminVideoPlayer;
