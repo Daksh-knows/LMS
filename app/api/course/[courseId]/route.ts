@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
-import cloudinary from "@/lib/cloudinary"; 
+import cloudinary from "@/lib/cloudinary";
+import { computeLockState } from "@/lib/drip";
 
 export async function GET(
   request: NextRequest,
@@ -14,8 +15,8 @@ export async function GET(
   try {
 
     const course = await db.course.findUnique({
-      where: { 
-        id: courseId 
+      where: {
+        id: courseId
       },
       select: {
         id: true,
@@ -24,7 +25,7 @@ export async function GET(
         description: true,
         language: true,
         estimatedDuration: true,
-        adminId: true, 
+        adminId: true,
         admin: {
           select: {
             name: true,
@@ -38,16 +39,19 @@ export async function GET(
             id: true,
             title: true,
             position: true,
+            releaseAt: true,
             lectures: {
               orderBy: { position: "asc" },
               select: {
                 id: true,
                 title: true,
                 position: true,
-                videoUrl: true, 
+                videoUrl: true,
                 textContent: true,
                 duration: true,
                 type: true,
+                releaseAt: true,
+                prerequisites: { select: { prerequisiteId: true } },
                 userProgress: {
                   where: {
                     userId: userId || ""
@@ -67,7 +71,52 @@ export async function GET(
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
-    return NextResponse.json(course);
+    // --- DRIP: compute per-lecture lock state for this user ---
+    const isCourseAdmin = userId === course.adminId;
+
+    const completedLectureIds = new Set(
+      course.modules.flatMap((m) =>
+        m.lectures.filter((l) => l.userProgress?.[0]?.isCompleted).map((l) => l.id)
+      )
+    );
+
+    const enrollment = await db.myEnrollment.findUnique({
+      where: { userId_courseId: { userId, courseId } },
+      select: { skipCredits: true },
+    });
+
+    const now = new Date();
+    const modules = course.modules.map((mod) => ({
+      ...mod,
+      lectures: mod.lectures.map((lec) => {
+        const prerequisiteIds = lec.prerequisites.map((p) => p.prerequisiteId);
+        const lock = isCourseAdmin
+          ? { isLocked: false, lockedByTime: false, lockedByPrereq: false, releaseAt: null, unmetPrerequisiteIds: [] as string[] }
+          : computeLockState({
+              lectureReleaseAt: lec.releaseAt,
+              moduleReleaseAt: mod.releaseAt,
+              prerequisiteIds,
+              completedLectureIds: [...completedLectureIds],
+              now,
+            });
+
+        const { prerequisites, ...rest } = lec;
+        return {
+          ...rest,
+          prerequisiteIds,
+          // Don't leak gated content to the client.
+          videoUrl: lock.isLocked ? null : rest.videoUrl,
+          textContent: lock.isLocked ? null : rest.textContent,
+          isLocked: lock.isLocked,
+          lockedByTime: lock.lockedByTime,
+          lockedByPrereq: lock.lockedByPrereq,
+          effectiveReleaseAt: lock.releaseAt,
+          unmetPrerequisiteIds: lock.unmetPrerequisiteIds,
+        };
+      }),
+    }));
+
+    return NextResponse.json({ ...course, modules, skipCredits: enrollment?.skipCredits ?? 0 });
   } catch (error) {
     console.error("[COURSE_API_GET]", error);
     return NextResponse.json({ error: "Internal Error" }, { status: 500 });
