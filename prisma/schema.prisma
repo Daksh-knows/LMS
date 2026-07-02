@@ -485,38 +485,6 @@ enum VideoQuestionType {
   MCQ
 }
 
-model VideoQuestion {
-  id            String                  @id @default(cuid())
-  lectureId     String
-  timestamp     Float
-  type          VideoQuestionType       @default(MCQ)
-  text          String
-  imageUrl      String?
-  options       String[]
-  correctAnswer String
-  createdAt     DateTime                @default(now())
-  updatedAt     DateTime                @updatedAt
-  lecture       Lecture                 @relation(fields: [lectureId], references: [id], onDelete: Cascade)
-  responses     VideoQuestionResponse[]
-
-  @@index([lectureId])
-}
-
-model VideoQuestionResponse {
-  id              String        @id @default(cuid())
-  videoQuestionId String
-  userId          String
-  answer          String
-  isCorrect       Boolean       @default(false)
-  createdAt       DateTime      @default(now())
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  videoQuestion   VideoQuestion @relation(fields: [videoQuestionId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, videoQuestionId])
-  @@index([videoQuestionId])
-  @@index([userId])
-}
-
 enum ItemType {
   VIDEO
   TEXT
@@ -573,8 +541,4 @@ enum NotificationType {
   ASSIGNMENT
   MENTION
   BILLING
-}
-
-enum VideoQuestionType {
-  MCQ
 }
