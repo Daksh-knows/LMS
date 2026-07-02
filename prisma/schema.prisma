@@ -65,7 +65,6 @@ model User {
   userProgress           UserProgress[]
   stats                  UserStats?
   VideoQuestionResponse VideoQuestionResponse[]
-  videoQuestionResponses VideoQuestionResponse[]
 }
 
 model StudentProfile {
@@ -176,7 +175,6 @@ model Lecture {
   userProgress   UserProgress[]
   rubric        Json?
   VideoQuestion VideoQuestion[]
-  videoQuestions VideoQuestion[]
 
   @@index([moduleId])
 }
