@@ -7,9 +7,9 @@ export async function POST(
 ) {
   try {
     const { courseId } = await context.params;
-    const { sectionTitle } = await req.json();
+    const { sectionTitle, releaseAt } = await req.json();
 
-    
+
     if (!sectionTitle) {
       return NextResponse.json({ success: false, error: "Title is required" }, { status: 400 });
     }
@@ -37,7 +37,8 @@ export async function POST(
         title: sectionTitle,
         courseId: courseId,
         position: newPosition,
-        isPublished: true
+        isPublished: true,
+        releaseAt: releaseAt ? new Date(releaseAt) : null
       }
     });
 

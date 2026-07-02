@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { deleteAsset } from "@/lib/cloud/delete-assets";
+import { computeLockState } from "@/lib/drip";
 
 
 export async function GET(
@@ -12,8 +13,8 @@ export async function GET(
     const { lectureId } = await context.params;
 
     const lecture = await db.lecture.findUnique({
-      where: { 
-        id: lectureId 
+      where: {
+        id: lectureId
       },
       select: {
         id: true,
@@ -25,16 +26,85 @@ export async function GET(
         moduleId: true,
         textContent: true,
         duration: true,
+        releaseAt: true,
         quizQuestions: {
           include: { options: true },
           orderBy: { position: 'asc' }
         },
         resources: true,
+        prerequisites: { select: { prerequisiteId: true } },
+        module: {
+          select: {
+            releaseAt: true,
+            courseId: true,
+            course: { select: { adminId: true } },
+          },
+        },
       },
     });
 
     if (!lecture) {
       return NextResponse.json({ error: "Item not found" }, { status: 404 });
+    }
+
+    // --- DRIP GATE ---
+    // The course admin can always preview. Students are gated by time + prereqs.
+    const session = await auth();
+    const userId = session?.user?.id;
+    const isCourseAdmin = !!userId && userId === lecture.module.course.adminId;
+
+    if (!isCourseAdmin) {
+      const prerequisiteIds = lecture.prerequisites.map((p) => p.prerequisiteId);
+
+      let completedLectureIds: string[] = [];
+      if (userId && prerequisiteIds.length > 0) {
+        const done = await db.userProgress.findMany({
+          where: { userId, courseId: lecture.module.courseId, isCompleted: true },
+          select: { lectureId: true },
+        });
+        completedLectureIds = done.map((d) => d.lectureId);
+      }
+
+      const lock = computeLockState({
+        lectureReleaseAt: lecture.releaseAt,
+        moduleReleaseAt: lecture.module.releaseAt,
+        prerequisiteIds,
+        completedLectureIds,
+      });
+
+      if (lock.isLocked) {
+        let enrollment = null;
+        if (userId) {
+          enrollment = await db.myEnrollment.findUnique({
+            where: { userId_courseId: { userId, courseId: lecture.module.courseId } },
+            select: { skipCredits: true },
+          });
+        }
+
+        const unmetPrerequisites =
+          lock.unmetPrerequisiteIds.length > 0
+            ? await db.lecture.findMany({
+                where: { id: { in: lock.unmetPrerequisiteIds } },
+                select: { id: true, title: true },
+              })
+            : [];
+
+        return NextResponse.json(
+          {
+            error: "Lecture locked",
+            locked: true,
+            lockedByTime: lock.lockedByTime,
+            lockedByPrereq: lock.lockedByPrereq,
+            releaseAt: lock.releaseAt,
+            unmetPrerequisites,
+            creditsRemaining: enrollment?.skipCredits ?? 0,
+            id: lecture.id,
+            title: lecture.title,
+            type: lecture.type,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // --- LOGIC: Handle Quiz Type & Randomization ---
