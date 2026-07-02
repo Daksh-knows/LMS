@@ -18,9 +18,9 @@ jobs:
       GCP_REPO_NAME: cohort-repo
       GCP_SERVICE_NAME: cohort-service
       GCP_IMAGE_NAME: cohort-app
-      GCP_PROJECT_ID: sineapp-476010 # e.g., my-gcp-project
+      GCP_PROJECT_ID: cohort-lms
       GCP_REGION: asia-south1
-      GCP_RUN_SERVICE_ACCOUNT: github-ci-cd-deployer@sineapp-476010.iam.gserviceaccount.com
+      GCP_RUN_SERVICE_ACCOUNT: github-ci-cd-deployer@cohort-lms.iam.gserviceaccount.com
 
     steps:
       - name: Checkout Code
@@ -107,3 +107,4 @@ jobs:
           flags: |-
             --allow-unauthenticated
             --service-account=${{ env.GCP_RUN_SERVICE_ACCOUNT }}
+            --add-cloudsql-instances=cohort-lms:asia-south1:cohort
