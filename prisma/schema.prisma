@@ -27,43 +27,43 @@ model Account {
 }
 
 model User {
-  id                   String                 @id @default(cuid())
-  email                String                 @unique
-  password             String                 @default("helloworld")
-  name                 String?
-  image                String?
-  emailVerified        DateTime?
-  otp                  String?                @default("123456")
-  otpExpires           DateTime?
-  isVerified           Boolean                @default(false)
-  role                 String                 @default("STUDENT")
-  hasPremium           Boolean                @default(false)
-  createdAt            DateTime               @default(now())
-  updatedAt            DateTime               @updatedAt
-  hasRegistered        Boolean                @default(false)
-  batch                String?                @default("Batch 1")
-  bio                  String?
-  isTempPassword       Boolean                @default(true)
-  resetToken           String?
-  resetTokenExpiry     DateTime?
-  accounts             Account[]
-  AssignmentSubmission AssignmentSubmission[]
-  bookmarks            Bookmark[]
-  createdCourses       Course[]               @relation("CourseAuthor")
+  id                     String                  @id @default(cuid())
+  email                  String                  @unique
+  password               String                  @default("helloworld")
+  name                   String?
+  image                  String?
+  emailVerified          DateTime?
+  otp                    String?                 @default("123456")
+  otpExpires             DateTime?
+  isVerified             Boolean                 @default(false)
+  role                   String                  @default("STUDENT")
+  hasPremium             Boolean                 @default(false)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  hasRegistered          Boolean                 @default(false)
+  batch                  String?                 @default("Batch 1")
+  bio                    String?
+  isTempPassword         Boolean                 @default(true)
+  resetToken             String?
+  resetTokenExpiry       DateTime?
+  accounts               Account[]
+  AssignmentSubmission   AssignmentSubmission[]
+  bookmarks              Bookmark[]
+  createdCourses         Course[]                @relation("CourseAuthor")
   createdBundles       CourseBundle[]         @relation("BundleAuthor")
-  enrollments          MyEnrollment[]
-  notes                Note[]
-  notifications        Notification[]
-  payments             Payment[]
-  questions            Question[]
-  refundRequests       RefundRequest[]
-  replies              Reply[]
-  reviews              Review[]
-  profile              StudentProfile?
-  supportMessages      SupportMessage[]
-  tickets              SupportTicket[]
-  userProgress         UserProgress[]
-  stats                UserStats?
+  enrollments            MyEnrollment[]
+  notes                  Note[]
+  notifications          Notification[]
+  payments               Payment[]
+  questions              Question[]
+  refundRequests         RefundRequest[]
+  replies                Reply[]
+  reviews                Review[]
+  profile                StudentProfile?
+  supportMessages        SupportMessage[]
+  tickets                SupportTicket[]
+  userProgress           UserProgress[]
+  stats                  UserStats?
   VideoQuestionResponse VideoQuestionResponse[]
 }
 
@@ -146,33 +146,33 @@ model Module {
 }
 
 model Lecture {
-  id            String                 @id @default(cuid())
-  title         String
-  description   String?
-  videoUrl      String?
-  duration      Int?
-  position      Int
-  isPublished   Boolean                @default(false)
-  isFree        Boolean                @default(false)
-  moduleId      String
-  createdAt     DateTime               @default(now())
-  updatedAt     DateTime               @updatedAt
-  textContent   String?
-  type          ItemType               @default(VIDEO)
+  id             String                 @id @default(cuid())
+  title          String
+  description    String?
+  videoUrl       String?
+  duration       Int?
+  position       Int
+  isPublished    Boolean                @default(false)
+  isFree         Boolean                @default(false)
+  moduleId       String
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  textContent    String?
+  type           ItemType               @default(VIDEO)
   releaseAt     DateTime?
   prerequisites LecturePrerequisite[]  @relation("GatedLecture")
   requiredFor   LecturePrerequisite[]  @relation("RequiredLecture")
-  submissions   AssignmentSubmission[]
-  resources     Attachment[]
-  bookmarks     Bookmark[]
-  enrollments   MyEnrollment[]
-  faqs          FAQ[]
-  module        Module                 @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  notes         Note[]
-  questions     Question[]
-  quizQuestions QuizQuestion[]
-  reviews       Review[]
-  userProgress  UserProgress[]
+  submissions    AssignmentSubmission[]
+  resources      Attachment[]
+  bookmarks      Bookmark[]
+  enrollments    MyEnrollment[]
+  faqs           FAQ[]
+  module         Module                 @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  notes          Note[]
+  questions      Question[]
+  quizQuestions  QuizQuestion[]
+  reviews        Review[]
+  userProgress   UserProgress[]
   rubric        Json?
   VideoQuestion VideoQuestion[]
 
@@ -336,8 +336,8 @@ model Reply {
 
 model Bookmark {
   id        String       @id @default(cuid())
-  startTime      Float
-  endTime      Float
+  startTime Float
+  endTime   Float
   label     String?
   type      BookmarkType @default(BOOKMARK)
   userId    String
@@ -485,6 +485,38 @@ enum VideoQuestionType {
   MCQ
 }
 
+model VideoQuestion {
+  id            String                  @id @default(cuid())
+  lectureId     String
+  timestamp     Float
+  type          VideoQuestionType       @default(MCQ)
+  text          String
+  imageUrl      String?
+  options       String[]
+  correctAnswer String
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  lecture       Lecture                 @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  responses     VideoQuestionResponse[]
+
+  @@index([lectureId])
+}
+
+model VideoQuestionResponse {
+  id              String        @id @default(cuid())
+  videoQuestionId String
+  userId          String
+  answer          String
+  isCorrect       Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoQuestion   VideoQuestion @relation(fields: [videoQuestionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, videoQuestionId])
+  @@index([videoQuestionId])
+  @@index([userId])
+}
+
 enum ItemType {
   VIDEO
   TEXT
@@ -541,4 +573,8 @@ enum NotificationType {
   ASSIGNMENT
   MENTION
   BILLING
+}
+
+enum VideoQuestionType {
+  MCQ
 }
