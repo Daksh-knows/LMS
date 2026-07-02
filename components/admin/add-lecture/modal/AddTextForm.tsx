@@ -6,12 +6,16 @@ import { Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getSession } from "next-auth/react";
 import { EditorToolbar } from "@/components/admin/EditorToolbar"; // Import the toolbar we made above
+import ReleaseScheduleField from "./sections/ReleaseScheduleField";
+import PrerequisitesField from "./sections/PrerequisitesField";
 import { showToast } from "@/utils/Toast";
 
-export default function AddTextForm({ courseId, sectionId, initialData, onSuccess, onCancel }: any) {
+export default function AddTextForm({ courseId, sectionId, initialData, availableLectures = [], onSuccess, onCancel }: any) {
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState(initialData?.title || "");
   const [isFree, setIsFree] = useState(initialData?.isFree || false);
+  const [releaseAt, setReleaseAt] = useState<string>(initialData?.releaseAt || "");
+  const [prerequisiteIds, setPrerequisiteIds] = useState<string[]>(initialData?.prerequisiteIds || []);
 
   const editor = useEditor({
     extensions: [StarterKit],
@@ -36,7 +40,9 @@ export default function AddTextForm({ courseId, sectionId, initialData, onSucces
       moduleId: sectionId,
       title,
       type: "TEXT",
-      htmlContent 
+      htmlContent,
+      releaseAt: releaseAt || null,
+      prerequisiteIds,
     };
 
     try {
@@ -87,6 +93,14 @@ export default function AddTextForm({ courseId, sectionId, initialData, onSucces
           </div>
         </div>
       </div>
+
+      <ReleaseScheduleField value={releaseAt} onChange={setReleaseAt} />
+      <PrerequisitesField
+        available={availableLectures}
+        selectedIds={prerequisiteIds}
+        onChange={setPrerequisiteIds}
+        currentLectureId={initialData?.id}
+      />
 
       <div className="flex gap-3 pt-4 border-t">
         <button type="button" onClick={onCancel} className="flex-1 p-3 border rounded-xl font-bold text-gray-600 hover:bg-gray-50 transition">

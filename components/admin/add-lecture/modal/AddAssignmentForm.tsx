@@ -12,6 +12,8 @@ import {
   Paperclip,
 } from "lucide-react";
 import { showToast } from "@/utils/Toast";
+import ReleaseScheduleField from "./sections/ReleaseScheduleField";
+import PrerequisitesField from "./sections/PrerequisitesField";
 
 /* ---------------- TYPES ---------------- */
 
@@ -64,6 +66,7 @@ export default function AddAssignmentForm({
   courseId,
   sectionId,
   initialData,
+  availableLectures = [],
   onSuccess,
   onCancel,
 }: any) {
@@ -72,6 +75,8 @@ export default function AddAssignmentForm({
   const [title, setTitle] = useState(initialData?.title || "");
   const [description, setDescription] = useState(initialData?.description || "");
   const [isFree, setIsFree] = useState(initialData?.isFree || false);
+  const [releaseAt, setReleaseAt] = useState<string>(initialData?.releaseAt || "");
+  const [prerequisiteIds, setPrerequisiteIds] = useState<string[]>(initialData?.prerequisiteIds || []);
 
   const [attachments, setAttachments] = useState<FileAttachment[]>(
     initialData?.attachments?.map((att: any) => ({
@@ -80,6 +85,81 @@ export default function AddAssignmentForm({
       file: null,
     })) || []
   );
+
+  /* ---------- Rubric States ---------- */
+  const [rubricEnabled, setRubricEnabled] = useState(
+    !!(initialData?.rubric && initialData.rubric.criteria && initialData.rubric.criteria.length > 0)
+  );
+  const [rubric, setRubric] = useState<any>(
+    initialData?.rubric || { criteria: [] }
+  );
+
+  const addCriterion = () => {
+    const newCriterion = {
+      id: "crit_" + Date.now(),
+      title: "",
+      description: "",
+      maxPoints: 10,
+      ratings: []
+    };
+    setRubric({
+      ...rubric,
+      criteria: [...(rubric.criteria || []), newCriterion]
+    });
+  };
+
+  const removeCriterion = (critId: string) => {
+    setRubric({
+      ...rubric,
+      criteria: (rubric.criteria || []).filter((c: any) => c.id !== critId)
+    });
+  };
+
+  const updateCriterion = (critId: string, field: string, value: any) => {
+    setRubric({
+      ...rubric,
+      criteria: (rubric.criteria || []).map((c: any) => {
+        if (c.id === critId) {
+          const updated = { ...c, [field]: value };
+          if (field === 'ratings' && Array.isArray(value) && value.length > 0) {
+            const maxVal = Math.max(...value.map((r: any) => parseFloat(r.points) || 0));
+            updated.maxPoints = maxVal;
+          }
+          return updated;
+        }
+        return c;
+      })
+    });
+  };
+
+  const addRating = (critId: string) => {
+    const crit = (rubric.criteria || []).find((c: any) => c.id === critId);
+    if (!crit) return;
+    const newRating = {
+      id: "rat_" + Date.now(),
+      title: "",
+      points: 5,
+      description: ""
+    };
+    const updatedRatings = [...(crit.ratings || []), newRating];
+    updateCriterion(critId, 'ratings', updatedRatings);
+  };
+
+  const removeRating = (critId: string, ratingId: string) => {
+    const crit = (rubric.criteria || []).find((c: any) => c.id === critId);
+    if (!crit) return;
+    const updatedRatings = (crit.ratings || []).filter((r: any) => r.id !== ratingId);
+    updateCriterion(critId, 'ratings', updatedRatings);
+  };
+
+  const updateRating = (critId: string, ratingId: string, field: string, value: any) => {
+    const crit = (rubric.criteria || []).find((c: any) => c.id === critId);
+    if (!crit) return;
+    const updatedRatings = (crit.ratings || []).map((r: any) => 
+      r.id === ratingId ? { ...r, [field]: value } : r
+    );
+    updateCriterion(critId, 'ratings', updatedRatings);
+  };
 
   /* ---------- Attachment Actions ---------- */
 
@@ -162,6 +242,9 @@ export default function AddAssignmentForm({
         isFree,
         description,
         attachments: finalAttachments,
+        rubric: rubricEnabled ? rubric : null,
+        releaseAt: releaseAt || null,
+        prerequisiteIds,
       };
 
       const isUpdate = !!initialData;
@@ -217,6 +300,190 @@ export default function AddAssignmentForm({
             placeholder="Describe the task details here..."
             className="w-full h-32 p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none text-sm"
            />
+      </div>
+
+      {/* --- RUBRIC SECTION --- */}
+      <div className="space-y-4 border border-gray-150 p-4 rounded-2xl bg-slate-50/50">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-gray-800">Use Rubric Grading</span>
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-1.5 py-0.5 rounded">
+              JSON
+            </span>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={rubricEnabled}
+              onChange={(e) => setRubricEnabled(e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+          </label>
+        </div>
+
+        {rubricEnabled && (
+          <div className="space-y-4 pt-2 animate-in fade-in slide-in-from-top-2">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-black text-gray-400 uppercase tracking-wider">
+                Evaluation Criteria
+              </span>
+              <button
+                type="button"
+                onClick={addCriterion}
+                className="text-xs font-bold bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+              >
+                <Plus size={14} /> Add Criterion
+              </button>
+            </div>
+
+            {(!rubric.criteria || rubric.criteria.length === 0) ? (
+              <div className="text-center p-6 border-2 border-dashed border-gray-100 rounded-xl bg-white">
+                <p className="text-xs text-gray-400 font-semibold">No criteria defined yet.</p>
+                <button
+                  type="button"
+                  onClick={addCriterion}
+                  className="mt-1 text-xs font-bold text-blue-600 hover:underline"
+                >
+                  Create first criterion
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {rubric.criteria.map((crit: any, critIdx: number) => {
+                  return (
+                    <div
+                      key={crit.id || critIdx}
+                      className="p-4 bg-white border border-gray-150 rounded-xl space-y-3 relative group text-left"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-xs font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded">
+                          Criterion #{critIdx + 1}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeCriterion(crit.id)}
+                          className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                        <div className="md:col-span-8 space-y-1">
+                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">
+                            Title
+                          </label>
+                          <input
+                            required
+                            type="text"
+                            placeholder="e.g. Code Correctness"
+                            value={crit.title || ""}
+                            onChange={(e) => updateCriterion(crit.id, "title", e.target.value)}
+                            className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold focus:bg-white outline-none transition-all"
+                          />
+                        </div>
+
+                        <div className="md:col-span-4 space-y-1">
+                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">
+                            Max Points
+                          </label>
+                          <input
+                            required
+                            type="number"
+                            min="1"
+                            placeholder="10"
+                            value={crit.maxPoints || ""}
+                            onChange={(e) => updateCriterion(crit.id, "maxPoints", parseFloat(e.target.value) || 0)}
+                            className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-center focus:bg-white outline-none transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">
+                          Description
+                        </label>
+                        <textarea
+                          placeholder="e.g. Measures structural correctness, tests covered..."
+                          value={crit.description || ""}
+                          onChange={(e) => updateCriterion(crit.id, "description", e.target.value)}
+                          className="w-full h-16 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:bg-white outline-none transition-all resize-none"
+                        />
+                      </div>
+
+                      {/* RATING LEVELS FOR CRITERION */}
+                      <div className="border-t border-gray-50 pt-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                            Rating Levels (Optional)
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => addRating(crit.id)}
+                            className="text-[10px] font-bold text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors flex items-center gap-1"
+                          >
+                            <Plus size={10} /> Add Level
+                          </button>
+                        </div>
+
+                        {crit.ratings && crit.ratings.length > 0 && (
+                          <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                            {crit.ratings.map((rat: any, ratIdx: number) => (
+                              <div
+                                key={rat.id || ratIdx}
+                                className="flex flex-col sm:flex-row gap-2 p-2.5 bg-slate-50/50 border border-slate-100 rounded-lg items-end sm:items-center"
+                              >
+                                <input
+                                  required
+                                  type="text"
+                                  placeholder="Level (e.g. Excellent)"
+                                  value={rat.title || ""}
+                                  onChange={(e) => updateRating(crit.id, rat.id, "title", e.target.value)}
+                                  className="w-full sm:w-1/3 p-1.5 bg-white border border-gray-200 rounded text-[11px] font-semibold outline-none focus:ring-1 focus:ring-blue-400"
+                                />
+                                <input
+                                  required
+                                  type="number"
+                                  placeholder="Pts"
+                                  value={rat.points !== undefined ? rat.points : ""}
+                                  onChange={(e) => updateRating(crit.id, rat.id, "points", parseFloat(e.target.value) || 0)}
+                                  className="w-20 p-1.5 bg-white border border-gray-200 rounded text-[11px] font-bold text-center outline-none focus:ring-1 focus:ring-blue-400"
+                                />
+                                <input
+                                  type="text"
+                                  placeholder="Desc (optional)"
+                                  value={rat.description || ""}
+                                  onChange={(e) => updateRating(crit.id, rat.id, "description", e.target.value)}
+                                  className="w-full sm:flex-1 p-1.5 bg-white border border-gray-200 rounded text-[11px] outline-none focus:ring-1 focus:ring-blue-400"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeRating(crit.id, rat.id)}
+                                  className="p-1 text-gray-400 hover:text-red-500 rounded"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Rubric Points Total indicator */}
+                <div className="p-3 bg-blue-50 text-blue-700 rounded-xl text-xs font-black flex justify-between items-center">
+                  <span>TOTAL RUBRIC VALUE</span>
+                  <span className="text-sm">
+                    {rubric.criteria.reduce((acc: number, c: any) => acc + (parseFloat(c.maxPoints) || 0), 0)} pts
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Attachments Section */}
@@ -300,11 +567,20 @@ export default function AddAssignmentForm({
          </div>
       </div>
 
+      {/* --- Drip Scheduling --- */}
+      <ReleaseScheduleField value={releaseAt} onChange={setReleaseAt} />
+      <PrerequisitesField
+        available={availableLectures}
+        selectedIds={prerequisiteIds}
+        onChange={setPrerequisiteIds}
+        currentLectureId={initialData?.id}
+      />
+
       {/* Actions */}
       <div className="flex gap-3 pt-4 border-t border-gray-100">
-         <button 
-           type="button" 
-           onClick={onCancel} 
+         <button
+           type="button"
+           onClick={onCancel}
            disabled={loading}
            className="flex-1 p-3 border border-gray-200 rounded-xl font-bold text-gray-600 hover:bg-gray-50 transition-colors"
          >

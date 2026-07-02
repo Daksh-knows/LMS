@@ -64,6 +64,7 @@ model User {
   tickets              SupportTicket[]
   userProgress         UserProgress[]
   stats                UserStats?
+  VideoQuestionResponse VideoQuestionResponse[]
 }
 
 model StudentProfile {
@@ -119,6 +120,7 @@ model MyEnrollment {
   courseId         String
   currentLectureId String?
   enrolledAt       DateTime @default(now())
+  skipCredits      Int      @default(3)
   course           Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   currentLecture   Lecture? @relation(fields: [currentLectureId], references: [id], onDelete: Cascade)
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -136,6 +138,7 @@ model Module {
   courseId    String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  releaseAt   DateTime?
   lectures    Lecture[]
   course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
@@ -156,6 +159,9 @@ model Lecture {
   updatedAt     DateTime               @updatedAt
   textContent   String?
   type          ItemType               @default(VIDEO)
+  releaseAt     DateTime?
+  prerequisites LecturePrerequisite[]  @relation("GatedLecture")
+  requiredFor   LecturePrerequisite[]  @relation("RequiredLecture")
   submissions   AssignmentSubmission[]
   resources     Attachment[]
   bookmarks     Bookmark[]
@@ -167,8 +173,21 @@ model Lecture {
   quizQuestions QuizQuestion[]
   reviews       Review[]
   userProgress  UserProgress[]
+  rubric        Json?
+  VideoQuestion VideoQuestion[]
 
   @@index([moduleId])
+}
+
+model LecturePrerequisite {
+  id             String  @id @default(cuid())
+  lectureId      String // the gated lecture
+  prerequisiteId String // lecture that must be completed first
+  lecture        Lecture @relation("GatedLecture", fields: [lectureId], references: [id], onDelete: Cascade)
+  prerequisite   Lecture @relation("RequiredLecture", fields: [prerequisiteId], references: [id], onDelete: Cascade)
+
+  @@unique([lectureId, prerequisiteId])
+  @@index([lectureId])
 }
 
 model FAQ {
@@ -285,17 +304,18 @@ model AnswerOption {
 }
 
 model AssignmentSubmission {
-  id        String           @id @default(cuid())
-  fileUrl   String
-  lectureId String
-  studentId String
-  grade     Float?
-  feedback  String?
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  status    AssignmentStatus @default(NOT_SUBMITTED)
-  lecture   Lecture          @relation(fields: [lectureId], references: [id], onDelete: Cascade)
-  User      User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  id           String           @id @default(cuid())
+  fileUrl      String
+  lectureId    String
+  studentId    String
+  grade        Float?
+  feedback     String?
+  rubricScores Json?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  status       AssignmentStatus @default(NOT_SUBMITTED)
+  lecture      Lecture          @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  User         User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, lectureId])
 }
@@ -427,6 +447,42 @@ model CourseBundle {
   admin       User      @relation("BundleAuthor", fields: [adminId], references: [id])
   courses     Course[]
   payments    Payment[]
+}
+
+model VideoQuestion {
+  id                    String                  @id
+  lectureId             String
+  timestamp             Float
+  type                  VideoQuestionType       @default(MCQ)
+  text                  String
+  imageUrl              String?
+  options               String[]
+  correctAnswer         String
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime
+  Lecture               Lecture                 @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  VideoQuestionResponse VideoQuestionResponse[]
+
+  @@index([lectureId])
+}
+
+model VideoQuestionResponse {
+  id              String        @id
+  videoQuestionId String
+  userId          String
+  answer          String
+  isCorrect       Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  User            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  VideoQuestion   VideoQuestion @relation(fields: [videoQuestionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, videoQuestionId])
+  @@index([userId])
+  @@index([videoQuestionId])
+}
+
+enum VideoQuestionType {
+  MCQ
 }
 
 enum ItemType {

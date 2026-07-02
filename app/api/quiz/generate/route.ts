@@ -14,6 +14,8 @@ export async function POST(req: Request) {
       context,
       difficulty,
       questionCount,
+      releaseAt,
+      prerequisiteIds,
     } = await req.json();
 
     if (!moduleId || !title || !context || !questionCount) {
@@ -43,6 +45,16 @@ export async function POST(req: Request) {
           questionCount,
           status: "GENERATING",
         }),
+        releaseAt: releaseAt ? new Date(releaseAt) : null,
+        ...(Array.isArray(prerequisiteIds) && prerequisiteIds.length > 0
+          ? {
+              prerequisites: {
+                create: prerequisiteIds
+                  .filter((id: string) => id && id !== "")
+                  .map((prerequisiteId: string) => ({ prerequisiteId })),
+              },
+            }
+          : {}),
       },
     });
 

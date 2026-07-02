@@ -15,7 +15,7 @@ export async function GET(
     }
 
     // Fetch both the progress status and the submission details
-    const [progress, submission] = await Promise.all([
+    const [progress, submission, lecture] = await Promise.all([
       db.userProgress.findUnique({
         where: {
           userId_lectureId: {
@@ -40,9 +40,16 @@ export async function GET(
           grade: true,
           status: true,
           feedback: true,
+          rubricScores: true,
           createdAt: true,
         },
       }),
+      db.lecture.findUnique({
+        where: { id: lectureId },
+        select: {
+          rubric: true,
+        }
+      })
     ]);
     console.log("user id:", user.id, "\nlectureId:", lectureId);
     console.log("Progress:", progress, "\nSubmission:", submission);
@@ -51,6 +58,7 @@ export async function GET(
       status: submission?.status || "NOT_SUBMITTED",
       isCompleted: progress?.isCompleted || false,
       submission: submission || null, 
+      rubric: lecture?.rubric || null,
     });
 
   } catch (error) {

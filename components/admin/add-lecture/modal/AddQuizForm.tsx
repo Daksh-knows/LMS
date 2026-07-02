@@ -5,6 +5,8 @@ import { Loader2, Sparkles, FileQuestion, AlignLeft, BarChart, Hash } from "luci
 import { Lecture } from "@prisma/client";
 import toast from "react-hot-toast";
 import { showToast } from "@/utils/Toast";
+import ReleaseScheduleField from "./sections/ReleaseScheduleField";
+import PrerequisitesField, { AvailableLecture } from "./sections/PrerequisitesField";
 
 
 
@@ -12,6 +14,7 @@ interface Props {
   courseId: string;
   sectionId: string; // This maps to 'moduleId' for the backend
   initialData: Lecture;
+  availableLectures?: AvailableLecture[];
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -20,6 +23,7 @@ export default function AddQuizForm({
   courseId,
   sectionId,
   initialData,
+  availableLectures = [],
   onSuccess,
   onCancel,
 }: Props) {
@@ -28,6 +32,8 @@ export default function AddQuizForm({
   const [difficulty, setDifficulty] = useState<string>("MEDIUM");
   const [questionCount, setQuestionCount] = useState<number>(5);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [releaseAt, setReleaseAt] = useState<string>((initialData as any)?.releaseAt || "");
+  const [prerequisiteIds, setPrerequisiteIds] = useState<string[]>((initialData as any)?.prerequisiteIds || []);
   // console.log(initialData)
 
 
@@ -68,6 +74,8 @@ export default function AddQuizForm({
         context,
         difficulty,
         questionCount,
+        releaseAt: releaseAt || null,
+        prerequisiteIds,
       }),
     });
 
@@ -188,6 +196,15 @@ export default function AddQuizForm({
           </div>
         </div>
       </div>
+
+      {/* --- Drip Scheduling --- */}
+      <ReleaseScheduleField value={releaseAt} onChange={setReleaseAt} />
+      <PrerequisitesField
+        available={availableLectures}
+        selectedIds={prerequisiteIds}
+        onChange={setPrerequisiteIds}
+        currentLectureId={(initialData as any)?.id}
+      />
 
       {/* --- ACTION BUTTONS --- */}
       <div className="flex gap-3 pt-4 border-t border-gray-100">
