@@ -107,3 +107,4 @@ jobs:
           flags: |-
             --allow-unauthenticated
             --service-account=${{ env.GCP_RUN_SERVICE_ACCOUNT }}
+            --add-cloudsql-instances=cohort-lms:asia-south1:cohort
