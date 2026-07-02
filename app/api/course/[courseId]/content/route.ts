@@ -32,7 +32,8 @@ export async function GET(
                 quizQuestions: {      // Quiz Data
                   include: { options: true },
                   orderBy: { position: 'asc' }
-                }
+                },
+                prerequisites: { select: { prerequisiteId: true } }
               }
             }
           }
@@ -63,7 +64,13 @@ export async function GET(
         
         attachments: item.resources,   // Map DB 'resources' to UI 'attachments'
         questions: item.quizQuestions,
-      }))
+        rubric: item.rubric,
+
+        // Drip scheduling
+        releaseAt: item.releaseAt,
+        prerequisiteIds: item.prerequisites.map((p) => p.prerequisiteId),
+      })),
+      releaseAt: mod.releaseAt,
     }));
 
     return NextResponse.json({ 

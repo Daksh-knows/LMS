@@ -17,6 +17,13 @@ export interface Lecture {
   type: "TEXT" | "VIDEO" | "QUIZ" | "ASSIGNMENT" | "LIVE";
   userProgress: UserProgress[];
   isFree: boolean;
+  // Drip scheduling (computed server-side)
+  isLocked?: boolean;
+  lockedByTime?: boolean;
+  lockedByPrereq?: boolean;
+  effectiveReleaseAt?: string | null;
+  unmetPrerequisiteIds?: string[];
+  prerequisiteIds?: string[];
 }
 
 export interface Module {
@@ -34,6 +41,7 @@ export interface Course {
   language: string;
   adminId: string;
   estimatedDuration: string;
+  skipCredits?: number;
   admin: {
     name: string;
     image: string;

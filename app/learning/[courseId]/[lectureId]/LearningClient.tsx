@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { VideoOff } from "lucide-react";
+import { VideoOff, Lock, CalendarClock, ListChecks, Sparkles, Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { showToast } from "@/utils/Toast";
 
 // Components
 import VideoPlayer from "../../components/VideoPlayer";
@@ -25,14 +26,52 @@ interface LearningClientProps {
 
 export default function LearningClient({ courseId, lectureId, user }: LearningClientProps) {
   const [currentLecture, setCurrentLecture] = useState<any>(null);
+  const [lockInfo, setLockInfo] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [unlocking, setUnlocking] = useState(false);
   const [seekTo, setSeekTo] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
-  
+
   const { course: contextCourse } = useCourse();
 
   const handleSeekComplete = () => setSeekTo(null);
+
+  const loadLecture = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/lecture/${lectureId}`);
+      const data = await response.json();
+      if (response.status === 403 && data?.locked) {
+        setLockInfo(data);
+        setCurrentLecture(null);
+      } else if (!response.ok) {
+        throw new Error(data?.error || "Failed to fetch lecture");
+      } else {
+        setLockInfo(null);
+        setCurrentLecture(data);
+      }
+    } catch (error) {
+      console.error("Error loading lecture:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [lectureId]);
+
+  const handleUnlock = async () => {
+    try {
+      setUnlocking(true);
+      const res = await fetch(`/api/lecture/${lectureId}/bypass`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Failed to unlock");
+      showToast.success(`Unlocked! ${data.creditsRemaining} credit(s) left.`);
+      await loadLecture();
+    } catch (err: any) {
+      showToast.error(err.message || "Could not unlock this lecture");
+    } finally {
+      setUnlocking(false);
+    }
+  };
 
   useEffect(() => {
     const updateProgress = async () => {
@@ -51,21 +90,8 @@ export default function LearningClient({ courseId, lectureId, user }: LearningCl
   
   useEffect(() => {
     if (!lectureId) return;
-    const fetchLecture = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch(`/api/lecture/${lectureId}`);
-        if (!response.ok) throw new Error("Failed to fetch lecture");
-        const data = await response.json();
-        setCurrentLecture(data);
-      } catch (error) {
-        console.error("Error loading lecture:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchLecture();
-  }, [lectureId]);
+    loadLecture();
+  }, [lectureId, loadLecture]);
 
   const handleBookmarkClick = useCallback((time: string) => {
     setSeekTo(time);
@@ -91,6 +117,61 @@ export default function LearningClient({ courseId, lectureId, user }: LearningCl
     <main className="flex-1 overflow-y-auto theme-transition bg-(--learning-background) relative h-full">
       {isLoading ? (
         <Loader message="Loading lecture" />
+      ) : lockInfo ? (
+        <div className="flex flex-col items-center justify-center h-full text-center p-10 max-w-lg mx-auto">
+          <div className="bg-amber-50 p-6 rounded-full mb-5">
+            {lockInfo.lockedByTime ? (
+              <CalendarClock size={48} className="text-amber-500" />
+            ) : (
+              <Lock size={48} className="text-amber-500" />
+            )}
+          </div>
+          <h2 className="text-2xl font-bold text-(--text-color)">
+            {lockInfo.title || "Locked content"}
+          </h2>
+
+          {lockInfo.lockedByTime ? (
+            <p className="text-gray-500 mt-3">
+              This content unlocks on{" "}
+              <span className="font-bold text-(--text-color)">
+                {lockInfo.releaseAt
+                  ? new Date(lockInfo.releaseAt).toLocaleString(undefined, {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })
+                  : "a scheduled date"}
+              </span>
+              . Please check back later.
+            </p>
+          ) : (
+            <>
+              <p className="text-gray-500 mt-3 flex items-center justify-center gap-2">
+                <ListChecks size={16} /> Complete these lectures first:
+              </p>
+              <ul className="mt-3 space-y-1.5 text-sm text-(--text-color)">
+                {(lockInfo.unmetPrerequisites || []).map((p: any) => (
+                  <li key={p.id} className="bg-(--lec-unwatched-bg) border border-(--lec-unwatched-border) rounded-lg px-4 py-2">
+                    {p.title}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-6 flex flex-col items-center gap-2">
+                <button
+                  onClick={handleUnlock}
+                  disabled={unlocking || (lockInfo.creditsRemaining ?? 0) < 1}
+                  className="flex items-center gap-2 bg-[#FABD23] text-black font-bold px-6 py-3 rounded-xl hover:brightness-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {unlocking ? <Loader2 className="animate-spin" size={18} /> : <Sparkles size={18} />}
+                  Spend 1 credit to unlock
+                </button>
+                <span className="text-xs text-gray-400">
+                  {lockInfo.creditsRemaining ?? 0} skip credit(s) remaining
+                </span>
+              </div>
+            </>
+          )}
+        </div>
       ) : currentLecture ? (
         <LectureProvider>
           <div className="max-w-[1400px] mx-auto px-4 md:px-6 py-2 lg:py-8 space-y-6">

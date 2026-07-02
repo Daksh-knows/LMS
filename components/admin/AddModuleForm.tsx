@@ -9,6 +9,7 @@ import { showToast } from "@/utils/Toast";
 export default function AddModuleForm({ courseId, refreshData}: { courseId: string, refreshData: () => void}) {
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
+  const [releaseAt, setReleaseAt] = useState("");
   
   const handleSubmit = async (e: React.FormEvent) => {
   
@@ -29,7 +30,7 @@ export default function AddModuleForm({ courseId, refreshData}: { courseId: stri
       const response = await fetch(`/api/course/${courseId}/module?adminId=${adminId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sectionTitle: title }),
+        body: JSON.stringify({ sectionTitle: title, releaseAt: releaseAt || null }),
       });
 
       const result = await response.json();
@@ -46,6 +47,7 @@ export default function AddModuleForm({ courseId, refreshData}: { courseId: stri
       await addModulePromise();
       toast.dismiss();
       setTitle(""); // Clear the input
+      setReleaseAt("");
       refreshData();
       setLoading(false);
       showToast.success("Module added successfully! 📂");
@@ -71,6 +73,14 @@ export default function AddModuleForm({ courseId, refreshData}: { courseId: stri
           <Plus size={20} />
         </div>
       </div>
+
+      <input
+        type="datetime-local"
+        value={releaseAt}
+        onChange={(e) => setReleaseAt(e.target.value)}
+        title="Optional: schedule when this module unlocks"
+        className="p-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-600"
+      />
 
       <button
         type="submit"
