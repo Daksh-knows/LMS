@@ -450,7 +450,7 @@ model CourseBundle {
 }
 
 model VideoQuestion {
-  id                    String                  @id
+  id                    String                  @id @default(cuid())
   lectureId             String
   timestamp             Float
   type                  VideoQuestionType       @default(MCQ)
@@ -459,7 +459,7 @@ model VideoQuestion {
   options               String[]
   correctAnswer         String
   createdAt             DateTime                @default(now())
-  updatedAt             DateTime
+  updatedAt             DateTime                @updatedAt
   Lecture               Lecture                 @relation(fields: [lectureId], references: [id], onDelete: Cascade)
   VideoQuestionResponse VideoQuestionResponse[]
 
@@ -467,7 +467,7 @@ model VideoQuestion {
 }
 
 model VideoQuestionResponse {
-  id              String        @id
+  id              String        @id @default(cuid())
   videoQuestionId String
   userId          String
   answer          String
