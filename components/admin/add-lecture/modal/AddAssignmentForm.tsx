@@ -12,6 +12,8 @@ import {
   Paperclip,
 } from "lucide-react";
 import { showToast } from "@/utils/Toast";
+import ReleaseScheduleField from "./sections/ReleaseScheduleField";
+import PrerequisitesField from "./sections/PrerequisitesField";
 
 /* ---------------- TYPES ---------------- */
 
@@ -64,6 +66,7 @@ export default function AddAssignmentForm({
   courseId,
   sectionId,
   initialData,
+  availableLectures = [],
   onSuccess,
   onCancel,
 }: any) {
@@ -72,6 +75,8 @@ export default function AddAssignmentForm({
   const [title, setTitle] = useState(initialData?.title || "");
   const [description, setDescription] = useState(initialData?.description || "");
   const [isFree, setIsFree] = useState(initialData?.isFree || false);
+  const [releaseAt, setReleaseAt] = useState<string>(initialData?.releaseAt || "");
+  const [prerequisiteIds, setPrerequisiteIds] = useState<string[]>(initialData?.prerequisiteIds || []);
 
   const [attachments, setAttachments] = useState<FileAttachment[]>(
     initialData?.attachments?.map((att: any) => ({
@@ -238,6 +243,8 @@ export default function AddAssignmentForm({
         description,
         attachments: finalAttachments,
         rubric: rubricEnabled ? rubric : null,
+        releaseAt: releaseAt || null,
+        prerequisiteIds,
       };
 
       const isUpdate = !!initialData;
@@ -560,11 +567,20 @@ export default function AddAssignmentForm({
          </div>
       </div>
 
+      {/* --- Drip Scheduling --- */}
+      <ReleaseScheduleField value={releaseAt} onChange={setReleaseAt} />
+      <PrerequisitesField
+        available={availableLectures}
+        selectedIds={prerequisiteIds}
+        onChange={setPrerequisiteIds}
+        currentLectureId={initialData?.id}
+      />
+
       {/* Actions */}
       <div className="flex gap-3 pt-4 border-t border-gray-100">
-         <button 
-           type="button" 
-           onClick={onCancel} 
+         <button
+           type="button"
+           onClick={onCancel}
            disabled={loading}
            className="flex-1 p-3 border border-gray-200 rounded-xl font-bold text-gray-600 hover:bg-gray-50 transition-colors"
          >

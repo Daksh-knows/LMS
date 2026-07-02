@@ -10,15 +10,18 @@ import AddTextForm from "./modal/AddTextForm";
 import AddAssignmentForm from "./modal/AddAssignmentForm";
 import AddQuizForm from "./modal/AddQuizForm";
 
+import type { AvailableLecture } from "./modal/sections/PrerequisitesField";
+
 interface Props {
   courseId: string;
   sectionId: string;
   initialData?: any;
+  availableLectures?: AvailableLecture[];
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-export default function AddLectureForm({ courseId, sectionId, initialData, onSuccess, onCancel }: Props) {
+export default function AddLectureForm({ courseId, sectionId, initialData, availableLectures = [], onSuccess, onCancel }: Props) {
   const [type, setType] = useState<ItemType>(initialData?.type || "VIDEO");
   const [courseType, setCourseType] = useState<string | null>(null);
   const [isFetchingType, setIsFetchingType] = useState(true);
@@ -104,12 +107,13 @@ export default function AddLectureForm({ courseId, sectionId, initialData, onSuc
 
       {/* --- FORM RENDERER --- */}
       {(type === "VIDEO" || type === "LIVE") && (
-        <AddVideoForm 
-          courseId={courseId} 
-          sectionId={sectionId} 
-          initialData={initialData} 
-          onSuccess={onSuccess} 
-          onCancel={onCancel} 
+        <AddVideoForm
+          courseId={courseId}
+          sectionId={sectionId}
+          initialData={initialData}
+          availableLectures={availableLectures}
+          onSuccess={onSuccess}
+          onCancel={onCancel}
         />
       )}
 
@@ -117,32 +121,35 @@ export default function AddLectureForm({ courseId, sectionId, initialData, onSuc
       {courseType !== "CRASH" && (
         <>
           {type === "TEXT" && (
-            <AddTextForm 
-              courseId={courseId} 
-              sectionId={sectionId} 
-              initialData={initialData} 
-              onSuccess={onSuccess} 
-              onCancel={onCancel} 
+            <AddTextForm
+              courseId={courseId}
+              sectionId={sectionId}
+              initialData={initialData}
+              availableLectures={availableLectures}
+              onSuccess={onSuccess}
+              onCancel={onCancel}
             />
           )}
 
           {type === "ASSIGNMENT" && (
-            <AddAssignmentForm 
-              courseId={courseId} 
-              sectionId={sectionId} 
-              initialData={initialData} 
-              onSuccess={onSuccess} 
-              onCancel={onCancel} 
+            <AddAssignmentForm
+              courseId={courseId}
+              sectionId={sectionId}
+              initialData={initialData}
+              availableLectures={availableLectures}
+              onSuccess={onSuccess}
+              onCancel={onCancel}
             />
           )}
 
           {type === "QUIZ" && (
-            <AddQuizForm 
-              courseId={courseId} 
-              sectionId={sectionId} 
+            <AddQuizForm
+              courseId={courseId}
+              sectionId={sectionId}
               initialData={initialData}
-              onSuccess={onSuccess} 
-              onCancel={onCancel} 
+              availableLectures={availableLectures}
+              onSuccess={onSuccess}
+              onCancel={onCancel}
             />
           )}
         </>

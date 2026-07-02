@@ -325,10 +325,13 @@ export default function AddModulePage({ params }: { params: Promise<{ id: string
                   </button>
               </div> */}
               <div className="p-6 max-h-[80vh] overflow-y-auto">
-                <AddLectureForm 
-                  courseId={id} 
-                  sectionId={activeSectionId} 
-                  initialData={editingLecture} 
+                <AddLectureForm
+                  courseId={id}
+                  sectionId={activeSectionId}
+                  initialData={editingLecture}
+                  availableLectures={sections.flatMap((s: any) =>
+                    s.lectures.map((l: any) => ({ id: l.id, title: l.title, sectionTitle: s.title }))
+                  )}
                   onSuccess={() => { setIsModalOpen(false); loadContent(id); }}
                   onCancel={() => setIsModalOpen(false)}
                 />
