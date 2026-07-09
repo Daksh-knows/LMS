@@ -148,9 +148,9 @@ export default function SignInPage() {
             className="mt-8 text-center space-y-4"
           >
             <p className="text-sm text-custom">
-              Don't have an account?{' '}
-              <Link href="/signup" className="text-[#FABD23] font-bold hover:underline underline-offset-4">
-                Sign Up
+              Already have an account?{' '}
+              <Link href="/" className="text-[#FABD23] font-bold hover:underline underline-offset-4">
+                Sign In
               </Link>
             </p>
             <div className="flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest text-(--text-color) opacity-70 font-bold">
