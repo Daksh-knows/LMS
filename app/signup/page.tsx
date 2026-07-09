@@ -3,45 +3,74 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, Lock, ArrowRight, Loader2, Info, EyeOff, Eye } from 'lucide-react';
-import { signIn, getSession } from "next-auth/react";
+import { Mail, Lock, ArrowRight, Loader2, EyeOff, Eye, User } from 'lucide-react';
+import { signIn } from "next-auth/react";
 import ThemeSwitcher from '@/components/Theme/ThemeSwitcher';
 import { showToast } from '@/utils/Toast';
 import { motion, AnimatePresence } from 'framer-motion'; 
 import ClickSpark from '@/components/ui/ClickSpark';
 
-export default function SignInPage() {
+export default function SignUpPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState<string | null>(null);
-  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading("credentials");
+    setIsLoading(true);
+    
     const formData = new FormData(e.currentTarget);
+    const fullName = formData.get("fullName") as string;
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
+    console.log("Fullna " , fullName) ;
+    if (!fullName.trim() || !email.trim() || !password.trim()) {
+      showToast.error("All fields are required");
+      setIsLoading(false);
+      return;
+    }
 
     try {
-      const res = await signIn("credentials", { email, password, redirect: false });
-      if (res?.error) {
-        showToast.error("Invalid email or password.");
-        setIsLoading(null);
-      } else {
-        const session = await getSession();
-        if (session?.user?.isTempPassword) {
-          showToast.success("Logged In successfully");
-          router.push("/reset-password");
-        } else {
-          router.refresh();
-          showToast.success("Logged In successfully");
-          router.push("/dashboard");
-        }
+      // 1. Create account
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: fullName.trim(),
+          email: email.trim(),
+          password: password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to register. Please try again.");
       }
-    } catch (err) {
-      showToast.error("Something went wrong.")
-      setIsLoading(null);
+
+      showToast.success("Account created successfully! Logging you in...");
+
+      // 2. Automatically sign in the user via next-auth credentials provider
+      const nextAuthRes = await signIn("credentials", {
+        email: email.trim(),
+        password: password,
+        redirect: false,
+      });
+
+      if (nextAuthRes?.error) {
+        showToast.error("Failed to sign in automatically. Please sign in manually.");
+        router.push("/signin");
+      } else {
+        router.refresh();
+        showToast.success("Logged in successfully!");
+        router.push("/dashboard");
+      }
+
+    } catch (err: any) {
+      console.error(err);
+      showToast.error(err.message || "Something went wrong during signup.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -78,12 +107,27 @@ export default function SignInPage() {
           {/* Card */}
           <div className="bg-transparent backdrop-blur-xl p-8 md:p-10 rounded-3xl shadow-(--box-shadow) border border-white/10 ">
             
-            <div className="text-center mb-10">
-              <h1 className="text-3xl font-bold text-custom tracking-tight">Welcome Back</h1>
-              <p className="mt-2 text-sm text-custom-muted opacity-70">Sign in to access your dashboard</p>
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-custom tracking-tight">Create Account</h1>
+              <p className="mt-2 text-sm text-custom-muted opacity-70">Join our cohort and start learning today</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Full Name */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-custom ml-1">Full Name</label>
+                <div className="relative group">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#464646] w-5 h-5 group-focus-within:text-amber-500 transition-colors" />
+                  <input
+                    name="fullName"
+                    type="text"
+                    required
+                    placeholder="John Doe"
+                    className="w-full pl-12 pr-4 py-3.5 bg-(--start-background) border border-(--input-border) rounded-xl focus:border-amber-500/50 transition-all outline-none text-custom placeholder:text-[#464646]"
+                  />
+                </div>
+              </div>
+
               {/* Email */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-custom ml-1">Email Address</label>
@@ -114,7 +158,7 @@ export default function SignInPage() {
                   <button
                     type="button" 
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors cursor-pointer"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -122,21 +166,23 @@ export default function SignInPage() {
               </div>
 
               {/* Gradient Button */}
-              <ClickSpark
-                sparkColor='#fff'
-                sparkSize={10}
-                sparkRadius={60}
-                sparkCount={8}
-                duration={400}
-              >
-                <button
-                  type="submit"
-                  disabled={!!isLoading}
-                  className="w-full h-[52px] bg-gradient-to-r from-[#F59E0B] to-[#C47E09] hover:brightness-110 text-white font-bold rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-amber-900/20"
+              <div className="pt-2">
+                <ClickSpark
+                  sparkColor='#fff'
+                  sparkSize={10}
+                  sparkRadius={60}
+                  sparkCount={8}
+                  duration={400}
                 >
-                  {isLoading ? <Loader2 className="animate-spin" /> : <>Sign In with Email <ArrowRight size={20} /></>}
-                </button>
-              </ClickSpark>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full h-[52px] bg-gradient-to-r from-[#F59E0B] to-[#C47E09] hover:brightness-110 text-white font-bold rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-amber-900/20 cursor-pointer disabled:opacity-50"
+                  >
+                    {isLoading ? <Loader2 className="animate-spin" /> : <>Sign Up with Email <ArrowRight size={20} /></>}
+                  </button>
+                </ClickSpark>
+              </div>
             </form>
           </div>
 
@@ -144,12 +190,12 @@ export default function SignInPage() {
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
+            transition={{ delay: 0.8 }}
             className="mt-8 text-center space-y-4"
           >
             <p className="text-sm text-custom">
               Already have an account?{' '}
-              <Link href="/" className="text-[#FABD23] font-bold hover:underline underline-offset-4">
+              <Link href="/signin" className="text-[#FABD23] font-bold hover:underline underline-offset-4">
                 Sign In
               </Link>
             </p>
